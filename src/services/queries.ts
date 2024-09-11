@@ -3,8 +3,13 @@ import {
   getAllEvents,
   getEvent,
   getSport,
-  getUserInfo,
+  useUserInfo,
   getAllSports,
+  getAllTeams,
+  getTeam,
+  getAllRules,
+  getRule,
+  getAllMatches,
 } from "./api";
 
 // get user login
@@ -13,7 +18,7 @@ export function useUserLogin() {
     queries: [
       {
         queryKey: ["userinfo"],
-        queryFn: getUserInfo,
+        queryFn: useUserInfo,
       },
     ],
   });
@@ -37,11 +42,19 @@ export function useEvent(id: string | undefined) {
 }
 
 
-// get all sports
-export function useGetAllSports() {
+// // get all sports
+// export function useGetAllSports() {
+//   return useQuery({
+//     queryKey: ["sports"],
+//     queryFn: getAllSports, 
+//   });
+// }
+
+export function useGetAllSports(eventId: string) {
   return useQuery({
-    queryKey: ["sports"],
-    queryFn: getAllSports, 
+    queryKey: ["sports", eventId], 
+    queryFn: () => getAllSports(eventId), 
+    enabled: !!eventId, 
   });
 }
 
@@ -53,3 +66,61 @@ export function useSport(id: string | undefined) {
     
   });
 }
+
+export const useSportDetails = (sportId: string) => {
+  return useQuery({
+    queryKey: ["sportDetails", sportId],
+    queryFn: () => getSport(sportId),
+    enabled: !!sportId, 
+  });
+};
+
+//get all teams 
+export function useGetAllTeams(eventId: string){
+  return useQuery({
+    queryKey: ['teams', eventId],
+    queryFn: () => getAllTeams(eventId),
+    enabled: !!eventId,
+  });
+}
+
+//get team by id
+export function useTeam(id: string | undefined) {
+  return useQuery({
+    queryKey: ['team', id],
+    queryFn: () => getTeam(id!),
+  })
+}
+
+//get all rules
+export function useGetAllRules(){
+  return useQuery({
+    queryKey: ['rules'],
+    queryFn: getAllRules,
+  })
+}
+
+//get rule by id
+export function UseRule(id: string | undefined) {
+  return useQuery({
+    queryKey: ['rule', id],
+    queryFn: () => getRule(id!),
+  })
+}
+
+//get all matches
+export function useGetAllMatches(eventId: string, sportId: string) {
+  return useQuery({
+    queryKey: ["matches", eventId, sportId],
+    queryFn: () => getAllMatches(eventId, sportId),
+    enabled: !!eventId && !!sportId,
+  });
+}
+//get all matches
+// export function useGetAllMatches() {
+//   return useQuery({
+//     queryKey: ["matches"],
+//     queryFn: () => getAllMatches(),
+//     // enabled: !!eventId && !!sportId,
+//   });
+// }
