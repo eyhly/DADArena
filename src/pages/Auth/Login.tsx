@@ -18,6 +18,7 @@ import Logo from "../../../public/img/logo.png";
 import ColorTheme from "../../utils/ColorTheme";
 import Lottie from 'lottie-react'
 import Log from '../../../public/img/login.json'
+// import LoginButton from "./LoginButton";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -159,6 +160,7 @@ const Login = () => {
                 ),
               }}
             />
+            {/* <LoginButton/> */}
             <Button
               type="button"
               fullWidth

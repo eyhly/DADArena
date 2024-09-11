@@ -7,7 +7,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import SidebarAdmin from '../Sidebar/SidebarAdmin';
 import { Grid } from '@mui/material';
-import EventsPage from '../Events/EventsPage';
+import EventsPage from '../Events/eventsAdmin/EventsPage';
 
 // contoh data untuk kartu
 // const cardData = [

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetAllEvents } from "../../services/queries";
+import { useGetAllEvents } from "../../../services/queries";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -12,10 +12,10 @@ import { ThemeProvider } from "@mui/material/styles";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import { Event } from "../../types/event";
+import { Event } from "../../../types/event";
 import { useNavigate } from "react-router-dom";
-import ColorTheme from "../../utils/ColorTheme";
-import { useDeleteEvent } from "../../services/mutation";
+import ColorTheme from "../../../utils/ColorTheme";
+import { useDeleteEvent } from "../../../services/mutation";
 import Swal from "sweetalert2";
 
 
@@ -46,11 +46,11 @@ const EventsPage = () => {
           text: "Event deleted successfully!",
           confirmButtonText: "Ok",
         });
-      } catch (error: any) {
+      } catch (error) {
         Swal.fire({
           icon: "error",
           title: "Failed!",
-          text: error.toString(),
+          text: error instanceof Error ? error.message : "An unexpected error occurred.",
           confirmButtonText: "Ok",
         });
       }
@@ -59,7 +59,7 @@ const EventsPage = () => {
 
   if (isLoading) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 4 }}>
+      <Container sx={{ textAlign: "center", marginTop: 4, ml: 65 }}>
         <CircularProgress />
         <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
           Loading events...
@@ -70,7 +70,7 @@ const EventsPage = () => {
 
   if (isError) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 4 }}>
+      <Container sx={{ textAlign: "center", marginTop: 4, ml: 65 }}>
         <Typography variant="h6" component="div" sx={{ color: "red" }}>
           Failed to load events
         </Typography>
@@ -82,7 +82,7 @@ const EventsPage = () => {
     id: event.id,
     title: event.title,
     description: event.description,
-    image: '/logo.png', 
+    image: event.image , 
   }));
 
   // if no events found
@@ -103,7 +103,8 @@ const EventsPage = () => {
 
   return (
     <ThemeProvider theme={ColorTheme}>
-      <Button size="small" variant="contained" sx={{ ml:175, mt: -5, mb: 3, maxHeight: 50, maxWidth: '100%' }} onClick={() => navigate('/events/add')}>
+      <Typography variant="h2"  sx={{mt: 3, ml:78, mb: 3}}>List Events</Typography>
+      <Button size="small" variant="contained" sx={{ ml:160, mb: 3, maxHeight: 50, maxWidth: '100%' }} onClick={() => navigate('/events/add')}>
         <AddOutlinedIcon /> Create Event
       </Button>
       <Container sx={{mt:4}}>
@@ -119,7 +120,9 @@ const EventsPage = () => {
                   component="img"
                   alt={card.title}
                   height="200"
-                  image={card.image} onClick={() => navigate(`/events/${card.id}/sports`)}
+                  image={card.image} 
+                  
+                  onClick={() => navigate(`/events/${card.id}/sports`)}
                 />
                 <CardContent sx={{ height: 100, overflow: 'hidden' }} onClick={() => navigate(`/events/${card.id}/sports`)}>
                   <Typography gutterBottom variant="h5" component="div">

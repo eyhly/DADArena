@@ -1,5 +1,7 @@
-export interface Rules {
+export interface Rule {
+    id: string;
     minPlayer: number,
     maxPlayer: number,
-    minWoman: number,
+    minWomen: number,
+    sportId: string,
 }

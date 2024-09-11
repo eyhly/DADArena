@@ -1,34 +1,70 @@
-import React, { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { TextField, Button, Container, Typography, Box, Grid } from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
-import { useUpdateEvent } from '../../services/mutation';
-import { useEvent } from '../../services/queries';
-import { Event } from '../../types/event';
-import ColorTheme from '../../utils/ColorTheme';
-import Swal from 'sweetalert2';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { ChangeEvent, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Box,
+  Grid,
+  // Select,
+  InputLabel,
+  FormControl,
+  // MenuItem,
+} from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
+import { useCreateEvent } from "../../../services/mutation";
+import { Event } from "../../../types/event";
+import ColorTheme from "../../../utils/ColorTheme";
+import Swal from "sweetalert2";
+import { useNavigate} from "react-router-dom";
+// import { useGetAllTeams } from "../../services/queries";
+// import { Team } from "../../types/team";
 
-export default function UpdateEventPage() {
-  const { id } = useParams<{ id: string }>();
-  const { handleSubmit, control, reset } = useForm<Event>();
-  const { data: event, isLoading } = useEvent(id);
-  const { mutate } = useUpdateEvent();
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toISOString().slice(0, 19) + "Z";
+};
+
+export default function AddEventPage() {
+  // const {eventId} = useParams();
+  const { handleSubmit, control, setValue } = useForm<Event>();
+  const { mutate } = useCreateEvent();
   const navigate = useNavigate();
+  const today = new Date().toISOString().split("T")[0];
+  // const { data: teams } = useGetAllTeams(eventId!);
 
-  useEffect(() => {
-    if (event) {
-      reset(event); 
+  const [fileName, setFileName] = useState<string>("");
+
+  // Function to convert image file to base64
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setValue("image", reader.result as string); 
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFileName("");
     }
-  }, [event, reset]);
+  };
 
   const onSubmit = (data: Event) => {
-    mutate({ id: id!, data }, {
+    const formattedData = {
+      ...data,
+      registrationStartDate: formatDate(data.registrationStartDate),
+      registrationEndDate: formatDate(data.registrationEndDate),
+      eventStartDate: formatDate(data.eventStartDate),
+      eventEndDate: formatDate(data.eventEndDate),
+    };
+    mutate(formattedData, {
       onSuccess: () => {
         Swal.fire({
           icon: "success",
-          title: "Success Update Event!",
-          text: "Event has been updated successfully!",
+          title: "Success Add Event!",
+          text: "Success!",
           confirmButtonText: "Ok",
         }).then((result) => {
           if (result.isConfirmed) {
@@ -36,15 +72,17 @@ export default function UpdateEventPage() {
           }
         });
       },
-      onError: (error: any) => {
+      onError: (error) => {
         Swal.fire({
           icon: "error",
-          title: "Failed to update event!",
-          text: error.toString(),
+          title: "Failed to add event!",
+          text: error instanceof Error
+          ? error.message 
+          : "An unexpected error occurred.",
           confirmButtonText: "Ok",
         }).then((result) => {
           if (result.isConfirmed) {
-            navigate(`/events/edit/${id}`);
+            navigate("/events/add");
           }
         });
       },
@@ -54,12 +92,12 @@ export default function UpdateEventPage() {
   const handleBatal = () => {
     Swal.fire({
       icon: "warning",
-      title: "Warning",
+      title: "Warning!",
       text: "Are you sure you want to cancel? You might lose your changes, it is ok?",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, cancel it",
+      confirmButtonText: "Yes, cancel it!",
       cancelButtonText: "No",
     }).then((result) => {
       if (result.isConfirmed) {
@@ -68,15 +106,11 @@ export default function UpdateEventPage() {
     });
   };
 
-  if (isLoading) {
-    return <Typography variant="h6">Loading...</Typography>;
-  }
-
   return (
     <Container maxWidth="md" sx={{ marginX: 60 }}>
       <ThemeProvider theme={ColorTheme}>
         <Typography variant="h4" align="center" sx={{ mt: -5 }} gutterBottom>
-          Update Event
+          Add New Event
         </Typography>
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 3 }}>
           <Grid container spacing={3}>
@@ -123,6 +157,7 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Registration Start Date"
                     type="date"
+                    inputProps={{min: today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -143,6 +178,7 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Registration End Date"
                     type="date"
+                    inputProps={{min: today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -163,6 +199,7 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Event Start Date"
                     type="date"
+                    inputProps={{min: today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -183,6 +220,7 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Event End Date"
                     type="date"
+                    inputProps={{min: today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
@@ -195,31 +233,69 @@ export default function UpdateEventPage() {
             </Grid>
 
             <Grid item xs={12}>
-              <Controller
-                name="rules"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Rules"
-                    variant="outlined"
-                    fullWidth
-                    multiline
-                    rows={4}
-                    required
+                <InputLabel htmlFor="image-upload">Image</InputLabel>
+              <FormControl fullWidth variant="outlined">
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  htmlFor="image-upload"
+                >
+                  {fileName ? fileName : "Upload Image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                    id="image-upload"
                   />
-                )}
-              />
+                </Button>
+              </FormControl>
             </Grid>
 
+            {/* <Grid item xs={6}>
+              <FormControl fullWidth>
+                <InputLabel id="team-select-label">Official Team</InputLabel>
+                <Controller
+                  name="officialId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      labelId="team-select-label"
+                      id="team-select"
+                      label="Official Team"
+                      {...field}
+                    >
+                      {teams?.map((team: Team) => (
+                        <MenuItem key={team.id} value={team.id}>
+                          {team.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  )}
+                />
+              </FormControl>
+            </Grid> */}
+
             <Grid item xs={6}>
-              <Button type="submit" variant="contained" color="primary" fullWidth>
-                Update Event
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+              >
+                Create Event
               </Button>
             </Grid>
             <Grid item xs={6}>
-              <Button type="button" variant="outlined" color="secondary" fullWidth onClick={handleBatal}>
-                Cancel
+              <Button
+                type="button"
+                variant="outlined"
+                color="secondary"
+                fullWidth
+                onClick={handleBatal}
+              >
+                Batal
               </Button>
             </Grid>
           </Grid>
