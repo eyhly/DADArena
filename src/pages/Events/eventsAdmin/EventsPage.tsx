@@ -122,9 +122,10 @@ const EventsPage = () => {
                   height="200"
                   image={card.image} 
                   
-                  onClick={() => navigate(`/events/${card.id}/sports`)}
+                  onClick={() => navigate(`/events/${card.id}/matches`)}
                 />
-                <CardContent sx={{ height: 100, overflow: 'hidden' }} onClick={() => navigate(`/events/${card.id}/sports`)}>
+            
+                <CardContent sx={{ height: 100, overflow: 'hidden' }} onClick={() => navigate(`/events/${card.id}/matches`)}>
                   <Typography gutterBottom variant="h5" component="div">
                     {card.title}
                   </Typography>

@@ -231,6 +231,22 @@ export default function AddEventPage() {
                 )}
               />
             </Grid>
+            <Grid item xs={12}>
+              <Controller
+              name="allowedSportLimit"
+              control={control}
+              render={({field}) => (
+                <TextField
+                {...field}
+                label="Allowed Sport Limit"
+                type="number"
+                variant="outlined"
+                fullWidth
+
+                />
+              )}
+              />
+            </Grid>
 
             <Grid item xs={12}>
                 <InputLabel htmlFor="image-upload">Image</InputLabel>

@@ -41,11 +41,11 @@ export default function UpdateEventPage() {
       setFileName(file.name);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setValue("image", reader.result as string); // to format the image eee pokoknya buat convert to base64
+        setValue("image", reader.result as string); 
       };
       reader.readAsDataURL(file);
     } else {
-      setFileName(""); // Reset the file name if no file is selected
+      setFileName(""); 
     }
   };
 
@@ -241,6 +241,23 @@ export default function UpdateEventPage() {
                     required
                   />
                 )}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller
+              name="allowedSportLimit"
+              control={control}
+              render={({field}) => (
+                <TextField
+                {...field}
+                label="Allowed Sport Limit"
+                type="number"
+                variant="outlined"
+                fullWidth
+
+                />
+              )}
               />
             </Grid>
 

@@ -29,6 +29,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 // import { useNavigate } from "react-router-dom";
 import { Event } from "../../types/event";
 import { useAuth0 } from "@auth0/auth0-react";  // Import Auth0 hook
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const { isLoading, isError } = useGetAllEvents();
@@ -38,6 +39,7 @@ const LandingPage = () => {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
   const { data: events } = useGetAllEvents();
+  const navigate = useNavigate();
   
   // Auth0 hooks
   const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();
@@ -112,7 +114,7 @@ const LandingPage = () => {
       </Container>
     );
   }
-  
+
 
   function HideOnScroll(props: any) {
     const { children, window } = props;
@@ -227,6 +229,7 @@ const LandingPage = () => {
               width: "100%",
               objectFit: "contain",
             }}
+
           />
         </Box>
         {/* Upcoming Events Section */}
@@ -246,7 +249,7 @@ const LandingPage = () => {
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => (
                 <Grid item xs={12} sm={6} md={4} key={event.id}>
-                  <Card sx={{ maxWidth: 400, maxHeight: "100%" }}>
+                  <Card sx={{ maxWidth: 400, maxHeight: "100%" }} onClick={() => navigate(`/events/${event.id}/matches`)}>
                     <CardMedia
                       component="img"
                       alt={event.title}

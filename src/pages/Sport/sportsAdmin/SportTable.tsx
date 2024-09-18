@@ -24,8 +24,9 @@ import {
   tableCellClasses,
   Button,
   ThemeProvider,
+  Tooltip,
 } from "@mui/material";
-import ScoreboardIcon from '@mui/icons-material/Scoreboard';
+// import ScoreboardIcon from '@mui/icons-material/Scoreboard';
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import EditCalendarOutlined from "@mui/icons-material/EditCalendarOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
@@ -41,6 +42,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { LogoutOutlined } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
+// import DetailEvents from "../../Events/eventsAdmin/DetailEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -165,12 +167,14 @@ const SportsTable: React.FC = () => {
             >
               <DeleteOutlineOutlined /> {/*Delete*/}
             </Button>
+            <Tooltip title='More Rules' placement="right">
             <Button onClick={() => handleOpenDescriptionModal(row.original)} sx={{ color: "#24aed4" }}>
               <VisibilityOutlinedIcon /> {/*More Rules*/}
             </Button>
-            <Button onClick={() => navigate(`/events/${eventId}/sports/${row.original.id}/matches`)}>
+            </Tooltip>
+            {/* <Button onClick={() => navigate(`/events/${eventId}/sports/${row.original.id}/matches`)}>
             <ScoreboardIcon />
-            </Button>
+            </Button> */}
           </>
         ),
       },
@@ -212,8 +216,9 @@ const SportsTable: React.FC = () => {
 
   if (filteredData.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 2 }}>
-        <Typography variant="h6" sx={{ marginTop: 2 }}>
+      <ThemeProvider theme={ColorTheme}>
+        <Box sx={{ textAlign: "center", marginTop: 3,ml: 90 }}>
+        <Typography variant="h6">
           No sports found for this event
         </Typography>
         <Button
@@ -226,11 +231,14 @@ const SportsTable: React.FC = () => {
         </Button>
         <AddSport open={open} handleClose={() => setOpen(false)} />
       </Box>
+      </ThemeProvider>
+      
     );
   }
 
   return (
     <ThemeProvider theme={ColorTheme}>
+      {/* <DetailEvents/> */}
       <Typography variant="h3" sx={{ ml: 90, mb: 3 }}>
         List Sport
       </Typography>

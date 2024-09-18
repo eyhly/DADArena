@@ -7,8 +7,6 @@ import {
   getAllSports,
   getAllTeams,
   getTeam,
-  getAllRules,
-  getRule,
   getAllMatches,
 } from "./api";
 
@@ -92,35 +90,19 @@ export function useTeam(id: string | undefined) {
   })
 }
 
-//get all rules
-export function useGetAllRules(){
-  return useQuery({
-    queryKey: ['rules'],
-    queryFn: getAllRules,
-  })
-}
-
-//get rule by id
-export function UseRule(id: string | undefined) {
-  return useQuery({
-    queryKey: ['rule', id],
-    queryFn: () => getRule(id!),
-  })
-}
-
-//get all matches
-export function useGetAllMatches(eventId: string, sportId: string) {
-  return useQuery({
-    queryKey: ["matches", eventId, sportId],
-    queryFn: () => getAllMatches(eventId, sportId),
-    enabled: !!eventId && !!sportId,
-  });
-}
-//get all matches
-// export function useGetAllMatches() {
+// //get all matches
+// export function useGetAllMatches(eventId: string, sportId: string) {
 //   return useQuery({
-//     queryKey: ["matches"],
-//     queryFn: () => getAllMatches(),
-//     // enabled: !!eventId && !!sportId,
+//     queryKey: ["matches", eventId, sportId],
+//     queryFn: () => getAllMatches(eventId, sportId),
+//     enabled: !!eventId && !!sportId,
 //   });
 // }
+//get all matches
+export function useGetAllMatches(eventId: string) {
+  return useQuery({
+    queryKey: ["matches", eventId],
+    queryFn: () => getAllMatches(eventId),
+    enabled: !!eventId,
+  });
+}

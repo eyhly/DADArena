@@ -8,7 +8,7 @@ export interface Event {
     eventStartDate: string;
     eventEndDate: string;
     officialId: string;
-    rules: string;
+    allowedSportLimit: number;
     status: string;
     isActive: boolean;
 }

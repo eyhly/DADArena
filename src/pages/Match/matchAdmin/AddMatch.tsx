@@ -8,6 +8,7 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  Grid,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { useCreateMatch } from "../../../services/mutation";
@@ -16,6 +17,7 @@ import ColorTheme from "../../../utils/ColorTheme";
 import Swal from "sweetalert2";
 import { Match } from "../../../types/match";
 import { useGetAllSports, useGetAllTeams } from "../../../services/queries";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddMatchModalProps {
   open: boolean;
@@ -23,14 +25,15 @@ interface AddMatchModalProps {
 }
 
 const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
-  const { eventId, sportId } = useParams<{ eventId: string; sportId: string }>();
+  const { eventId } = useParams<{ eventId: string }>();
   const { data: sports } = useGetAllSports(eventId!);
   const { data: teams } = useGetAllTeams(eventId!);
   const { mutate } = useCreateMatch();
   const [error, setError] = React.useState<string | null>(null);
   const today = new Date().toISOString().split("T")[0];
+  const queryClient = useQueryClient();
 
-  const { handleSubmit, control, watch, setValue } = useForm<Match>({
+  const { handleSubmit, control, watch } = useForm<Match>({
     defaultValues: {
       sportId: "",
       teamRedId: "",
@@ -47,17 +50,23 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toISOString().slice(0,19) + "Z";
+    return date.toISOString(); 
   };
 
-  const onSubmit = (data: Match)=> {
+  const onSubmit = (data: Match) => {
+    if (!eventId) {
+      setError("Event ID is not available.");
+      return;
+    }
+
     const formattedData = {
       ...data,
       date: formatDate(data.date),
     };
 
-    console.log("Submitting data:", formattedData); 
-    mutate(formattedData, {
+    console.log("Submitting data:", formattedData);
+    mutate({ eventId, data: formattedData }, {
+      
       onSuccess: () => {
         Swal.fire({
           icon: "success",
@@ -66,6 +75,7 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
           confirmButtonText: "Ok",
         });
         handleClose();
+        queryClient.invalidateQueries({ queryKey: ['matches', eventId] });
       },
       onError: (error) => {
         console.log("Error:", error); // Log error for debugging
@@ -80,14 +90,6 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
       },
     });
   };
-
-  React.useEffect(() => {
-    if (sports && sports.length > 0) {
-      setValue("sportId", sportId || sports[0]?.id || "");
-    }
-  }, [sports, sportId, setValue]);
-
-  const selectedSport = sports?.find((sport) => sport.id === (sportId || ""));
 
   return (
     <ThemeProvider theme={ColorTheme}>
@@ -108,15 +110,34 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  value={selectedSport?.title || ""}
-                  disabled
+                  select
+                  label="Select Sport"
                   variant="outlined"
                   fullWidth
                   sx={{ mb: 2 }}
-                />
+                >
+                  {sports?.map((sport) => (
+                    <MenuItem key={sport.id} value={sport.id}>
+                      {sport.title}
+                    </MenuItem>
+                  ))}
+                </TextField>
               )}
             />
-
+            <Controller
+                name="week"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    type="number"
+                    label="Week"
+                    variant="outlined"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                  />
+                )}
+              />
             <Controller
               name="teamRedId"
               control={control}
@@ -137,6 +158,7 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                 </TextField>
               )}
             />
+            
             <Controller
               name="teamBlueId"
               control={control}
@@ -157,6 +179,8 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                 </TextField>
               )}
             />
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
             <Controller
               name="teamRedScore"
               control={control}
@@ -166,11 +190,14 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                   label="Team Red Score"
                   type="number"
                   variant="outlined"
+                  defaultValue={0}
                   fullWidth
                   sx={{ mb: 2 }}
                 />
               )}
             />
+            </Grid>
+            <Grid item xs={6}>
             <Controller
               name="teamBlueScore"
               control={control}
@@ -180,11 +207,14 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                   label="Team Blue Score"
                   type="number"
                   variant="outlined"
+                  defaultValue={0}
                   fullWidth
                   sx={{ mb: 2 }}
                 />
               )}
             />
+            </Grid>
+            </Grid>
             <Controller
               name="venue"
               control={control}

@@ -19,7 +19,6 @@ import ScoreboardIcon from '@mui/icons-material/Scoreboard';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
-import SportsEsportsOutlinedIcon from '@mui/icons-material/SportsEsportsOutlined';
 import ColorTheme from '../../utils/ColorTheme';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Button } from '@mui/material';
@@ -27,7 +26,7 @@ import { LoginOutlined } from '@mui/icons-material';
 
 const drawerWidth = 240;
 
-export default function PermanentDrawerLeft() {
+export default function SidebarOfficial() {
   const navigate = useNavigate();
   const location = useLocation();
   const { eventId } = useParams(); 
@@ -45,18 +44,17 @@ export default function PermanentDrawerLeft() {
       <Toolbar />
       <Typography sx={{ mt: -6, mb: 2, mx: 5, display: 'flex' }}>
         <SupportAgentOutlinedIcon />
-        Admin
+        Official
       </Typography>
       <Divider />
       <List>
         {[
+          { text: 'Team', icon: <GroupsOutlinedIcon />, path: `/events/${eventId}/team` },
           { text: 'Match', icon: <ScoreboardIcon />, path: `/events/${eventId}/matches` },
-          { text: 'Sport & Rules', icon: <SportsEsportsOutlinedIcon />, path: `/events/${eventId}/sports` },
-          { text: 'Team', icon: <GroupsOutlinedIcon />, path: `/events/${eventId}/teams` },
           { text: 'Absensi', icon: <EditNoteOutlinedIcon />, path: `/events/${eventId}/absensi` },
           { text: 'Leaderboard', icon: <LeaderboardOutlinedIcon />, path: `/events/${eventId}/leaderboard` },
           { text: 'Data User', icon: <PeopleOutlineOutlinedIcon />, path: `/events/${eventId}/user` },
-          { text: 'Settings', icon: <SettingsIcon />, path: `/events/${eventId}/detail` },
+          { text: 'Settings', icon: <SettingsIcon />, path: `/events/setting/${eventId}` },
         ].map(({ text, icon, path }) => (
           <ListItem key={text} disablePadding>
             <ListItemButton
@@ -82,7 +80,7 @@ export default function PermanentDrawerLeft() {
       <Button
         variant="contained"
         color="primary"
-        sx={{ maxHeight: 50, mb: -70, mx: 7 }}
+        sx={{ maxHeight: 50, mb: -80, mx: 7 }}
         onClick={handleBack}
       >
         <LoginOutlined /> Back

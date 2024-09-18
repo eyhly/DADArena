@@ -8,10 +8,13 @@ import LandingPage from './pages/User/LandingPage';
 import SportsTable from './pages/Sport/sportsAdmin/SportTable';
 import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
 // import { SignIn, SignUp } from '@clerk/clerk-react';
-import ListRules from './pages/Sport/Rules';
 import ListTeam from './pages/Team/ListTeam';
 import LoginButton from './pages/Auth/LoginButton';
 import Matches from './pages/Match/matchAdmin/Matches';
+import DetailEvents from './pages/Events/eventsAdmin/DetailEvents';
+import Attandance from './pages/Attandance/Attandance';
+import Leaderboard from './pages/Leaderboard/Leaderboard';
+import User from './pages/User/User';
 
 const router = createBrowserRouter([
   {
@@ -59,26 +62,35 @@ const router = createBrowserRouter([
       path: '/events/edit/:eventId',
       element: <UpdateEvent/>
     },
-    // {
-    //   path: 'admin/events',
-    //   element: <DashboardAdmin/>
-    // },
+    {
+      path: '/events/:eventId/absensi',
+      element: <Attandance/>
+    },
+    {
+      path: '/events/:eventId/leaderboard',
+      element: <Leaderboard/>
+    },
+    {
+      path: '/events/:eventId/user',
+      element: <User/>
+    },
     {
       path: '/events/:eventId/sports',
       element: <SportsTable/>
     },
     {
-      path: '/events/:eventId/sports/:sportId/rules',
-      element: <ListRules/>
-    },
-    {
-      path: '/events/:eventId/sports/:sportId/matches',
+      path: '/events/:eventId/matches',
       element: <Matches/>
     },
     {
-      path: '/events/:eventId/team',
+      path: '/events/:eventId/teams',
       element: <ListTeam/>
-    }
+    },
+    {
+      path: '/events/:eventId/detail',
+      element: <DetailEvents/>
+    },
+
   ]
  }
 ]);

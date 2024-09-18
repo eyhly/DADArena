@@ -39,10 +39,11 @@ const UpdateSport: React.FC<UpdateSportProps> = ({ open, handleClose, sport }) =
   }, [sport, reset]);
 
   const onSubmit = async (data: Omit<Sport, 'id' | 'eventId'>) => {
-    if (sport.id) {
+    if (sport.id && sport.eventId) {
       try {
         await updateSportMutation.mutateAsync({
           id: sport.id,
+          eventId: sport.eventId,
           data: { ...sport, ...data },
         });
 

@@ -3,8 +3,6 @@ import { Event } from "../types/event";
 import { Sport } from "../types/sport";
 import { LoginUser } from "../types/login";
 import { Register } from "../types/register";
-import { Rule } from "../types/rules";
-import { Custom_Rule } from "../types/customRule";
 import {
   postLogin,
   createEvent,
@@ -14,12 +12,6 @@ import {
   updateSport,
   deleteSport,
   postRegister,
-  createRule,
-  updateRule,
-  deleteRule,
-  updateCustomRule,
-  createCustomRule,
-  deleteCustomRule,
   createTeam,
   updateTeam,
   deleteTeam,
@@ -40,6 +32,7 @@ export function useRegister() {
         const result = await postRegister(data);
         return result;
       } catch (error) {
+        console.error("Error to login:", error);
         throw new Error("Failed to register");
       }
     },
@@ -63,7 +56,8 @@ export function useLogin() {
         const result = await postLogin(data);
         return result;
       } catch (error) {
-        throw new Error("Failed to login");
+        console.error("Error to login:", error);
+        throw new Error("Failed to login",);
       }
     },
 
@@ -138,7 +132,8 @@ export function useCreateSport() {
       maxPlayer: number;
       minWomen: number;
       minMen: number;
-      eventId: string;
+      description: string;
+      eventId: string;  
     }) => createSport(data),
 
     onError: () => {
@@ -155,8 +150,8 @@ export function useUpdateSport() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["updateSport"],
-    mutationFn: ({ id, data }: { id: string; data: Sport & {eventId: string} }) =>
-      updateSport(id, data),
+    mutationFn: ({ id, eventId, data }: { id: string; eventId: string; data: Sport & {eventId: string} }) =>
+      updateSport(id, eventId, data),
     onError: () => {
       console.log("error");
     },
@@ -185,111 +180,6 @@ export function useDeleteSport() {
   });
 }
 
-//create rules
-export function useCreateRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["createRule"],
-    mutationFn: (data: {
-      minPlayer: number;
-      maxPlayer: number;
-      minWomen: number;
-      sportId: string;
-    }) => createRule(data),
-
-    onError: () => {
-      console.log("error");
-    },
-
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["rule"] });
-    },
-  });
-}
-
-// update rule
-export function useUpdateRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["updateRule"],
-    mutationFn: ({ id, data }: { id: string; data: Rule }) =>
-      updateRule(id, data),
-    onError: () => {
-      console.log("error");
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["rule"] });
-    },
-  });
-}
-
-//delete rule
-export function useDeleteRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["deleteRule"],
-    mutationFn: (id: string) => deleteRule(id),
-    onError: () => {
-      console.log("error");
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["rule"] });
-    },
-  });
-}
-
-//create custom rule
-export function useCreateCustomRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["createCustomRule"],
-    mutationFn: (data: { description: string; sportId: string }) =>
-      createCustomRule(data),
-    onError: () => {
-      console.log("error");
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["custom_rule"] });
-    },
-  });
-}
-
-//update custom rule
-export function useUpdateCustomRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["updateCustomRule"],
-    mutationFn: ({ id, data }: { id: string; data: Custom_Rule }) =>
-      updateCustomRule(id, data),
-    onError: () => {
-      console.log("error");
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["custom_rule"] });
-    },
-  });
-}
-
-//delete custom rule
-export function useDeleteCustomRule() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["deleteCustomRule"],
-    mutationFn: (id: string) => deleteCustomRule(id),
-    onError: () => {
-      console.log("error");
-    },
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["custom_rule"] });
-    },
-  });
-}
 
 //create team
 export function useCreateTeam() {
@@ -297,7 +187,7 @@ export function useCreateTeam() {
 
   return useMutation({
     mutationKey: ["createTeam"],
-    mutationFn: (data: Team) => createTeam(data),
+    mutationFn: ({eventId, data}:{eventId: string, data: Team}) => createTeam(eventId, data),
     onError: () => {
       console.log("error");
     },
@@ -313,8 +203,8 @@ export function useUpdateTeam() {
 
   return useMutation({
     mutationKey: ["updateTeam"],
-    mutationFn: ({ id, data }: { id: string; data: Team }) =>
-      updateTeam(id, data),
+    mutationFn: ({ id, data, eventId }: { id: string; eventId: string; data: Team }) =>
+      updateTeam(id, eventId, data),
     onError: () => {
       console.log("error");
     },
@@ -330,7 +220,7 @@ export function useDeleteTeam() {
 
   return useMutation({
     mutationKey: ["delete team"],
-    mutationFn: (id: string) => deleteTeam(id),
+    mutationFn: ({id, eventId}:{ id: string, eventId: string}) => deleteTeam(id, eventId),
 
     onError: () => {
       console.log("error");
@@ -347,7 +237,7 @@ export function useCreateMatch() {
 
   return useMutation({
     mutationKey: ['create match'],
-    mutationFn: (data: Match) => createMatch(data),
+    mutationFn: ({eventId, data }:{eventId: string, data: Match}) => createMatch(eventId, data),
     onError: () => {
       console.log('error')
     },
@@ -363,7 +253,7 @@ export function useUpdateMatch() {
 
   return useMutation({
     mutationKey: ['update match'],
-    mutationFn: ({id, data}:{id: string, data: Match}) => updateMatch(id, data), 
+    mutationFn: ({id, data, eventId}:{id: string, eventId: string, data: Match}) => updateMatch(id, eventId, data), 
     onError: () => {
       console.log('error')
     },
@@ -379,7 +269,7 @@ export function useDeleteMatch() {
 
   return useMutation({
     mutationKey: ['delete match'],
-    mutationFn: (id: string) => deleteMatch(id),
+    mutationFn: ({id, eventId}:{id: string, eventId: string}) => deleteMatch(id, eventId),
     onError: () => {
       console.log("error")
     },

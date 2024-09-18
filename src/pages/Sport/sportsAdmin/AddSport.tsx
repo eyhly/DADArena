@@ -17,19 +17,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { Sport } from "../../../types/sport";
 
-// interface FormValues {
-//   title: string;
-//   minPlayer: number;
-//   maxPlayer: number;
-//   minWomen: number;
-//   minMen: number;
-// }
-
 const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
   open,
   handleClose,
 }) => {
-  const { handleSubmit, control } = useForm<Sport>();
+  const { handleSubmit, control, reset } = useForm<Sport>();
   const { eventId } = useParams();
   const createSport = useCreateSport();
   const queryClient = useQueryClient();
@@ -42,6 +34,7 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
         maxPlayer: data.maxPlayer,
         minWomen: data.minWomen,
         minMen: data.minMen,
+        description: data.description,
         eventId: eventId!,
       });
       Swal.fire({
@@ -52,6 +45,7 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
       });
       queryClient.invalidateQueries({ queryKey: ["sports"] });
       handleClose();
+      reset();
     } catch (error) {
       Swal.fire({
         icon: "error",

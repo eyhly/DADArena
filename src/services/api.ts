@@ -5,13 +5,12 @@ import { LoginUser } from "../types/login";
 import { UserLogin } from "../types/user";
 import { Register } from "../types/register";
 import { Team } from "../types/team";
-import { Rule } from "../types/rules";
-import { Custom_Rule } from "../types/customRule";
-import { useAuth0 } from "@auth0/auth0-react";
 import { Match } from "../types/match";
+import { useAuth0 } from "@auth0/auth0-react";
 
-const BASE_URL = "http://192.168.54.12:5000/api";
-// const BASE_URL = "http://localhost:8080";
+const BASE_URL = "http://192.168.54.62:5000/api";
+// const BASE_URL = "http://192.168.0.114:5000/api";
+// const BASE_URL = "http://192.168.54.12:5000/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 //register
@@ -85,6 +84,13 @@ export const getAllEvents = async (): Promise<Event[]> => {
     throw new Error("Failed to fetch events");
   }
 };
+
+//get eventid by name
+export const getEventIdByTitle = async (eventTitle: string): Promise<string> => {
+    const response = await axios.get(`${BASE_URL}/events?title=${eventTitle}`)
+    const eventId = response.data.id;
+    return eventId;
+}
 
 // get event by ID
 export const getEvent = async (id: string): Promise<Event> => {
@@ -245,6 +251,16 @@ export const getAllTeams = async (eventId: string): Promise<Team[]> => {
   });
   return response.data;
 };
+//  get all teams
+// export const getAllTeams = async (eventTitle: string): Promise<Team[]> => {
+//   const eventId = getEventIdByTitle(eventTitle);
+//   const response = await axios.get<Team[]>(`${BASE_URL}/events/${eventId}/teams`, {
+//     headers: {
+//       Authorization: `Bearer ${localStorage.getItem("token")}`,
+//     },
+//   });
+//   return response.data;
+// };
 
 // get teams by ID
 export const getTeam = async (id: string) => {
@@ -257,8 +273,8 @@ export const getTeam = async (id: string) => {
 };
 
 //create teams
-export const createTeam = async (data: Team) => {
-  const response = await axios.post(`${BASE_URL}/teams`, data, {
+export const createTeam = async (eventId: string, data: Team) => {
+  const response = await axios.post(`${BASE_URL}/events/${eventId}/teams`, data, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
@@ -267,8 +283,8 @@ export const createTeam = async (data: Team) => {
 };
 
 //update teams
-export const updateTeam = async (id: string, data: Team) => {
-  const response = await axios.put<Team>(`${BASE_URL}/teams/${id}`, data, {
+export const updateTeam = async (id: string, eventId: string, data: Team) => {
+  const response = await axios.put<Team>(`${BASE_URL}/events/${eventId}/teams/${id}`, data, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
@@ -277,8 +293,8 @@ export const updateTeam = async (id: string, data: Team) => {
 };
 
 //delete teams
-export const deleteTeam = async (id: string) => {
-  const response = await axios.delete(`${BASE_URL}/teams/${id}`, {
+export const deleteTeam = async (id: string, eventId: string ) => {
+  const response = await axios.delete(`${BASE_URL}/events/${eventId}/teams/${id}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
@@ -286,137 +302,10 @@ export const deleteTeam = async (id: string) => {
   return response.data;
 };
 
-//  get all rules
-export const getAllRules = async () => {
-  const response = await axios.get<Rule[]>(`${BASE_URL}/rules`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-// get rule by ID
-export const getRule = async (id: string) => {
-  const response = await axios.get<Rule>(`${BASE_URL}/rules/${id}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//create rule
-//get sportid
-export const createRule = async (data: {
-  minPlayer: number;
-  maxPlayer: number;
-  minWomen: number;
-  sportId: string;
-}) => {
-  const response = await axios.post(`${BASE_URL}/rules`, data, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//update rule
-export const updateRule = async (id: string, data: Rule) => {
-  const response = await axios.put<Rule>(`${BASE_URL}/rules/${id}`, data, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//delete rule
-export const deleteRule = async (id: string) => {
-  const response = await axios.delete(`${BASE_URL}/rules/${id}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//get all custom rule
-export const getAllCustomRule = async () => {
-  const response = await axios.get<Custom_Rule[]>(`${BASE_URL}/customRule`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-// get custom rule by id
-export const getCustomRule = async (id: string) => {
-  const response = await axios.get<Custom_Rule[]>(
-    `${BASE_URL}/customRule/${id}`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    }
-  );
-  return response.data;
-};
-
-//create custom rule
-export const createCustomRule = async (data: Custom_Rule) => {
-  const response = await axios.post(`${BASE_URL}/customRule`, data, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//update custom rule
-export const updateCustomRule = async (id: string, data: Custom_Rule) => {
-  const response = await axios.put<Custom_Rule>(
-    `${BASE_URL}/customRule/${id}`,
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    }
-  );
-  return response.data;
-};
-
-//delete custom rule
-export const deleteCustomRule = async (id: string) => {
-  const response = await axios.delete(`${BASE_URL}/customRule/${id}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-  return response.data;
-};
-
-//get all match
-export const getAllMatches = async (eventId: string, sportId: string): Promise<Match[]> => {
-  try {
-    const response = await axios.get<Match[]>(`${BASE_URL}/events/${eventId}/sports/${sportId}/matches`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching matches:", error);
-    throw new Error("Failed to fetch matches");
-  }
-};
-//get all match
-// export const getAllMatches = async () => {
+// //get all match
+// export const getAllMatches = async (eventId: string, sportId: string): Promise<Match[]> => {
 //   try {
-//     const response = await axios.get<Match[]>(`${BASE_URL}/matches`, {
+//     const response = await axios.get<Match[]>(`${BASE_URL}/events/${eventId}/sports/${sportId}/matches`, {
 //       headers: {
 //         Authorization: `Bearer ${localStorage.getItem("token")}`,
 //       },
@@ -427,6 +316,20 @@ export const getAllMatches = async (eventId: string, sportId: string): Promise<M
 //     throw new Error("Failed to fetch matches");
 //   }
 // };
+//get all match
+export const getAllMatches = async (eventId: string): Promise<Match[]> => {
+  try {
+    const response = await axios.get<Match[]>(`${BASE_URL}/events/${eventId}/matches`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) { 
+    console.error("Error fetching matches:", error);
+    throw new Error("Failed to fetch matches");
+  }
+};
 
 //get match by id
 export const getMatch = async (id: string): Promise<Match> => {
@@ -444,8 +347,8 @@ export const getMatch = async (id: string): Promise<Match> => {
 };
 
 //create match
-export const createMatch = async (data: Match) => {
-  const response = await axios.post(`${BASE_URL}/matches`, data, {
+export const createMatch = async (eventId: string, data: Match) => {
+  const response = await axios.post(`${BASE_URL}/events/${eventId}/matches`, data, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
     }
@@ -454,8 +357,8 @@ export const createMatch = async (data: Match) => {
 }
 
 //update match
-export const  updateMatch = async (id: string, data: Match) => {
-  const response = await axios.put<Match>(`${BASE_URL}/matches/${id}`, data, {
+export const  updateMatch = async (id: string, eventId: string, data: Match) => {
+  const response = await axios.put<Match>(`${BASE_URL}/events/${eventId}/matches/${id}`, data, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`
     }
@@ -464,8 +367,8 @@ export const  updateMatch = async (id: string, data: Match) => {
 }
 
 //delete match 
-export const deleteMatch = async (id : string) => {
-  const response = await axios.delete(`${BASE_URL}/matches/${id}`, {
+export const deleteMatch = async (id : string, eventId: string) => {
+  const response = await axios.delete(`${BASE_URL}/events/${eventId}/matches/${id}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token')}`
     }
