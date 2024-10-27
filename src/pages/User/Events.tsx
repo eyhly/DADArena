@@ -8,7 +8,7 @@ import Typography from "@mui/material/Typography";
 import { Container, Grid, CircularProgress } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { Event } from "../../types/event";
-import ColorTheme from "../../utils/ColorTheme";
+import ColorTheme from "../../utils/colorTheme";
 
 const Events = () => {
   const { data, isLoading, isError } = useGetAllEvents();

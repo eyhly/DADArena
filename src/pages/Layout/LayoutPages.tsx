@@ -1,5 +1,5 @@
 import React from 'react'
-import SidebarAdmin from '../Sidebar/SidebarAdmin'
+import SidebarAdmin from '../Navigation/SidebarAdmin'
 import { Outlet } from 'react-router-dom'
 
 const LayoutPages = () => {
@@ -7,7 +7,7 @@ const LayoutPages = () => {
     <div>
         <SidebarAdmin/>
         <Outlet/>
-    </div>
+    </div>  
   )
 }
 

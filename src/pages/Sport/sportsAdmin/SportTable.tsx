@@ -23,26 +23,25 @@ import {
   styled,
   tableCellClasses,
   Button,
-  ThemeProvider,
   Tooltip,
+  Container,
 } from "@mui/material";
-// import ScoreboardIcon from '@mui/icons-material/Scoreboard';
+// import ScoreboardIcon from '@mui/icons-material/Diversity3';
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import EditCalendarOutlined from "@mui/icons-material/EditCalendarOutlined";
+import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Swal from "sweetalert2";
 import { useDeleteSport } from "../../../services/mutation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Sport } from "../../../types/sport";
-import AddSport from "./AddSport"; 
-import ColorTheme from "../../../utils/ColorTheme";
+import AddSport from "./AddSport";
 import UpdateSport from "./UpdateSport";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { LogoutOutlined } from "@mui/icons-material";
+import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
-// import DetailEvents from "../../Events/eventsAdmin/DetailEvents";
+// import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -63,7 +62,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 const SportsTable: React.FC = () => {
-  const { eventId } = useParams<{eventId: string}>();
+  const { eventId } = useParams<{ eventId: string }>();
   const { data, isLoading, isError } = useGetAllSports(eventId!);
   const queryClient = useQueryClient();
   const deleteSport = useDeleteSport();
@@ -73,9 +72,6 @@ const SportsTable: React.FC = () => {
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false); //description rule
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const navigate = useNavigate();
-  const handleBack = () => {
-    navigate(-1);
-  };
 
   const filteredData = React.useMemo(
     () => data?.filter((sport) => sport.eventId === eventId) ?? [],
@@ -104,35 +100,40 @@ const SportsTable: React.FC = () => {
       cancelButtonText: "Cancel",
     });
     if (confirmation.isConfirmed) {
-      try {
-        await deleteSport.mutateAsync({id, eventId});
-        queryClient.invalidateQueries({ queryKey: ["sports", eventId] });
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Sport deleted successfully!",
-          confirmButtonText: "Ok",
-        });
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text:
-            error instanceof Error
-              ? error.message
-              : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
-        });
-      }
+      await deleteSport.mutateAsync(
+        { id, eventId },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["sports", eventId] });
+            Swal.fire({
+              icon: "success",
+              title: "Success",
+              text: "Sport deleted successfully!",
+              confirmButtonText: "Ok",
+            });
+          },
+          onError: (error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Failed!",
+              text:
+                error instanceof Error
+                  ? error.message
+                  : "An unexpected error occurred.",
+              confirmButtonText: "Ok",
+            });
+          },
+        }
+      );
     }
   };
 
   const columns = React.useMemo<ColumnDef<Sport>[]>(
     () => [
-      {
-        accessorFn: (row, i) => i + 1,
-        header: "No",
-      },
+      // {
+      //   accessorFn: (row, i) => i + 1,
+      //   header: "No",
+      // },
       {
         accessorKey: "title",
         header: "Title ",
@@ -159,22 +160,35 @@ const SportsTable: React.FC = () => {
         cell: ({ row }) => (
           <>
             <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
-             <EditCalendarOutlined /> {/*  Update */}
+              <EditOutlined /> {/*  Update */}
             </Button>
             <Button
-              onClick={() => handleDelete(row.original.id, row.original.eventId)}
+              onClick={() =>
+                handleDelete(row.original.id, row.original.eventId)
+              }
               sx={{ color: "red" }}
             >
               <DeleteOutlineOutlined /> {/*Delete*/}
             </Button>
-            <Tooltip title='More Rules' placement="right">
-            <Button onClick={() => handleOpenDescriptionModal(row.original)} sx={{ color: "#24aed4" }}>
-              <VisibilityOutlinedIcon /> {/*More Rules*/}
-            </Button>
+            <Tooltip title="More Rules" placement="top">
+              <Button
+                onClick={() => handleOpenDescriptionModal(row.original)}
+                sx={{ color: "#24aed4" }}
+              >
+                <VisibilityOutlinedIcon /> {/*More Rules*/}
+              </Button>
             </Tooltip>
-            {/* <Button onClick={() => navigate(`/events/${eventId}/sports/${row.original.id}/matches`)}>
-            <ScoreboardIcon />
-            </Button> */}
+            <Tooltip title="Sport Player" placement="top">
+              <Button
+                onClick={() =>
+                  navigate(
+                    `/events/${eventId}/sports/${row.original.id}/sportplayers`
+                  )
+                }
+              >
+                <Diversity3 />
+              </Button>
+            </Tooltip>
           </>
         ),
       },
@@ -211,16 +225,13 @@ const SportsTable: React.FC = () => {
           Failed to load sports
         </Typography>
       </Box>
-    ); 
+    );
   }
 
   if (filteredData.length === 0) {
     return (
-      <ThemeProvider theme={ColorTheme}>
-        <Box sx={{ textAlign: "center", marginTop: 3,ml: 90 }}>
-        <Typography variant="h6">
-          No sports found for this event
-        </Typography>
+      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+        <Typography variant="h6">No sports found for this event</Typography>
         <Button
           size="small"
           variant="contained"
@@ -229,30 +240,31 @@ const SportsTable: React.FC = () => {
         >
           <AddOutlinedIcon /> Create Sport
         </Button>
+        {/* modal add sport */}
         <AddSport open={open} handleClose={() => setOpen(false)} />
       </Box>
-      </ThemeProvider>
-      
     );
   }
 
   return (
-    <ThemeProvider theme={ColorTheme}>
-      {/* <DetailEvents/> */}
-      <Typography variant="h3" sx={{ ml: 90, mb: 3 }}>
+    <Container sx={{ textAlign: "center", marginTop: 3, ml: 50 }}>
+      <Typography variant="h3" sx={{ color: "black" }}>
         List Sport
       </Typography>
       <Button
         size="small"
         variant="contained"
-        sx={{ mb: 2, maxHeight: 50, ml: 145, maxWidth: "100%" }}
+        sx={{ mb: 2, mt: 5, maxHeight: 50, ml: 90, maxWidth: "100%" }}
         onClick={() => setOpen(true)}
       >
         <AddOutlinedIcon /> Create Sport
       </Button>
       <AddSport open={open} handleClose={() => setOpen(false)} />
-      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 1000 }}>
-        <Table aria-label="customized collapsible table">
+      <TableContainer
+        component={Paper}
+        sx={{ maxWidth: 1000, maxHeight: 400, overflow: "auto" }}
+      >
+        <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -295,9 +307,6 @@ const SportsTable: React.FC = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Button onClick={handleBack} variant="contained">
-        <LogoutOutlined /> Back
-      </Button>
 
       {/* update sport modal */}
       {selectedSport && (
@@ -314,7 +323,7 @@ const SportsTable: React.FC = () => {
         handleClose={() => setDescriptionModalOpen(false)}
         sport={selectedSport}
       />
-    </ThemeProvider>
+    </Container>
   );
 };
 

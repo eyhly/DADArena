@@ -1,38 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { DialogContent, Button, Dialog, TextField, Typography } from '@mui/material';
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Button,
+  Box,
+} from '@mui/material';
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { useUpdateTeam } from '../../../services/mutation';
 import { useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
 import { Team } from '../../../types/team';
 
 interface UpdateModalProps {
-  eventId: string;
   open: boolean;
   onClose: () => void;
   selectedTeam: Team | null;
+  eventId: string;
 }
 
-const UpdateTeam: React.FC<UpdateModalProps> = ({ eventId, open, onClose, selectedTeam }) => {
-  const [teamName, setTeamName] = useState('');
-  const queryClient = useQueryClient();
+const UpdateTeam: React.FC<UpdateModalProps> = ({ open, onClose, selectedTeam }) => {
+  const { eventId } = useParams<{ eventId: string }>(); 
+  const { handleSubmit, control, reset } = useForm<Team>({
+    defaultValues: selectedTeam || {}
+  });
   const updateTeam = useUpdateTeam();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (selectedTeam) {
-      setTeamName(selectedTeam.name);
+      reset(selectedTeam);
     }
-  }, [selectedTeam]);
+  }, [selectedTeam, reset]);
 
-  const handleUpdateTeam = async () => {
-    if (!teamName || !selectedTeam) return;
-
-    try {
-      await updateTeam.mutateAsync({
-        id: selectedTeam.id,
-        data: { ...selectedTeam, name: teamName }, // Mengirim data yang benar
-        eventId
-      });
-      queryClient.invalidateQueries({ queryKey: ['teams', eventId] });
+  const onSubmit: SubmitHandler<Team> = async (data) => {
+    if (!eventId) return; 
+    updateTeam.mutateAsync({ id: data.id, data, eventId },
+      {
+        onSuccess: () => {
       Swal.fire({
         icon: 'success',
         title: 'Success!',
@@ -40,33 +47,44 @@ const UpdateTeam: React.FC<UpdateModalProps> = ({ eventId, open, onClose, select
         confirmButtonText: 'Ok',
       });
       onClose();
-    } catch (error) {
+      queryClient.invalidateQueries({queryKey:['teams', eventId]});
+    }, 
+    onError: (error) => {
       Swal.fire({
         icon: 'error',
-        title: 'Error',
+        title: 'Error!',
         text: error instanceof Error ? error.message : 'Failed to update team!',
         confirmButtonText: 'Ok',
       });
       onClose();
     }
+  })
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
+      <DialogTitle variant="h6" component="h2" >
+        Update Team
+      </DialogTitle>
       <DialogContent>
-        <Typography variant="h6" mb={2}>
-          Update Team
-        </Typography>
-        <TextField
-          label="Team Name"
-          value={teamName}
-          onChange={(e) => setTeamName(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
-        <Button variant="contained" onClick={handleUpdateTeam}>
-          Update
-        </Button>
+        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Team Name"
+                variant="outlined"
+                fullWidth
+                sx={{ mt: 2 }}
+              />
+            )}
+          />
+          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+            Update Team
+          </Button>
+        </Box>
       </DialogContent>
     </Dialog>
   );

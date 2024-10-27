@@ -1,20 +1,25 @@
 import { createBrowserRouter } from 'react-router-dom';
+// import history from "./utils/history"
 import Login from './pages/Auth/Login';
 import EventsPage from './pages/Events/eventsAdmin/EventsPage';
-// import DashboardAdmin from './pages/Dashboard/AdminDashboard';
 import LayoutPages from './pages/Layout/LayoutPages';
 import AddEventPage from './pages/Events/eventsAdmin/AddEvent';
 import LandingPage from './pages/User/LandingPage';
 import SportsTable from './pages/Sport/sportsAdmin/SportTable';
 import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
-// import { SignIn, SignUp } from '@clerk/clerk-react';
 import ListTeam from './pages/Team/ListTeam';
 import LoginButton from './pages/Auth/LoginButton';
 import Matches from './pages/Match/matchAdmin/Matches';
-import DetailEvents from './pages/Events/eventsAdmin/DetailEvents';
-import Attandance from './pages/Attandance/Attandance';
+import SettingEvents from './pages/Events/eventsAdmin/SettingEvents';
+import Attendance from './pages/Attendance/Attendance';
 import Leaderboard from './pages/Leaderboard/Leaderboard';
-import User from './pages/User/User';
+import Recap from './pages/Point/Recap';
+import Schedules from './pages/Attendance/Schedules';
+import ExtraPointPage from './pages/Point/ExtraPoint';
+import TeamMembers from './pages/Team/TeamMember/TeamMembers';
+import SportPlayerTable from './pages/Sport/Player/SportPlayer';
+import DataUser from './pages/User/DataUser';
+import DetailMatchPoint from './pages/Point/DetailMatchPoint';
 
 const router = createBrowserRouter([
   {
@@ -41,6 +46,10 @@ const router = createBrowserRouter([
     path: '/events',
     element: <EventsPage/>
   },
+  {
+    path: '/events/add',
+    element: <AddEventPage/>
+  },
   // {
   //   path: '/register',
   //   element: <Register />,
@@ -55,16 +64,16 @@ const router = createBrowserRouter([
     //   element: <EventsPage/>
     // },
     {
-      path: '/events/add',
-      element: <AddEventPage/>
-    },
-    {
       path: '/events/edit/:eventId',
       element: <UpdateEvent/>
     },
     {
-      path: '/events/:eventId/absensi',
-      element: <Attandance/>
+      path: '/events/:eventId/schedules',
+      element: <Schedules/>
+    },
+    {
+      path: '/events/:eventId/schedules/:scheduleId/attendances',
+      element: <Attendance/>
     },
     {
       path: '/events/:eventId/leaderboard',
@@ -72,11 +81,15 @@ const router = createBrowserRouter([
     },
     {
       path: '/events/:eventId/user',
-      element: <User/>
+      element: <DataUser/>
     },
     {
       path: '/events/:eventId/sports',
       element: <SportsTable/>
+    },
+    {
+      path: '/events/:eventId/sports/:sportId/sportplayers',
+      element: <SportPlayerTable/>
     },
     {
       path: '/events/:eventId/matches',
@@ -87,12 +100,27 @@ const router = createBrowserRouter([
       element: <ListTeam/>
     },
     {
-      path: '/events/:eventId/detail',
-      element: <DetailEvents/>
+      path: '/events/:eventId/teams/:teamId/teamMembers',
+      element: <TeamMembers/>
     },
-
-  ]
- }
-]);
+    {
+      path: '/events/:eventId/detail',
+      element: <SettingEvents/>
+    },
+    {
+      path: '/events/:eventId/recap',
+      element: <Recap/>
+    },
+    {
+      path: '/events/:eventId/recap/:teamId/extrapoints',
+      element: <ExtraPointPage/>
+    },
+    {
+      path: '/events/:eventId/recap/:teamId/detailmatchpoints',
+      element: <DetailMatchPoint/>
+    }, 
+  ],  
+ } 
+]); 
 
 export default router;

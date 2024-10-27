@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled, ThemeProvider } from '@mui/material/styles';
-import ColorTheme from '../../utils/ColorTheme';
+import ColorTheme from '../../utils/colorTheme';
 
 interface AppBarProps {
   onMenuClick: () => void;

@@ -12,8 +12,6 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
-import ColorTheme from "../../../utils/ColorTheme";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
@@ -27,6 +25,25 @@ import AddMatch from "./AddMatch";
 import UpdateMatch from "./UpdateMatch";
 import { useGetAllMatches } from "../../../services/queries";
 
+const renderDate = (dateString: string) => {
+  if (!dateString) return 'Unknown Date';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.toLocaleString('en-US', { month: 'long' });
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day} ${month} ${year} ${hours}:${minutes}`;
+};
+
+const renderTime = (dateString: string) => {
+  if (!dateString) return 'Unknown Time';
+  const date = new Date(dateString);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`
+}
+
 const Matches = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const queryClient = useQueryClient();
@@ -38,18 +55,20 @@ const Matches = () => {
   const [isUpdateMatchModalOpen, setUpdateMatchModalOpen] = useState(false);
   const [currentMatch, setCurrentMatch] = useState<Match | null>(null);
   const formatStatus = (status: string) => {
-    // format for status
+    if (!status) {
+      return '';
+    }
+    // format untuk status
     return status
       .replace(/([A-Z])/g, ' $1')  
       .replace(/^./, (str) => str.toUpperCase());  
   };
 
-  // States for filtering
+  // filter match berdasarkan week status dan sport
   const [weekFilter, setWeekFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [sportFilter, setSportFilter] = useState<string[]>([]);
 
-  //
   const [anchorElWeek, setAnchorElWeek] = useState<null | HTMLElement>(null);
   const [anchorElStatus, setAnchorElStatus] = useState<null | HTMLElement>(null);
   const [anchorElSport, setAnchorElSport] = useState<null | HTMLElement>(null);
@@ -66,8 +85,9 @@ const Matches = () => {
       cancelButtonText: "Cancel",
     });
     if (confirmation.isConfirmed) {
-      try {
-        await deleteMatch.mutateAsync({id, eventId});
+      deleteMatch.mutateAsync({id, eventId}, 
+        {
+          onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['matches', eventId] });
         Swal.fire({
           icon: "success",
@@ -75,7 +95,8 @@ const Matches = () => {
           text: "Match deleted successfully!",
           confirmButtonText: "Ok",
         });
-      } catch (error) {
+          }, 
+          onError: (error) => { 
         Swal.fire({
           icon: "error",
           title: "Failed!",
@@ -83,11 +104,15 @@ const Matches = () => {
           confirmButtonText: "Ok",
         });
       }
-    }
+        }
+    )}
   };
 
   const openAddMatchModal = () => {
+    console.log('testing');
+    
     setAddMatchModalOpen(true);
+
   };
 
   const closeAddMatchModal = () => {
@@ -126,7 +151,7 @@ const Matches = () => {
     );
   };
 
-  // Get unique values for week, status, and sportTitle from the matches data
+  // for define filter by week, status, or sport  
   const uniqueWeeks = useMemo(() => {
     return [...new Set(matches?.map((match) => match.week.toString()))];
   }, [matches]);
@@ -139,7 +164,7 @@ const Matches = () => {
     return [...new Set(matches?.map((match) => match.sportTitle))];
   }, [matches]);
 
-  // Filter matches based on selected filters
+  // for filter matches by  week, status, or sport
   const filteredMatches = matches?.filter((match: Match) => {
     const weekMatch = weekFilter.length === 0 || weekFilter.includes(match.week.toString());
     const statusMatch = statusFilter.length === 0 || statusFilter.includes(match.status);
@@ -171,8 +196,6 @@ const Matches = () => {
     setAnchorElSport(null);
   };
 
-
-
   if (matchesLoading) {
     return (
       <Container sx={{ textAlign: "center", marginTop: 4 }}>
@@ -196,23 +219,22 @@ const Matches = () => {
 
   if (matches && matches.length === 0) {
     return (
-      <ThemeProvider theme={ColorTheme}>
-        <Container sx={{ textAlign: "center", marginTop: 3, ml: 60 }}>
+        <Container sx={{ textAlign: "center", marginTop: 3, ml: 60}}>
         <Typography variant="h6">No matches found for this event.</Typography>
         <Button size="small" variant="contained" sx={{ maxHeight: 50, maxWidth: '100%', mt:2 }} onClick={openAddMatchModal}>
         <AddOutlinedIcon /> Create Match
       </Button>
+      <AddMatch open={isAddMatchModalOpen} handleClose={closeAddMatchModal} />
       </Container>
-      </ThemeProvider>
       
     );
   }
 
   return (
-    <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h4" sx={{  ml: 42, mb: 3, fontWeight: 500}}>List Matches</Typography>
+    <Container>
       {/* Filter Section */}
-      <Container sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, ml: 40 }}>
+      <Typography variant="h4" sx={{  ml: 42, mb: 3, mt: 10, fontWeight: 500}}>List Matches</Typography>
+      <Container sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, ml: 40, minWidth: 1200 }}>
         
         <Box>
           <Typography variant="h6">Sort By : </Typography>
@@ -237,7 +259,6 @@ const Matches = () => {
           ))}
         </Menu>
         
-
         {/* Status Filter */}
         <Button onClick={handleOpenStatusMenu} variant="text"  >
           Status 
@@ -293,29 +314,32 @@ const Matches = () => {
         </Button>
         </Box>
       </Container>
-      <Container sx={{ mt: 4, ml: 40 }}>
+      <Container sx={{ mt: 4, ml: 40, minHeight: 550  }}>
         <Grid container spacing={4}>
           {filteredMatches?.map((match: Match) => (
             <Grid item xs={12} sm={6} md={4} key={match.id}>
-              <Paper elevation={3} sx={{ padding: 3}}>
-                <Box mt={2} sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Grid item xs={6} sx={{ mt: -2, mb: 2,  maxWidth: 400, maxHeight: "100%"  }}>
-                    <Typography variant="h6" sx={{ mb: 1 }}>
+              <Paper elevation={3} sx={{ padding: 3, minWidth: 350}}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2, mb: 2 }}>
+                  <Grid item xs={6} sx={{ mt: -2, mb: 2, maxHeight: "100%"  }}>
+                    <Typography variant="h6" >
                       {match.sportTitle}
                     </Typography>
-                    <Typography variant="body1" color="textSecondary">
-                      {new Date(match.date).toLocaleDateString()}
-                    </Typography>
+                    <Typography>
+                     week {match.week}
+                  </Typography>
                   </Grid>
+                  <Grid item xs={4} sx={{display: 'flex', flexDirection: 'column', textAlign: 'right'}}> 
                   <Typography variant="body1" color="blue">
                     {formatStatus(match.status)}
                   </Typography>
+                  
+                  </Grid>
                 </Box>
                 <Grid container spacing={3} sx={{ textAlign: "center" }}>
                   <Grid item xs={4}>
                     <Typography variant="h6">{match.teamRedName}</Typography>
                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                      {match.teamRedScore ?? 0}
+                      {match.teamRedFinalScore ?? 0}
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
@@ -324,13 +348,17 @@ const Matches = () => {
                   <Grid item xs={4}>
                     <Typography variant="h6">{match.teamBlueName}</Typography>
                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-                      {match.teamBlueScore ?? 0}
+                      {match.teamBlueFinalScore ?? 0}
                     </Typography>
                   </Grid>
                 </Grid>
-                <Typography variant="body2" color="textSecondary" sx={{ mt: 2, display: 'flex' }}>
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 3, display: 'flex' }}>
                   <FmdGoodOutlinedIcon/> {match.venue}
                 </Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ml: 1}}>
+                      {renderDate(match.startTime)} - {renderTime(match.endTime)}
+
+                    </Typography>
                 <Box sx={{ display: "flex", mt: 3, mb: -1 }}>
                   <Button
                     size="small"
@@ -352,9 +380,10 @@ const Matches = () => {
             </Grid>
           ))}
         </Grid>
+        <AddMatch open={isAddMatchModalOpen} handleClose={closeAddMatchModal} />
       </Container>
 
-      <AddMatch open={isAddMatchModalOpen} handleClose={closeAddMatchModal} />
+     
       {currentMatch && (
         <UpdateMatch
           open={isUpdateMatchModalOpen}
@@ -362,7 +391,7 @@ const Matches = () => {
           matchData={currentMatch}
         />
       )}
-    </ThemeProvider>
+    </Container>
   );
 };
 

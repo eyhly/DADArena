@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ReactElement, useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -16,33 +16,45 @@ import {
   Grid,
   Card,
   CardContent,
+  CardActions,
+  Button,
 } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { useGetAllEvents } from "../../services/queries";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import Slide from "@mui/material/Slide";
-import ColorTheme from "../../utils/ColorTheme";
-import Banner from "../../../public/img/banner.png";
-import Logo from "../../../public/img/logo.png";
-import { AccountCircle } from "@mui/icons-material";
+import ColorTheme from "../../utils/colorTheme";
+import Banner from "/img/banner.png";
+import Logo from "/img/logo.png";
+import { AccountCircle, ArrowCircleRightOutlined, DeleteOutlineOutlined, EditCalendarOutlined } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
-// import { useNavigate } from "react-router-dom";
 import { Event } from "../../types/event";
-import { useAuth0 } from "@auth0/auth0-react";  // Import Auth0 hook
+// import { useAuth0 } from "../../auth0";
 import { useNavigate } from "react-router-dom";
+import { useDeleteEvent } from "../../services/mutation";
+import Swal from "sweetalert2";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth0 } from "@auth0/auth0-react";
+
+interface HideScrollProps {
+  children: ReactElement;
+  window?: () => Window
+}
 
 const LandingPage = () => {
   const { isLoading, isError } = useGetAllEvents();
-  // const navigate = useNavigate();
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [eventTab, setEventTab] = useState(0);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
   const { data: events } = useGetAllEvents();
   const navigate = useNavigate();
+  const deleteEvent = useDeleteEvent();
+  const queryClient = useQueryClient();
+
+  const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();  
+  console.log(isAuthenticated, 'authenticeeeeet')
   
-  // Auth0 hooks
-  const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
   const handleChange = (event: React.SyntheticEvent, newEvent: number) => {
     setEventTab(newEvent);
@@ -81,6 +93,13 @@ const LandingPage = () => {
     }
   }, [eventTab, events]);
 
+  // useEffect(() => {
+  //   // If the user is not authenticated, redirect to login
+  //   if (!isAuthenticated) {
+  //     loginWithRedirect();
+  //   }
+  // }, [isAuthenticated, loginWithRedirect]);
+
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -90,8 +109,45 @@ const LandingPage = () => {
   };
 
   const handleLogout = () => {
-    logout({logoutParams:{ returnTo: window.location.origin,
+    localStorage.removeItem('access_token')
+    console.log('access token has removed');
+    
+     logout({logoutParams:{ returnTo: window.location.origin,
      }})
+    //   // loginWithRedirect();
+
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmation = await Swal.fire({
+      title: "Are you sure want to delete this event?",
+      text: "You can canceled!.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+    if (confirmation.isConfirmed) {
+      try {
+        await deleteEvent.mutateAsync(id);
+        queryClient.invalidateQueries({ queryKey: ['events']});
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Event deleted successfully!",
+          confirmButtonText: "Ok",
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: error instanceof Error ? error.message : "An unexpected error occurred.",
+          confirmButtonText: "Ok",
+        });
+      }
+    }
   };
 
   if (isLoading) {
@@ -107,16 +163,18 @@ const LandingPage = () => {
 
   if (isError) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 8 }}>
+      <Container sx={{ textAlign: "center", marginTop: 8, ml : 55 }}>
         <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
           Failed to load events
+          <Button onClick={()=> {handleLogout()}}>logout</Button>
         </Typography>
+          <Button onClick={() => loginWithRedirect()}>login</Button>
       </Container>
     );
   }
 
 
-  function HideOnScroll(props: any) {
+  function HideOnScroll(props: HideScrollProps) {
     const { children, window } = props;
     const trigger = useScrollTrigger({
       target: window ? window() : undefined,
@@ -171,7 +229,7 @@ const LandingPage = () => {
                     <MenuItem>
                       <Typography>{user?.email}</Typography>
                     </MenuItem>
-                    <MenuItem onClick={handleLogout}>
+                    <MenuItem onClick={()=> {handleLogout()}}>
                       <Typography sx={{ textAlign: "center", display: "flex" }}>
                         <LogoutIcon />
                         Logout
@@ -179,10 +237,21 @@ const LandingPage = () => {
                     </MenuItem>
                   </>
                 ) : (
-                  <MenuItem onClick={() => loginWithRedirect()}>
-                    <Typography>Login</Typography>
-                  </MenuItem>
-                )}
+                  <>
+                    <MenuItem onClick={() => loginWithRedirect()}>
+                      <Typography>Login</Typography>
+                    </MenuItem>
+                    <MenuItem>
+                    <Typography>{user?.email}</Typography>
+                    </MenuItem>
+                    <MenuItem onClick={handleLogout}>
+                    <Typography sx={{ textAlign: "center", display: "flex" }}>
+                      <LogoutIcon />
+                      Logout
+                    </Typography>
+                    </MenuItem>
+                    </>
+                ) }
               </Menu>
             </Box>
           </Toolbar>
@@ -207,6 +276,15 @@ const LandingPage = () => {
           <Typography variant="h6" component="div" sx={{ mt: 1 }}>
             Check out the latest events happening near you!
           </Typography>
+          <Button variant="contained" sx={{mt: 2}}
+          onClick={() => navigate(`/events`)}
+          >
+            <ArrowCircleRightOutlined/>
+            See All Events
+          </Button>
+          <Button onClick={()=> {handleLogout()}}>
+            logout
+          </Button>
         </Box>
 
         {/* Banner Section */}
@@ -249,12 +327,18 @@ const LandingPage = () => {
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => (
                 <Grid item xs={12} sm={6} md={4} key={event.id}>
-                  <Card sx={{ maxWidth: 400, maxHeight: "100%" }} onClick={() => navigate(`/events/${event.id}/matches`)}>
+                  <Card sx={{ maxWidth: 400, maxHeight: "100%", "&:hover": {
+                    transform: 'scale(1.05)',
+                    transition: 'transform 0.3s ease-in-out'
+                  },
+                  cursor:'pointer'
+                  }}>
                     <CardMedia
                       component="img"
                       alt={event.title}
                       height="200"
                       image={event.image}
+                      onClick={() => navigate(`/events/${event.id}/matches`)}
                     />
                     <CardContent sx={{ height: 100, overflow: "hidden" }}>
                       <Typography gutterBottom variant="h5" component="div">
@@ -267,11 +351,24 @@ const LandingPage = () => {
                         {formatStatus(event.status)}
                       </Typography>
                     </CardContent>
+                    <CardActions>
+                  <Button variant="outlined" size="small">
+                    Detail
+                  </Button>
+                  <Button size="small" onClick={()=> navigate(`/events/edit/${event.id}`)}>
+                    <EditCalendarOutlined />
+                    Update
+                  </Button>
+                  <Button size="small" sx={{ color: "red" }} onClick={() => handleDelete(event.id)}>
+                    <DeleteOutlineOutlined />
+                    Delete
+                  </Button>
+                </CardActions>
                   </Card>
                 </Grid>
               ))
             ) : (
-              <p>No events available</p>
+              <Typography>No events available</Typography>
             )}
           </Grid>
         </Box>

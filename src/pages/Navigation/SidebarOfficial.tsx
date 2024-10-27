@@ -19,7 +19,7 @@ import ScoreboardIcon from '@mui/icons-material/Scoreboard';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ColorTheme from '../../utils/ColorTheme';
+import ColorTheme from '../../utils/colorTheme';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Button } from '@mui/material';
 import { LoginOutlined } from '@mui/icons-material';

@@ -1,23 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   TextField,
   Button,
   Alert,
-  ThemeProvider,
   MenuItem,
   Dialog,
   DialogContent,
   DialogTitle,
   Grid,
+  Box,
+  Typography,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { useCreateMatch } from "../../../services/mutation";
 import { useParams } from "react-router-dom";
-import ColorTheme from "../../../utils/ColorTheme";
 import Swal from "sweetalert2";
 import { Match } from "../../../types/match";
 import { useGetAllSports, useGetAllTeams } from "../../../services/queries";
 import { useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { matchSchema } from "../../../utils/schema";
 
 interface AddMatchModalProps {
   open: boolean;
@@ -30,19 +32,19 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
   const { data: teams } = useGetAllTeams(eventId!);
   const { mutate } = useCreateMatch();
   const [error, setError] = React.useState<string | null>(null);
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().slice(0, 16);
   const queryClient = useQueryClient();
+  const [startTime, setStartTime] = useState<string>("")
 
-  const { handleSubmit, control, watch } = useForm<Match>({
+  const { handleSubmit, control, watch, reset, formState: {errors} } = useForm<Match>({
     defaultValues: {
       sportId: "",
       teamRedId: "",
       teamBlueId: "",
-      teamRedScore: 0,
-      teamBlueScore: 0,
       venue: "",
-      date: today,
-    },
+      startTime: today,
+      endTime: today,
+    }, resolver: zodResolver(matchSchema)
   });
 
   const teamRedId = watch("teamRedId");
@@ -50,7 +52,7 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toISOString(); 
+    return date.toISOString();
   };
 
   const onSubmit = (data: Match) => {
@@ -61,40 +63,45 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
 
     const formattedData = {
       ...data,
-      date: formatDate(data.date),
+      week: Number(data.week),
+      startTime: formatDate(data.startTime),
+      endTime: formatDate(data.endTime),
     };
 
     console.log("Submitting data:", formattedData);
-    mutate({ eventId, data: formattedData }, {
-      
-      onSuccess: () => {
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Match added successfully!",
-          confirmButtonText: "Ok",
-        });
-        handleClose();
-        queryClient.invalidateQueries({ queryKey: ['matches', eventId] });
-      },
-      onError: (error) => {
-        console.log("Error:", error); // Log error for debugging
-        setError("An error occurred while adding the match. Please try again.");
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: error instanceof Error ? error.message : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
-        });
-        handleClose();
-      },
-    });
+    mutate(
+      { eventId, data: formattedData },
+      {
+        onSuccess: () => {
+          Swal.fire({
+            icon: "success",
+            title: "Success",
+            text: "Match added successfully!",
+            confirmButtonText: "Ok",
+          });
+          handleClose();
+          reset();
+          queryClient.invalidateQueries({ queryKey: ["matches", eventId] });
+        },
+        onError: (error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Failed!",
+            text:
+              error instanceof Error
+                ? error.message
+                : "An unexpected error occurred.",
+            confirmButtonText: "Ok",
+          });
+          handleClose();
+        },
+      }
+    );
   };
 
   return (
-    <ThemeProvider theme={ColorTheme}>
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle variant="h6" component="h2" sx={{ mb: 2 }}>
+        <DialogTitle variant="h6" component="h2">
           Add Match
         </DialogTitle>
         <DialogContent>
@@ -103,7 +110,7 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
               {error}
             </Alert>
           )}
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <Box component="form" onSubmit={handleSubmit(onSubmit)}>
             <Controller
               name="sportId"
               control={control}
@@ -111,10 +118,16 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                 <TextField
                   {...field}
                   select
-                  label="Select Sport"
+                  label={<Typography component="span">
+                    Sport <Typography component="span" color="red" >
+                      *
+                    </Typography>
+                  </Typography>}
                   variant="outlined"
+                  error={!!errors.sportId}
+                  helperText={errors.sportId?.message}
                   fullWidth
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 2, mt: 2 }}
                 >
                   {sports?.map((sport) => (
                     <MenuItem key={sport.id} value={sport.id}>
@@ -125,95 +138,94 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
               )}
             />
             <Controller
-                name="week"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    type="number"
-                    label="Week"
-                    variant="outlined"
-                    fullWidth
-                    sx={{ mb: 2 }}
-                  />
-                )}
-              />
-            <Controller
-              name="teamRedId"
+              name="week"
               control={control}
+              defaultValue={1}
               render={({ field }) => (
                 <TextField
                   {...field}
-                  select
-                  label="Team Red"
+                  type="number"
+                  label={<Typography component="span">
+                    Week <Typography component="span" color="red" >
+                      *
+                    </Typography>
+                  </Typography>}
                   variant="outlined"
                   fullWidth
+                  error={!!errors.week}
+                  helperText={errors.week?.message}
                   sx={{ mb: 2 }}
-                >
-                  {teams?.map((team) => (
-                    <MenuItem key={team.id} value={team.id} disabled={team.id === teamBlueId}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              )}
-            />
-            
-            <Controller
-              name="teamBlueId"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  select
-                  label="Team Blue"
-                  variant="outlined"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                >
-                  {teams?.map((team) => (
-                    <MenuItem key={team.id} value={team.id} disabled={team.id === teamRedId}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                  onChange={(e) => {
+                    field.onChange(Number(e.target.value))
+                }}
+                />
               )}
             />
             <Grid container spacing={2}>
               <Grid item xs={6}>
-            <Controller
-              name="teamRedScore"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Team Red Score"
-                  type="number"
-                  variant="outlined"
-                  defaultValue={0}
-                  fullWidth
-                  sx={{ mb: 2 }}
+                <Controller
+                  name="teamRedId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select
+                      label={<Typography component="span">
+                        Team Red <Typography component="span" color="red" >
+                          *
+                        </Typography>
+                      </Typography>}
+                      variant="outlined"
+                      fullWidth
+                      error={!!errors.teamRedId}
+                      helperText={errors.teamRedId?.message}
+                      sx={{ mb: 2 }}
+                    >
+                      {teams?.map((team) => (
+                        <MenuItem
+                          key={team.id}
+                          value={team.id}
+                          disabled={team.id === teamBlueId}
+                        >
+                          {team.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
                 />
-              )}
-            />
-            </Grid>
-            <Grid item xs={6}>
-            <Controller
-              name="teamBlueScore"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Team Blue Score"
-                  type="number"
-                  variant="outlined"
-                  defaultValue={0}
-                  fullWidth
-                  sx={{ mb: 2 }}
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="teamBlueId"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select
+                      label={<Typography component="span">
+                        Team Blue <Typography component="span" color="red" >
+                          *
+                        </Typography>
+                      </Typography>}
+                      variant="outlined"
+                      fullWidth
+                      error={!!errors.teamBlueId}
+                      helperText={errors.teamBlueId?.message}
+                      sx={{ mb: 2 }}
+                    >
+                      {teams?.map((team) => (
+                        <MenuItem
+                          key={team.id}
+                          value={team.id}
+                          disabled={team.id === teamRedId}
+                        >
+                          {team.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
                 />
-              )}
-            />
-            </Grid>
+              </Grid>
             </Grid>
             <Controller
               name="venue"
@@ -221,37 +233,88 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Venue"
+                  label={<Typography component="span">
+                    Venue <Typography component="span" color="red" >
+                      *
+                    </Typography>
+                  </Typography>}
                   variant="outlined"
                   fullWidth
+                  error={!!errors.venue}
+                  helperText={errors.venue?.message}
                   sx={{ mb: 2 }}
                 />
               )}
             />
-            <Controller
-              name="date"
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Date"
-                  type="date"
-                  variant="outlined"
-                  inputProps={{ min: today }}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ mb: 2 }}
-                  required
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Controller
+                  name="startTime"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label={<Typography component="span">
+                        Start Match <Typography component="span" color="red" >
+                          *
+                        </Typography>
+                      </Typography>}
+                      type="datetime-local"
+                      variant="outlined"
+                      inputProps={{ min: today }}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      sx={{ mb: 2 }}
+                      error={!!errors.startTime}
+                      helperText={errors.startTime?.message}
+                      onChange={(e) => {
+                        setStartTime(e.target.value);
+                        field.onChange(e); 
+                      }}
+                    />
+                  )}
                 />
-              )}
-            />
-            <Button type="submit" variant="contained" fullWidth>
-              Add Match
-            </Button>
-          </form>
+              </Grid>
+              <Grid item xs={6}>
+                <Controller
+                  name="endTime"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label={<Typography component="span">
+                        End Match <Typography component="span" color="red" >
+                          *
+                        </Typography>
+                      </Typography>}
+                      type="datetime-local"
+                      variant="outlined"
+                      inputProps={{ min: startTime }}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      sx={{ mb: 2 }}
+                      disabled={!startTime}
+                      error={!!errors.endTime}
+                      helperText={errors.endTime?.message}
+                      
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <Button type="submit" variant="contained" fullWidth>
+                  Add Match
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button variant="contained" fullWidth onClick={handleClose}>
+                  Cancel
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
       </Dialog>
-    </ThemeProvider>
   );
 };
 

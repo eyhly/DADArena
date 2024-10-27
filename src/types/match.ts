@@ -1,19 +1,20 @@
 export interface Match {
     id: string;
-    teamRedId: string;
-    teamRedName: string;
-    teamBlueId: string;
-    teamBlueName: string;
-    teamRedScore: number;
-    teamBlueScore: number;
-    timeStart: string;
-    timeEnd: string;
-    status: string;
-    venue: string;
     week: number;
-    date: string;
-    sportId: string;
-    sportTitle: string;
     eventId: string;
     eventTitle: string;
+    sportId: string;
+    sportTitle: string;
+    teamBlueId: string;
+    teamBlueName: string;
+    teamRedId: string;
+    teamRedName: string;
+    teamBlueFinalScore: number;
+    teamRedFinalScore: number;
+    rounds:{matchRound: number; teamRedScore: number;teamBlueScore: number;} [];
+    notes: {teamId: string; description: string;} [];
+    startTime: string;
+    endTime: string;
+    venue: string;
+    status: string;
 }

@@ -1,14 +1,14 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { TextField, Button, Container, Typography, Box, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
 import { useUpdateEvent } from '../../../services/mutation';
 import { useEvent, useGetAllTeams } from '../../../services/queries';
 import { Event } from '../../../types/event';
-import ColorTheme from '../../../utils/ColorTheme';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Team } from '../../../types/team';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { eventSchema } from '../../../utils/schema';
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -26,13 +26,16 @@ const submitDate = (dateString: string) => {
 
 export default function UpdateEventPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { handleSubmit, control, reset, setValue } = useForm<Event>();
+  const { handleSubmit, control, reset, setValue, formState: {errors} } = useForm<Event>({resolver: zodResolver(eventSchema)});
   const { data: event, isLoading } = useEvent(eventId);
   const { mutate } = useUpdateEvent();
   const navigate = useNavigate();
   const { data: teams } = useGetAllTeams(eventId!);
 
   const [fileName, setFileName] = useState<string>("");
+  const [registrationStartDate, setRegistrationStartDate] = useState<string>("");
+  const [eventStartDate, setEventStartDate] = useState<string>("");
+
 
   // Function to convert image file to base64
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +127,6 @@ export default function UpdateEventPage() {
 
   return (
     <Container maxWidth="md" sx={{ marginX: 60 }}>
-      <ThemeProvider theme={ColorTheme}>
         <Typography variant="h4" align="center" sx={{ mt: -5 }} gutterBottom>
           Update Event
         </Typography>
@@ -140,7 +142,8 @@ export default function UpdateEventPage() {
                     label="Event Title"
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.title}
+                    helperText={errors.title?.message}
                   />
                 )}
               />
@@ -158,7 +161,8 @@ export default function UpdateEventPage() {
                     fullWidth
                     multiline
                     rows={4}
-                    required
+                    error={!!errors.description}
+                    helperText={errors.description?.message}
                   />
                 )}
               />
@@ -178,7 +182,12 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.registrationStartDate}
+                    helperText={errors.registrationStartDate?.message}
+                    onChange={(e) => {
+                      setRegistrationStartDate(e.target.value);
+                      field.onChange(e); 
+                    }}
                   />
                 )}
               />
@@ -198,7 +207,7 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    inputProps={{min: registrationStartDate || today}}
                   />
                 )}
               />
@@ -218,7 +227,12 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.eventStartDate}
+                    helperText={errors.eventStartDate?.message}
+                    onChange={(e)=> {
+                      setEventStartDate(e.target.value);
+                      field.onChange(e);
+                    }}
                   />
                 )}
               />
@@ -233,12 +247,14 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Event End Date"
                     type="date"
+                    inputProps={{min: eventStartDate || today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.eventEndDate}
+                    helperText={errors.eventEndDate?.message}
                   />
                 )}
               />
@@ -255,7 +271,11 @@ export default function UpdateEventPage() {
                 type="number"
                 variant="outlined"
                 fullWidth
-
+                error={!!errors.allowedSportLimit}
+                helperText={errors.allowedSportLimit?.message}
+                onChange={(e) => {
+                  field.onChange(Number(e.target.value));
+                }}
                 />
               )}
               />
@@ -319,7 +339,6 @@ export default function UpdateEventPage() {
             </Grid>
           </Grid>
         </Box>
-      </ThemeProvider>
     </Container>
   );
 }

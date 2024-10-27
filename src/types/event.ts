@@ -8,7 +8,10 @@ export interface Event {
     eventStartDate: string;
     eventEndDate: string;
     officialId: string;
+    officialName: string;
     allowedSportLimit: number;
     status: string;
     isActive: boolean;
+    createdDate : string;
+    updatedDate: string;
 }

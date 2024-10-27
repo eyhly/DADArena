@@ -24,16 +24,17 @@ import {
   tableCellClasses,
   Button,
   ThemeProvider,
+  Tooltip,
 } from "@mui/material";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { Team } from "../../types/team";
-import ColorTheme from "../../utils/ColorTheme";
+import ColorTheme from "../../utils/colorTheme";
 import {
   DeleteOutlineOutlined,
-  EditCalendarOutlined,
   AddOutlined,
   KeyboardArrowDown,
   KeyboardArrowUp,
+  EditOutlined,
 } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
@@ -90,16 +91,17 @@ const ListTeam: React.FC = () => {
       cancelButtonText: "Cancel",
     });
     if (confirmation.isConfirmed) {
-      try {
-        await deleteTeam.mutateAsync({ id, eventId });
-        queryClient.invalidateQueries({ queryKey: ["teams", eventId] });
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Team deleted successfully!",
-          confirmButtonText: "Ok",
-        });
-      } catch (error) {
+      deleteTeam.mutateAsync({ id, eventId },
+        {
+          onSuccess: () => {
+            Swal.fire({
+              icon: "success",
+              title: "Success",
+              text: "Team deleted successfully!",
+              confirmButtonText: "Ok",
+            });
+            queryClient.invalidateQueries({ queryKey: ["teams", eventId] });
+      }, onError: (error) => {
         Swal.fire({
           icon: "error",
           title: "Failed!",
@@ -111,14 +113,15 @@ const ListTeam: React.FC = () => {
         });
       }
     }
+  )}
   };
 
   const columns = React.useMemo<ColumnDef<Team>[]>(
     () => [
-      {
-        accessorFn: (row, i) => i + 1,
-        header: "No",
-      },
+      // {
+      //   accessorFn: (row, i) => i + 1,
+      //   header: "No",
+      // },
       {
         accessorKey: "name",
         header: "Team Name",
@@ -129,7 +132,7 @@ const ListTeam: React.FC = () => {
         cell: ({ row }) => (
           <>
             <Button onClick={() => handleOpenUpdate(row.original)}>
-              <EditCalendarOutlined /> {/*  Update */}
+              <EditOutlined /> {/*  Update */}
             </Button>
             <Button
               onClick={() =>
@@ -139,14 +142,16 @@ const ListTeam: React.FC = () => {
             >
               <DeleteOutlineOutlined /> {/*Delete*/}
             </Button>
-            <Button
+            <Tooltip title='View Members' placement="right-end">
+            <Button variant="contained"
               onClick={() =>
-                navigate(`/events/${eventId}/teams/${row.original.id}/members`)
+                navigate(`/events/${eventId}/teams/${row.original.id}/teamMembers`)
               }
-              sx={{ color: "#24aed4" }}
+              sx={{  bgcolor: "#24aed4" }}
             >
-              <VisibilityOutlinedIcon /> {/*View Members*/}
+              <VisibilityOutlinedIcon /> View Members
             </Button>
+            </Tooltip>
           </>
         ),
       },
@@ -154,7 +159,6 @@ const ListTeam: React.FC = () => {
     [navigate, eventId]
   );
 
-  // Set up the table instance
   const table = useReactTable({
     data: data ?? [],
     columns,
@@ -184,13 +188,13 @@ const ListTeam: React.FC = () => {
 
   return (
     <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h3" sx={{ ml: 90, mb: 3 }}>
+      <Typography variant="h3" sx={{ ml: 90, mb: 3, mt: 10 }}>
         List Teams
       </Typography>
       <Button variant="contained" onClick= {handleOpenCreate} sx={{ml: 145, mb: 2}}>
         <AddOutlined/> Create Team
       </Button>
-      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 900 }}>
+      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 900}}>
         <Table>
           <TableHead>
             <StyledTableRow>

@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useLogin } from "../../services/mutation";
 import Logo from "../../../public/img/logo.png";
-import ColorTheme from "../../utils/ColorTheme";
+import ColorTheme from "../../utils/colorTheme";
 import Lottie from 'lottie-react'
 import Log from '../../../public/img/login.json'
 // import LoginButton from "./LoginButton";

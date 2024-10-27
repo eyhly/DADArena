@@ -5,7 +5,7 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import SidebarAdmin from '../Sidebar/SidebarAdmin';
+import SidebarAdmin from '../Navigation/SidebarAdmin';
 import { Grid } from '@mui/material';
 import EventsPage from '../Events/eventsAdmin/EventsPage';
 
