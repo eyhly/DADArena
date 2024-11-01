@@ -80,7 +80,6 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                 <Controller
                   name="title"
                   control={control}
-                  defaultValue=""
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -101,7 +100,6 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                 <Controller
                   name="minPlayer"
                   control={control}
-                  defaultValue={0}
                   render={({ field }) => (
                     <TextField
                       {...field}

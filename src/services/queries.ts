@@ -210,3 +210,30 @@ export function useGetAllTeamMembers(eventId : string, teamId: string){
     queryFn: () => getAllTeamMembers(eventId, teamId)
   })
 }
+
+//get profile
+export function useGetProfile (userId: string){
+  const {getProfile} = useApi();
+  return useQuery({
+    queryKey: ['profile', userId],
+    queryFn: () => getProfile(userId)
+  })
+}
+
+//export Tmember
+export function useExportTeamMembers (eventId: string, teamId: string){
+  const {exportTeamMembers} = useApi();
+  return useQuery({
+    queryKey: ['exportTeamMembers', eventId, teamId],
+    queryFn: () => exportTeamMembers(eventId, teamId)
+  })
+}
+
+//export Splayer
+export function useExportSportPlayers (eventId: string, sportId: string){
+  const {exportSportPlayers} = useApi();
+  return useQuery({
+    queryKey: ['exportSportPllayers', eventId, sportId],
+    queryFn: () => exportSportPlayers(eventId, sportId)
+  })
+}

@@ -3,6 +3,7 @@ export interface UserLogin {
     name: string;
     nickname: string;
     username: string;
+    user_Metadata: {fullname: string, gender: string;};
     email: string;
     email_verified: boolean;
     roles: [];

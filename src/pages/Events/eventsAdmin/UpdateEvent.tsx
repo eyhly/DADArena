@@ -7,8 +7,6 @@ import { Event } from '../../../types/event';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Team } from '../../../types/team';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { eventSchema } from '../../../utils/schema';
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -26,7 +24,7 @@ const submitDate = (dateString: string) => {
 
 export default function UpdateEventPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { handleSubmit, control, reset, setValue, formState: {errors} } = useForm<Event>({resolver: zodResolver(eventSchema)});
+  const { handleSubmit, control, reset, setValue } = useForm<Event>();
   const { data: event, isLoading } = useEvent(eventId);
   const { mutate } = useUpdateEvent();
   const navigate = useNavigate();
@@ -142,8 +140,6 @@ export default function UpdateEventPage() {
                     label="Event Title"
                     variant="outlined"
                     fullWidth
-                    error={!!errors.title}
-                    helperText={errors.title?.message}
                   />
                 )}
               />
@@ -161,8 +157,6 @@ export default function UpdateEventPage() {
                     fullWidth
                     multiline
                     rows={4}
-                    error={!!errors.description}
-                    helperText={errors.description?.message}
                   />
                 )}
               />
@@ -182,8 +176,6 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    error={!!errors.registrationStartDate}
-                    helperText={errors.registrationStartDate?.message}
                     onChange={(e) => {
                       setRegistrationStartDate(e.target.value);
                       field.onChange(e); 
@@ -207,7 +199,7 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    inputProps={{min: registrationStartDate || today}}
+                    inputProps={{min: registrationStartDate}}
                   />
                 )}
               />
@@ -227,8 +219,6 @@ export default function UpdateEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    error={!!errors.eventStartDate}
-                    helperText={errors.eventStartDate?.message}
                     onChange={(e)=> {
                       setEventStartDate(e.target.value);
                       field.onChange(e);
@@ -247,14 +237,12 @@ export default function UpdateEventPage() {
                     {...field}
                     label="Event End Date"
                     type="date"
-                    inputProps={{min: eventStartDate || today}}
+                    inputProps={{min: eventStartDate }}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     variant="outlined"
                     fullWidth
-                    error={!!errors.eventEndDate}
-                    helperText={errors.eventEndDate?.message}
                   />
                 )}
               />
@@ -271,8 +259,6 @@ export default function UpdateEventPage() {
                 type="number"
                 variant="outlined"
                 fullWidth
-                error={!!errors.allowedSportLimit}
-                helperText={errors.allowedSportLimit?.message}
                 onChange={(e) => {
                   field.onChange(Number(e.target.value));
                 }}

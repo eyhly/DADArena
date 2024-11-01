@@ -2,11 +2,10 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, Grid, Typography, Button } from '@mui/material';
 import { useCreateAttendance } from '../../services/mutation';
-import { useGetAllTeamMembers } from '../../services/queries';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth0 } from '@auth0/auth0-react';
 import { Attendance } from '../../types/attendance';
-import { TeamMember } from '../../types/teamMember';
+import { useAuthState } from '../../hook/useAuth';
+import Swal from 'sweetalert2';
 
 interface AddModalAttendance {
   open: boolean;
@@ -15,26 +14,19 @@ interface AddModalAttendance {
 
 const AddAttendance: React.FC<AddModalAttendance> = ({ open, handleClose }) => {
   const { eventId, scheduleId } = useParams<{ eventId: string; scheduleId: string }>();
-  const { user } = useAuth0(); 
-  console.log('user?',user)
-  const { data: teamMembers } = useGetAllTeamMembers(eventId!); // Fetch all team members based on event
   const { mutate } = useCreateAttendance();
   const queryClient = useQueryClient();
-
-  // Find the logged-in user's team member record
-  const userTeamMember = teamMembers?.find((member: TeamMember) => member.userId === user?.sub);
+  const {data} = useAuthState();
+  const user = data?.user;
 
   const handleCreateAttendance = () => {
-    if (!user?.sub || !eventId || !scheduleId || !userTeamMember) {
+    if (!user?.profile.sub || !eventId || !scheduleId ) {
       console.error("Missing required data to create attendance.");
       return;
     }
 
-    // Create attendance payload
     const attendanceData: Attendance = {
-      id: "", 
-      userId: user.sub, 
-      teamId: userTeamMember.teamId, 
+      userId: user?.profile.sub, 
       eventId,
       scheduleId,
       time: new Date().toISOString(), 
@@ -44,11 +36,23 @@ const AddAttendance: React.FC<AddModalAttendance> = ({ open, handleClose }) => {
       { eventId, scheduleId, data: attendanceData }, 
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({queryKey: ['attendances', eventId, scheduleId]}); // Invalidate attendance queries to refetch
-          handleClose(); // Close the modal after success
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: "You've already absence ontime!",
+            confirmButtonText: 'Ok!',
+          })
+          queryClient.invalidateQueries({queryKey: ['attendances', scheduleId, eventId]}); 
+          handleClose(); 
         },
         onError: (error) => {
-          console.error('Error creating attendance:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: error instanceof Error ? error.message : "An error occured",
+            confirmButtonText: 'Ok'
+          })
+          handleClose();
         },
       }
     );
@@ -56,29 +60,23 @@ const AddAttendance: React.FC<AddModalAttendance> = ({ open, handleClose }) => {
 
   return (
     <Dialog open={open} onClose={handleClose}>
-      <DialogContent>
+      <DialogContent sx={{textAlign: 'center'}}>
         <DialogTitle>Add Attendance</DialogTitle>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Typography>Name: {user?.nickname || "Unknown"}</Typography>
+            <Typography>Name: {user?.profile.name || "Unknown"}</Typography>
           </Grid>
-          <Grid item xs={12}>
-            <Typography>Team: {userTeamMember?.teamName || "No team found"}</Typography>
-          </Grid>
-        </Grid>
 
-        <Grid container spacing={2}>
           <Grid item xs={12}>
             <Button
               variant="contained"
               color="primary"
               onClick={handleCreateAttendance}
-              // disabled={!userTeamMember} 
             >
-              Add Attendance
+              Create Attendance
             </Button>
           </Grid>
-        </Grid>
+          </Grid>
       </DialogContent>
     </Dialog>
   );

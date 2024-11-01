@@ -61,23 +61,23 @@ export default function SettingEvents() {
     .replace(/^./, (str) => str.toUpperCase())
   }
 
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [isEditable, setIsEditable] = useState(false);
   const [registrationStartDate, setRegistrationStartDate] = useState<string>("");
   const [eventStartDate, setEventStartDate] = useState<string>("");
 
 
+  // untuk upload image
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("image", reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+        setFile(selectedFile); // Store the actual file in state
+        setFileName(selectedFile.name);
+        setValue("image", selectedFile.name); // Set file name in form state if needed
     } else {
-      setFileName("");
+        setFile(null);
+        setFileName("");
     }
   };
 
@@ -94,18 +94,20 @@ export default function SettingEvents() {
     }
   }, [event, reset]);
 
-  const onSubmit = (data: Event) => {
-    console.log('yang disubmit?', data);
-    
-    const formattedData = {
-      ...data,
-      registrationStartDate: submitDate(data.registrationStartDate),
-      registrationEndDate: submitDate(data.registrationEndDate),
-      eventStartDate: submitDate(data.eventStartDate),
-      eventEndDate: submitDate(data.eventEndDate),
-      allowedSportLimit: Number(data.allowedSportLimit),
-    };
-    console.log('yangdisubmit?', formattedData);
+  const onSubmit = async (data: Event) => {    
+    const formattedData = new FormData(); 
+    formattedData.append("title", data.title)
+    formattedData.append("description", data.description)
+    formattedData.append("registrationStartDate", submitDate(data.registrationStartDate))
+    formattedData.append("registrationEndDate", submitDate(data.registrationEndDate))
+    formattedData.append("eventStartDate", submitDate(data.eventStartDate))
+    formattedData.append("eventEndDate", submitDate(data.eventEndDate))
+    formattedData.append("allowedSportLimit", String(data.allowedSportLimit))
+  
+    if(file){
+      formattedData.append("image", file)
+    }
+    console.log('yangdisubmit?', ...formattedData);
     
 
     updateEvent(
@@ -120,7 +122,7 @@ export default function SettingEvents() {
           })
           .then((result) => {
             if (result.isConfirmed) {
-              navigate("/events/:eventId/detail");
+              navigate("/");
             }
           });
         },
@@ -156,7 +158,7 @@ export default function SettingEvents() {
               text: "Your event has been deleted.",
               confirmButtonText: "Ok",
             }).then(() => {
-              navigate("/events", { replace: true });
+              navigate("/", { replace: true });
             });
             queryClient.invalidateQueries({ queryKey: ["event", eventId] });
           },
@@ -442,7 +444,7 @@ export default function SettingEvents() {
               )}
               />
             </Grid>
-
+              
               <Grid item xs={12}>
                 <Button
                   type="submit"

@@ -7,8 +7,8 @@ import {
   SortingState,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { useParams } from "react-router-dom";
-import { useGetAllTeamMembers } from "../../../services/queries";
+import { useNavigate, useParams } from "react-router-dom";
+import { useExportTeamMembers, useGetAllTeamMembers } from "../../../services/queries";
 import {
   Table,
   TableBody,
@@ -24,12 +24,13 @@ import {
   tableCellClasses,
   Button,
   Container,
+  Breadcrumbs,
 } from "@mui/material";
-import { DeleteOutlineOutlined, AddOutlined, KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import { DeleteOutlineOutlined, AddOutlined, KeyboardArrowDown, KeyboardArrowUp, SaveAltRounded } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeleteTeamMember } from "../../../services/mutation"; // Assuming you have a delete mutation for members
-import AddMember from './AddTeamMember'; // Assuming you have a AddMember component
+import { useDeleteTeamMember } from "../../../services/mutation"; 
+import AddMember from './AddTeamMember'; 
 import { TeamMember } from "../../../types/teamMember";
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -52,8 +53,10 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const TeamMembers: React.FC = () => {
   const { eventId, teamId } = useParams();
   const { data, isLoading, isError } = useGetAllTeamMembers(eventId!, teamId!);
+  const exportTM = useExportTeamMembers(eventId!, teamId!);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const deleteMember = useDeleteTeamMember(); 
 
@@ -102,17 +105,21 @@ const TeamMembers: React.FC = () => {
 
   const columns = React.useMemo<ColumnDef<TeamMember>[]>( 
     () => [
-      // {
-      //   accessorFn: (row, i) => i + 1,
-      //   header: "No",
-      // },
       {
         accessorKey: 'teamName',
         header: 'Team'
       },
       {
-        accessorKey: "username",
-        header: "Member Name",
+        accessorKey: "fullname",
+        header: "Name",
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "gender",
+        header: "Gender",
       },
       {
         id: "actions",
@@ -147,7 +154,7 @@ const TeamMembers: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 65 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 95 }}>
         <CircularProgress />
       </Box>
     );
@@ -176,14 +183,32 @@ const TeamMembers: React.FC = () => {
   }
 
   return (
-    <Container>
-      <Typography variant="h3" sx={{ ml: 90, mb: 3 }}>
+    <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
+      <Box>
+        <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            onClick={() => navigate(`/events/${eventId}/teams/`)}
+            style={{ cursor: "pointer" }}
+            color="inherit"
+          >
+            Teams
+          </Typography>
+          <Typography color="text.primary">Team Members</Typography>
+        </Breadcrumbs>
+      </Box>
+      <Typography variant="h4">
         List Team Members
       </Typography>
-      <Button variant="contained" onClick={handleOpenCreate} sx={{ ml: 145, mb: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
+      <Button variant="contained" sx={{maxWidth: 150}} onClick={() => navigate(`events/${eventId}/teams/${teamId}/teammembers/export`)}>
+        <SaveAltRounded/> Download
+      </Button>
+      <Button variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
         <AddOutlined /> Create Member
       </Button>
-      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 900 }}>
+      </Box>
+
+      <TableContainer component={Paper} sx={{ maxWidth: 900 }}>
         <Table>
           <TableHead>
             <StyledTableRow>

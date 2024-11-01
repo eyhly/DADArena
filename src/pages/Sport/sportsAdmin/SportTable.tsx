@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllSports } from "../../../services/queries";
+import { useGetAllSports, useGetProfile } from "../../../services/queries";
 import {
   Table,
   TableBody,
@@ -41,6 +41,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
+import { useAuthState } from "../../../hook/useAuth";
 // import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -72,6 +73,13 @@ const SportsTable: React.FC = () => {
   const [descriptionModalOpen, setDescriptionModalOpen] = useState(false); //description rule
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const navigate = useNavigate();
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
 
   const filteredData = React.useMemo(
     () => data?.filter((sport) => sport.eventId === eventId) ?? [],
@@ -158,8 +166,10 @@ const SportsTable: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <>
-            <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
+          <Box sx={{display: 'flex', justifyContent: 'space-evenly'}}>
+            {!isMemberOrKapten && (
+              <div>
+                <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
               <EditOutlined /> {/*  Update */}
             </Button>
             <Button
@@ -178,6 +188,8 @@ const SportsTable: React.FC = () => {
                 <VisibilityOutlinedIcon /> {/*More Rules*/}
               </Button>
             </Tooltip>
+              </div>
+            )}
             <Tooltip title="Sport Player" placement="top">
               <Button
                 onClick={() =>
@@ -189,7 +201,7 @@ const SportsTable: React.FC = () => {
                 <Diversity3 />
               </Button>
             </Tooltip>
-          </>
+          </Box>
         ),
       },
     ],
@@ -206,6 +218,7 @@ const SportsTable: React.FC = () => {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
   });
+ 
 
   if (isLoading) {
     return (
@@ -232,7 +245,8 @@ const SportsTable: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
         <Typography variant="h6">No sports found for this event</Typography>
-        <Button
+        {!isMemberOrKapten && (
+          <Button
           size="small"
           variant="contained"
           sx={{ mt: 2, mb: 3, maxHeight: 50, maxWidth: "100%" }}
@@ -240,6 +254,7 @@ const SportsTable: React.FC = () => {
         >
           <AddOutlinedIcon /> Create Sport
         </Button>
+        )}
         {/* modal add sport */}
         <AddSport open={open} handleClose={() => setOpen(false)} />
       </Box>
@@ -251,7 +266,8 @@ const SportsTable: React.FC = () => {
       <Typography variant="h3" sx={{ color: "black" }}>
         List Sport
       </Typography>
-      <Button
+      {!isMemberOrKapten && (
+        <Button
         size="small"
         variant="contained"
         sx={{ mb: 2, mt: 5, maxHeight: 50, ml: 90, maxWidth: "100%" }}
@@ -259,6 +275,7 @@ const SportsTable: React.FC = () => {
       >
         <AddOutlinedIcon /> Create Sport
       </Button>
+      )}
       <AddSport open={open} handleClose={() => setOpen(false)} />
       <TableContainer
         component={Paper}

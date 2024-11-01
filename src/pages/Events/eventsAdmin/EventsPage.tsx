@@ -19,23 +19,24 @@ import {
   CardActions,
   Button,
 } from "@mui/material";
-import { useGetAllEvents } from "../../../services/queries";
+import { useGetAllEvents, useGetProfile } from "../../../services/queries";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import Slide from "@mui/material/Slide";
 import Logo from "/img/logo.png";
-import { AccountCircle, AddOutlined} from "@mui/icons-material";
+import { AccountCircle, AddOutlined } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { Event } from "../../../types/event";
-import { useAuth0 } from "@auth0/auth0-react";  // Import Auth0 hook
+import { useAuth0 } from "@auth0/auth0-react"; // Import Auth0 hook
 import { useNavigate } from "react-router-dom";
 // import { useDeleteEvent } from "../../../services/mutation";
 // import Swal from "sweetalert2";
 // import { useQueryClient } from "@tanstack/react-query";
 import DetailEvents from "./DetailEvents";
+import { useAuthState, useSignOutRedirect } from "../../../hook/useAuth";
 
 interface HideScrollProps {
   children: ReactElement;
-  window?: () => Window
+  window?: () => Window;
 }
 
 const EventsPage = () => {
@@ -43,22 +44,21 @@ const EventsPage = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [eventTab, setEventTab] = useState(0);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [openModalDetail, setOpenModalDetail] = useState(false); //detail modal
+  const [openModalDetail, setOpenModalDetail] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-
   const { data: events } = useGetAllEvents();
   const navigate = useNavigate();
-  
-  // Auth0 hooks
-  const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();
-  console.log(user)
+  const { mutate: signOutRedirect } = useSignOutRedirect();
 
-  // useEffect(() => {
-  //   // If the user is not authenticated, redirect to login
-  //   if (!isAuthenticated) {
-  //     loginWithRedirect();
-  //   }
-  // }, [isAuthenticated, loginWithRedirect]);
+  const { data } = useAuthState();
+  const { logout } = useAuth0();
+  const user = data?.user;
+  const userId = user?.profile.sub;
+  const { data: profile } = useGetProfile(userId!);
+  const isAuthenticated = data?.isAuthenticated;
+  console.log(user);
+
+  const isDisabled = profile?.roles === "member" || profile?.roles === "captain";
 
   const handleChange = (event: React.SyntheticEvent, newEvent: number) => {
     setEventTab(newEvent);
@@ -66,42 +66,53 @@ const EventsPage = () => {
 
   const handleOpenModalDetail = (event: Event) => {
     setSelectedEvent(event);
-    setOpenModalDetail(true)
-  }
+    setOpenModalDetail(true);
+  };
 
   const handleCloseModalDetail = () => {
     setSelectedEvent(null);
     setOpenModalDetail(false);
-  }
+  };
 
   const formatStatus = (status: string) => {
     return status
-      .replace(/([A-Z])/g, ' $1')  
-      .replace(/^./, (str) => str.toUpperCase());  
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase());
   };
-
 
   useEffect(() => {
     if (events) {
-        const sortedEvents = [...events].sort((a, b) => {
-          return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
+      const sortedEvents = [...events].sort((a, b) => {
+        return (
+          new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+        );
       });
 
       switch (eventTab) {
         case 1:
-          setFilteredEvents(sortedEvents.filter(event => event.status === "comingSoon"));
+          setFilteredEvents(
+            sortedEvents.filter((event) => event.status === "comingSoon")
+          );
           break;
         case 2:
-          setFilteredEvents(sortedEvents.filter(event => event.status === "registration"));
+          setFilteredEvents(
+            sortedEvents.filter((event) => event.status === "registration")
+          );
           break;
         case 3:
-          setFilteredEvents(sortedEvents.filter(event => event.status === "preparation"));
+          setFilteredEvents(
+            sortedEvents.filter((event) => event.status === "preparation")
+          );
           break;
         case 4:
-          setFilteredEvents(sortedEvents.filter(event => event.status === "onGoing"));
+          setFilteredEvents(
+            sortedEvents.filter((event) => event.status === "onGoing")
+          );
           break;
         case 5:
-          setFilteredEvents(sortedEvents.filter(event => event.status === "finish"));
+          setFilteredEvents(
+            sortedEvents.filter((event) => event.status === "finish")
+          );
           break;
         default:
           setFilteredEvents(sortedEvents);
@@ -119,8 +130,7 @@ const EventsPage = () => {
   };
 
   const handleLogout = () => {
-    logout({logoutParams:{ returnTo: window.location.origin,
-     }})
+    logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   if (isLoading) {
@@ -136,15 +146,14 @@ const EventsPage = () => {
 
   if (isError) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 8, ml : 55 }}>
+      <Container sx={{ textAlign: "center", marginTop: 8, ml: 55 }}>
         <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
           Failed to load events
-        <button onClick={()=> {handleLogout()}}>logout</button>
+          <button onClick={() => signOutRedirect}>logout</button>
         </Typography>
       </Container>
     );
   }
-
 
   function HideOnScroll(props: HideScrollProps) {
     const { children, window } = props;
@@ -169,19 +178,23 @@ const EventsPage = () => {
                 noWrap
                 component="div"
                 sx={{ display: "flex" }}
-              > 
+              >
                 <img src={Logo} alt="Logo" width="40px" />
-                Sports Events 
+                Sports Events
               </Typography>
             </Box>
             <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title={isAuthenticated ? user?.name || "Profile" : "Login"}>
+              <Tooltip
+                title={
+                  isAuthenticated ? user?.profile.name || "Profile" : "Login"
+                }
+              >
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <AccountCircle />
                 </IconButton>
               </Tooltip>
               <Menu
-                sx={{ mt: "45px", ml: 175, width:500 }}
+                sx={{ mt: "45px", ml: 175, width: 500 }}
                 id="menu-appbar"
                 anchorEl={anchorElUser}
                 anchorOrigin={{
@@ -196,10 +209,12 @@ const EventsPage = () => {
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
-                {isAuthenticated ? (
+                {isAuthenticated && (
                   <>
-                    <MenuItem>
-                      <Typography>{user?.email}</Typography>
+                    <MenuItem
+                      onClick={() => navigate(`/profile/${user?.profile.sub}`)}
+                    >
+                      <Typography>{user?.profile.email}</Typography>
                     </MenuItem>
                     <MenuItem onClick={handleLogout}>
                       <Typography sx={{ textAlign: "center", display: "flex" }}>
@@ -208,21 +223,6 @@ const EventsPage = () => {
                       </Typography>
                     </MenuItem>
                   </>
-                ) : (
-                  <>
-                    <MenuItem onClick={() => loginWithRedirect()}>
-                      <Typography>Login</Typography>
-                    </MenuItem>
-                    <MenuItem>
-                    <Typography>{user?.email}</Typography>
-                    </MenuItem>
-                    <MenuItem onClick={handleLogout}>
-                    <Typography sx={{ textAlign: "center", display: "flex" }}>
-                      <LogoutIcon />
-                      Logout
-                    </Typography>
-                    </MenuItem>
-                    </>
                 )}
               </Menu>
             </Box>
@@ -251,15 +251,27 @@ const EventsPage = () => {
         </Box>
 
         {/* Upcoming Events Section */}
-        <Container sx={{ ml: 20, mb: 3, display: 'flex', justifyContent: 'space-between', maxWidth: 1200 }}>
-        <Typography variant="h4" component="div" gutterBottom>
-          List Events
-        </Typography>
-        <Button variant="contained" size="small" sx={{maxHeight: 40}}
-        onClick={() => navigate('/events/add')}
+        <Container
+          sx={{
+            ml: 20,
+            mb: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            maxWidth: 1200,
+          }}
         >
-          <AddOutlined/> Create Event
-        </Button>
+          <Typography variant="h4" component="div" gutterBottom>
+            List Events
+          </Typography>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ maxHeight: 40 }}
+            onClick={() => navigate("/events/add")}
+            disabled={isDisabled}
+          >
+            <AddOutlined /> Create Event
+          </Button>
         </Container>
         <Box sx={{ width: "100%" }}>
           <Tabs value={eventTab} onChange={handleChange} centered>
@@ -270,16 +282,26 @@ const EventsPage = () => {
             <Tab label="On Going" />
             <Tab label="Past Event" />
           </Tabs>
-          <Grid container spacing={6} justifyContent="center" sx={{ ml: 20, mt: 5 }}>
+          <Grid
+            container
+            spacing={6}
+            justifyContent="center"
+            sx={{ ml: 20, mt: 5 }}
+          >
             {filteredEvents.length > 0 ? (
               filteredEvents.map((event) => (
                 <Grid item xs={12} sm={6} md={4} key={event.id}>
-                  <Card sx={{ maxWidth: 400, maxHeight: "100%", "&:hover": {
-                    transform: 'scale(1.05)',
-                    transition: 'transform 0.3s ease-in-out'
-                  },
-                  cursor:'pointer'
-                  }}>
+                  <Card
+                    sx={{
+                      maxWidth: 400,
+                      maxHeight: "100%",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                        transition: "transform 0.3s ease-in-out",
+                      },
+                      cursor: "pointer",
+                    }}
+                  >
                     <CardMedia
                       component="img"
                       alt={event.title}
@@ -299,10 +321,14 @@ const EventsPage = () => {
                       </Typography>
                     </CardContent>
                     <CardActions>
-                  <Button variant="outlined" size="small" onClick={() => handleOpenModalDetail(event)}>
-                    Detail
-                  </Button>
-                  {/* <Button size="small" onClick={()=> navigate(`/events/edit/${event.id}`)}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleOpenModalDetail(event)}
+                      >
+                        Detail
+                      </Button>
+                      {/* <Button size="small" onClick={()=> navigate(`/events/edit/${event.id}`)}>
                     <EditCalendarOutlined />
                     Update
                   </Button>
@@ -310,7 +336,7 @@ const EventsPage = () => {
                     <DeleteOutlineOutlined />
                     Delete
                   </Button> */}
-                </CardActions>
+                    </CardActions>
                   </Card>
                 </Grid>
               ))
@@ -319,11 +345,11 @@ const EventsPage = () => {
             )}
           </Grid>
         </Box>
-      </Container>  
+      </Container>
       <DetailEvents
-      open={openModalDetail}
-      onClose={handleCloseModalDetail}
-      eventId={selectedEvent?.id}
+        open={openModalDetail}
+        onClose={handleCloseModalDetail}
+        eventId={selectedEvent?.id}
       />
     </Container>
   );

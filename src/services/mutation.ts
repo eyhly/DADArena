@@ -14,30 +14,7 @@ import { Round } from "../types/round";
 import { Schedule } from "../types/schedule";
 import { ExtraPoint } from "../types/extraPoint";
 import { Attendance } from "../types/attendance";
-
-//register
-// export function useRegister() {
-//   const queryClient = useQueryClient();
-
-//   return useMutation<Register, Error, Register, unknown>({
-//     mutationFn: async (data: Register) => {
-//       try {
-//         const result = await postRegister(data);
-//         return result;
-//       } catch (error) {
-//         console.error("Error to login:", error);
-//         throw new Error("Failed to register");
-//       }
-//     },
-
-//     onError: () => {
-//       console.log("error");
-//     },
-//     onSuccess: async () => {
-//       await queryClient.invalidateQueries({ queryKey: ["register"] });
-//     },
-//   });
-// }
+import { Profile } from "../types/profile";
 
 // login
 export function useLogin() {
@@ -921,4 +898,19 @@ export function useDeleteTeamMember() {
       queryClient.invalidateQueries({ queryKey: ["teammember"] });
     },
   });
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  const {updateProfile} = useApi();
+  return useMutation({
+    mutationKey: ['update profile'],
+    mutationFn: ({userId, data} : {userId: string; data: Profile}) => updateProfile(userId, data),
+    onError: () => {
+      console.log("error")
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    }
+  })
 }

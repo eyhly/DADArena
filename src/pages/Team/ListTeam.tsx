@@ -118,10 +118,6 @@ const ListTeam: React.FC = () => {
 
   const columns = React.useMemo<ColumnDef<Team>[]>(
     () => [
-      // {
-      //   accessorFn: (row, i) => i + 1,
-      //   header: "No",
-      // },
       {
         accessorKey: "name",
         header: "Team Name",
@@ -147,7 +143,6 @@ const ListTeam: React.FC = () => {
               onClick={() =>
                 navigate(`/events/${eventId}/teams/${row.original.id}/teamMembers`)
               }
-              sx={{  bgcolor: "#24aed4" }}
             >
               <VisibilityOutlinedIcon /> View Members
             </Button>
@@ -172,7 +167,7 @@ const ListTeam: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 65 }}>
+      <Box sx={{ display: "flex", mt: 3, ml: 105 }}>
         <CircularProgress />
       </Box>
     );

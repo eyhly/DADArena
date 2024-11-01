@@ -19,7 +19,9 @@ import ExtraPointPage from './pages/Point/ExtraPoint';
 import TeamMembers from './pages/Team/TeamMember/TeamMembers';
 import SportPlayerTable from './pages/Sport/Player/SportPlayer';
 import DataUser from './pages/User/DataUser';
-import DetailMatchPoint from './pages/Point/DetailMatchPoint';
+// import DetailMatchPoint from './pages/Point/DetailMatchPoint';
+import ProfilePage from './pages/User/Profile';
+import ProtectedRoute from './hook/protectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -44,83 +46,78 @@ const router = createBrowserRouter([
   // },
   {
     path: '/events',
-    element: <EventsPage/>
+    element: <ProtectedRoute element={<EventsPage/>}/>
   },
   {
     path: '/events/add',
-    element: <AddEventPage/>
+    element: <ProtectedRoute element={<AddEventPage/>}/>
   },
-  // {
-  //   path: '/register',
-  //   element: <Register />,
-  // },
+  {
+    path: '/profile/:user_Id',
+    element: <ProtectedRoute element={<ProfilePage/>}/>
+  }, 
  {
   id: 'root',
   element: <LayoutPages/>, 
-  // loader
   children: [
-    // {
-    //   path: '/events',
-    //   element: <EventsPage/>
-    // },
     {
       path: '/events/edit/:eventId',
-      element: <UpdateEvent/>
+      element: <ProtectedRoute element={<UpdateEvent/>}/>
     },
     {
       path: '/events/:eventId/schedules',
-      element: <Schedules/>
+      element: <ProtectedRoute element={<Schedules/>} />
     },
     {
       path: '/events/:eventId/schedules/:scheduleId/attendances',
-      element: <Attendance/>
+      element: <ProtectedRoute element={<Attendance/>} />
     },
     {
       path: '/events/:eventId/leaderboard',
-      element: <Leaderboard/>
+      element: <ProtectedRoute element={<Leaderboard/>} />
     },
     {
       path: '/events/:eventId/user',
-      element: <DataUser/>
+      element: <ProtectedRoute element={<DataUser/>} />
     },
     {
       path: '/events/:eventId/sports',
-      element: <SportsTable/>
+      element: <ProtectedRoute element={<SportsTable/>} />
     },
     {
       path: '/events/:eventId/sports/:sportId/sportplayers',
-      element: <SportPlayerTable/>
+      element: <ProtectedRoute element={<SportPlayerTable/>} />
     },
     {
       path: '/events/:eventId/matches',
-      element: <Matches/>
+      element: <ProtectedRoute element={<Matches/>} />
     },
     {
       path: '/events/:eventId/teams',
-      element: <ListTeam/>
+      element: <ProtectedRoute element={<ListTeam/>}/>
     },
     {
       path: '/events/:eventId/teams/:teamId/teamMembers',
-      element: <TeamMembers/>
+      element: <ProtectedRoute element={<TeamMembers/>} />
     },
     {
       path: '/events/:eventId/detail',
-      element: <SettingEvents/>
+      element: <ProtectedRoute element={<SettingEvents/>} />
     },
     {
       path: '/events/:eventId/recap',
-      element: <Recap/>
+      element: <ProtectedRoute element={<Recap/>} />
     },
     {
       path: '/events/:eventId/recap/:teamId/extrapoints',
-      element: <ExtraPointPage/>
+      element: <ProtectedRoute element={<ExtraPointPage/>} />
     },
-    {
-      path: '/events/:eventId/recap/:teamId/detailmatchpoints',
-      element: <DetailMatchPoint/>
-    }, 
+    // {
+    //   path: '/events/:eventId/recap/:teamId/detailmatchpoints',
+    //   element: <DetailMatchPoint/>
+    // }, 
   ],  
  } 
 ]); 
 
-export default router;
+export default router;  

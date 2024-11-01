@@ -19,22 +19,17 @@ import {
   CardActions,
   Button,
 } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
-import { useGetAllEvents } from "../../services/queries";
+import { useGetAllEvents, useGetProfile } from "../../services/queries";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
 import Slide from "@mui/material/Slide";
-import ColorTheme from "../../utils/colorTheme";
-import Banner from "/img/banner.png";
+import WELCOME from "/img/WELCOME.png";
 import Logo from "/img/logo.png";
-import { AccountCircle, ArrowCircleRightOutlined, DeleteOutlineOutlined, EditCalendarOutlined } from "@mui/icons-material";
+import { AccountCircle, AddOutlined, ManageAccountsRounded } from "@mui/icons-material";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { Event } from "../../types/event";
-// import { useAuth0 } from "../../auth0";
 import { useNavigate } from "react-router-dom";
-import { useDeleteEvent } from "../../services/mutation";
-import Swal from "sweetalert2";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuthState, useSigninRedirect, useSignOutRedirect } from "../../hook/useAuth";
+import DetailEvents from "../Events/eventsAdmin/DetailEvents";
 
 interface HideScrollProps {
   children: ReactElement;
@@ -46,16 +41,37 @@ const LandingPage = () => {
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [eventTab, setEventTab] = useState(0);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-
+  const [openModalDetail, setOpenModalDetail] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { data: events } = useGetAllEvents();
   const navigate = useNavigate();
-  const deleteEvent = useDeleteEvent();
-  const queryClient = useQueryClient();
 
-  const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();  
-  console.log(isAuthenticated, 'authenticeeeeet')
+  const {mutate: signOutRedirect} = useSignOutRedirect();
+  const {refetch: signInRedirect} = useSigninRedirect();
+  const {data } = useAuthState();
+
+  const user = data?.user;
+  const userId = user?.profile.sub;
+  const isAuthenticated = data?.isAuthenticated;
+  const { data: profile } = useGetProfile(userId!);
+
+  //cek role nya apaan
+  const roles = profile?.roles || [];
+  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
+  console.log(profile?.roles, "role")
   
+  console.log(isAuthenticated, 'authenticeeeeet')
 
+  const handleOpenModalDetail = (event: Event) => {
+    setSelectedEvent(event);
+    setOpenModalDetail(true);
+  };
+  
+  const handleCloseModalDetail = () => {
+   setSelectedEvent(null);
+   setOpenModalDetail(false);
+  };
+  
   const handleChange = (event: React.SyntheticEvent, newEvent: number) => {
     setEventTab(newEvent);
   };
@@ -93,13 +109,6 @@ const LandingPage = () => {
     }
   }, [eventTab, events]);
 
-  // useEffect(() => {
-  //   // If the user is not authenticated, redirect to login
-  //   if (!isAuthenticated) {
-  //     loginWithRedirect();
-  //   }
-  // }, [isAuthenticated, loginWithRedirect]);
-
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -107,49 +116,7 @@ const LandingPage = () => {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token')
-    console.log('access token has removed');
-    
-     logout({logoutParams:{ returnTo: window.location.origin,
-     }})
-    //   // loginWithRedirect();
-
-  };
-
-  const handleDelete = async (id: string) => {
-    const confirmation = await Swal.fire({
-      title: "Are you sure want to delete this event?",
-      text: "You can canceled!.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
-    });
-    if (confirmation.isConfirmed) {
-      try {
-        await deleteEvent.mutateAsync(id);
-        queryClient.invalidateQueries({ queryKey: ['events']});
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: "Event deleted successfully!",
-          confirmButtonText: "Ok",
-        });
-      } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Failed!",
-          text: error instanceof Error ? error.message : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
-        });
-      }
-    }
-  };
-
+  
   if (isLoading) {
     return (
       <Container sx={{ textAlign: "center", marginTop: 8, ml: 55 }}>
@@ -166,9 +133,9 @@ const LandingPage = () => {
       <Container sx={{ textAlign: "center", marginTop: 8, ml : 55 }}>
         <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
           Failed to load events
-          <Button onClick={()=> {handleLogout()}}>logout</Button>
+          <Button onClick={() => signOutRedirect()}>logout</Button>
         </Typography>
-          <Button onClick={() => loginWithRedirect()}>login</Button>
+          <Button onClick={() => signInRedirect()}>login</Button>
       </Container>
     );
   }
@@ -187,7 +154,7 @@ const LandingPage = () => {
   }
 
   return (
-    <ThemeProvider theme={ColorTheme}>
+    <Container>
       <HideOnScroll>
         <AppBar position="fixed" sx={{ width: "100%" }}>
           <Toolbar sx={{ justifyContent: "space-between" }}>
@@ -199,11 +166,11 @@ const LandingPage = () => {
                 sx={{ display: "flex" }}
               >
                 <img src={Logo} alt="Logo" width="40px" />
-                DAD Sports League
+                Sports Events
               </Typography>
             </Box>
             <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title={isAuthenticated ? user?.name || "Profile" : "Login"}>
+              <Tooltip title={isAuthenticated ? user?.profile.name || "Profile" : "Login"}>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <AccountCircle />
                 </IconButton>
@@ -225,95 +192,79 @@ const LandingPage = () => {
                 onClose={handleCloseUserMenu}
               >
                 {isAuthenticated ? (
-                  <>
-                    <MenuItem>
-                      <Typography>{user?.email}</Typography>
+                  <div>
+                    <MenuItem onClick={() => navigate(`/profile/${user?.profile.sub}`)}>
+                      <ManageAccountsRounded/> My Profile
                     </MenuItem>
-                    <MenuItem onClick={()=> {handleLogout()}}>
+                    <MenuItem onClick={()=> {signOutRedirect()}}>
                       <Typography sx={{ textAlign: "center", display: "flex" }}>
                         <LogoutIcon />
                         Logout
                       </Typography>
                     </MenuItem>
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <MenuItem onClick={() => loginWithRedirect()}>
+                  <div>
+                    <MenuItem onClick={() => signInRedirect()}>
                       <Typography>Login</Typography>
                     </MenuItem>
                     <MenuItem>
-                    <Typography>{user?.email}</Typography>
+                    <Typography>{user?.profile.name}</Typography>
                     </MenuItem>
-                    <MenuItem onClick={handleLogout}>
+                    <MenuItem onClick={() => signOutRedirect()}>
                     <Typography sx={{ textAlign: "center", display: "flex" }}>
                       <LogoutIcon />
                       Logout
                     </Typography>
                     </MenuItem>
-                    </>
+                    </div>
                 ) }
               </Menu>
             </Box>
           </Toolbar>
         </AppBar>
       </HideOnScroll>
-      <Container sx={{ flexGrow: 1, paddingBottom: 4, mt: 10 }}>
-        {/* Welcome Section */}
-        <Box
-          sx={{
-            background: "#ffee58",
-            color: "black",
-            p: 4,
-            borderRadius: 1,
-            mb: 4,
-            textAlign: "center",
-            width: 1470,
-          }}
-        >
-          <Typography variant="h4" component="div">
-            Welcome to Our Events
-          </Typography>
-          <Typography variant="h6" component="div" sx={{ mt: 1 }}>
-            Check out the latest events happening near you!
-          </Typography>
-          <Button variant="contained" sx={{mt: 2}}
-          onClick={() => navigate(`/events`)}
-          >
-            <ArrowCircleRightOutlined/>
-            See All Events
-          </Button>
-          <Button onClick={()=> {handleLogout()}}>
-            logout
-          </Button>
-        </Box>
 
-        {/* Banner Section */}
-        <Box
-          sx={{
-            position: "relative",
-            ml: 50,
-            height: 450,
-            mb: 4,
-            borderRadius: 1,
-            overflow: "hidden",
-          }}
-        >
-          <CardMedia
+        {/* Welcome Section */}
+      <Container sx={{ flexGrow: 1, paddingBottom: 4, mt: 10, minHeight: 800  }}>
+        <CardMedia
             component="img"
-            image={Banner}
-            alt="Banner"
+            image={WELCOME}
+            alt="WELCOME"
             sx={{
               height: "100%",
-              width: "100%",
+              width: "137%",
               objectFit: "contain",
+              mb: 3,
+              borderRadius: 6
             }}
 
-          />
-        </Box>
+        />
+
         {/* Upcoming Events Section */}
-        <Typography variant="h4" component="div" gutterBottom sx={{ ml: 20, mb: 3 }}>
-          List Events
-        </Typography>
+        <Container
+          sx={{
+            ml: 20,
+            mb: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            maxWidth: 1200,
+          }}
+        >
+          <Typography variant="h4" component="div" gutterBottom>
+            List Events
+          </Typography>
+          {!isMemberOrKapten && (
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ maxHeight: 40 }}
+            onClick={() => navigate("/events/add")}
+          >
+            <AddOutlined /> Create Event
+          </Button>
+          )}
+        </Container>
         <Box sx={{ width: "100%" }}>
           <Tabs value={eventTab} onChange={handleChange} centered>
             <Tab label="All Events" />
@@ -352,16 +303,8 @@ const LandingPage = () => {
                       </Typography>
                     </CardContent>
                     <CardActions>
-                  <Button variant="outlined" size="small">
+                  <Button variant="outlined" size="small" onClick={() => handleOpenModalDetail(event)}>
                     Detail
-                  </Button>
-                  <Button size="small" onClick={()=> navigate(`/events/edit/${event.id}`)}>
-                    <EditCalendarOutlined />
-                    Update
-                  </Button>
-                  <Button size="small" sx={{ color: "red" }} onClick={() => handleDelete(event.id)}>
-                    <DeleteOutlineOutlined />
-                    Delete
                   </Button>
                 </CardActions>
                   </Card>
@@ -373,7 +316,12 @@ const LandingPage = () => {
           </Grid>
         </Box>
       </Container>
-    </ThemeProvider>
+      <DetailEvents
+      open={openModalDetail}
+      onClose={handleCloseModalDetail}
+      eventId={selectedEvent?.id}
+      />
+    </Container>
   );
 };
 

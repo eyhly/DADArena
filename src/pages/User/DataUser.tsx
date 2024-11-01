@@ -42,7 +42,7 @@ const DataUser: React.FC = () => {
                 header: "Name"
             },
             {
-                accessorKey: "username",
+                accessorKey: "user_Metadata.fullname",
                 header: "Username"
             },
             {

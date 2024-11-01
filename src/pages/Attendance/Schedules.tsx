@@ -242,7 +242,7 @@ const SchedulesTable: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550 }}>
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
       {/* Breadcrumbs */}
       
         <Breadcrumbs aria-label="breadcrumb">

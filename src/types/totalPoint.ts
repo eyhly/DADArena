@@ -1,4 +1,6 @@
 export interface TotalPoint {
+    rank: number;
+    teamName: string;
     teamId: string;
     totalMatchPoints: number;
     totalExtraPoints: number;

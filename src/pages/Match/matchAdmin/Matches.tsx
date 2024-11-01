@@ -23,7 +23,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteMatch } from "../../../services/mutation";
 import AddMatch from "./AddMatch";
 import UpdateMatch from "./UpdateMatch";
-import { useGetAllMatches } from "../../../services/queries";
+import { useGetAllMatches, useGetProfile } from "../../../services/queries";
+import { useAuthState } from "../../../hook/useAuth";
 
 const renderDate = (dateString: string) => {
   if (!dateString) return 'Unknown Date';
@@ -48,6 +49,15 @@ const Matches = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const queryClient = useQueryClient();
   const deleteMatch = useDeleteMatch();
+
+  //untuk mengetahui user dan role nya
+  const {data} = useAuthState();
+  const user = data?.user;
+  const userId = user?.profile.sub;
+  const {data: profile } = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+
+  const isMemberOrKapten = roles.includes("member") || roles.includes("captain")
 
   const { data: matches, isLoading: matchesLoading, isError: matchesError } = useGetAllMatches(eventId!);
 
@@ -151,7 +161,7 @@ const Matches = () => {
     );
   };
 
-  // for define filter by week, status, or sport  
+  // untuk definisi (key) filter  
   const uniqueWeeks = useMemo(() => {
     return [...new Set(matches?.map((match) => match.week.toString()))];
   }, [matches]);
@@ -164,7 +174,7 @@ const Matches = () => {
     return [...new Set(matches?.map((match) => match.sportTitle))];
   }, [matches]);
 
-  // for filter matches by  week, status, or sport
+  // filter match
   const filteredMatches = matches?.filter((match: Match) => {
     const weekMatch = weekFilter.length === 0 || weekFilter.includes(match.week.toString());
     const statusMatch = statusFilter.length === 0 || statusFilter.includes(match.status);
@@ -221,9 +231,11 @@ const Matches = () => {
     return (
         <Container sx={{ textAlign: "center", marginTop: 3, ml: 60}}>
         <Typography variant="h6">No matches found for this event.</Typography>
-        <Button size="small" variant="contained" sx={{ maxHeight: 50, maxWidth: '100%', mt:2 }} onClick={openAddMatchModal}>
-        <AddOutlinedIcon /> Create Match
-      </Button>
+        {!isMemberOrKapten && (
+          <Button size="small" variant="contained" sx={{ maxHeight: 50, maxWidth: '100%', mt:2 }} onClick={openAddMatchModal}>
+          <AddOutlinedIcon /> Create Match
+        </Button>
+        )}
       <AddMatch open={isAddMatchModalOpen} handleClose={closeAddMatchModal} />
       </Container>
       
@@ -303,8 +315,9 @@ const Matches = () => {
         </Box>
 
           <Box>
-        {/* Button Create Match */}
-        <Button
+
+        {!isMemberOrKapten && (
+          <Button
           size="small"
           variant="contained"
           sx={{ mx: 2, maxHeight: 50, maxWidth: '100%' }}
@@ -312,6 +325,7 @@ const Matches = () => {
         >
           <AddOutlinedIcon /> Create Match
         </Button>
+        )}
         </Box>
       </Container>
       <Container sx={{ mt: 4, ml: 40, minHeight: 550  }}>
@@ -359,7 +373,8 @@ const Matches = () => {
                       {renderDate(match.startTime)} - {renderTime(match.endTime)}
 
                     </Typography>
-                <Box sx={{ display: "flex", mt: 3, mb: -1 }}>
+                {!isMemberOrKapten && (
+                  <Box sx={{ display: "flex", mt: 3, mb: -1 }}>
                   <Button
                     size="small"
                     onClick={() => openUpdateMatchModal(match)}
@@ -376,6 +391,7 @@ const Matches = () => {
                     Delete
                   </Button>
                 </Box>
+                )}
               </Paper>
             </Grid>
           ))}

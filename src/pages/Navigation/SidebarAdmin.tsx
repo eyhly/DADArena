@@ -24,13 +24,24 @@ import {
   AccountCircle,
   Logout,
   EventNoteOutlined,
+  HowToRegRounded,
+  ManageAccountsRounded,
 } from '@mui/icons-material';
 import { Button, IconButton, Tooltip, Menu, MenuItem } from '@mui/material';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { useAuth0 } from "@auth0/auth0-react";
 import Logo from '/img/logo.png';
+import { useAuthState, useSignOutRedirect } from '../../hook/useAuth';
+import { useGetProfile } from '../../services/queries';
 
 const drawerWidth = 260;
+
+//untuk merubah icon di drawer
+const roleLabels = {
+  committee: { label: "Admin", icon: <SupportAgentOutlined /> },
+  member: { label: "Member", icon: <PeopleOutlineOutlined /> },
+  captain: { label: "Captain", icon: <GroupsOutlined /> },
+  official: { label: "Official", icon: <HowToRegRounded /> },
+};
 
 export default function PermanentDrawerLeft() {
   const navigate = useNavigate();
@@ -38,7 +49,19 @@ export default function PermanentDrawerLeft() {
   const { eventId } = useParams(); 
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
-  const { user, isAuthenticated, loginWithRedirect, logout } = useAuth0();
+  const {mutate: signOutRedirect} = useSignOutRedirect();
+  const {data} = useAuthState();
+  const user = data?.user;
+  const isAuthenticated = data?.isAuthenticated;
+  const userId = user?.profile.sub;
+  const { data: profile } = useGetProfile(userId!);
+
+  //untuk mendapatkan data roles
+  const userRole = profile?.roles?.[0]?.toLowerCase() || 'member'; // default role ya member
+  const roleData = roleLabels[userRole] || { label: "Unknown Role", icon: null };
+  const isMember = userRole === "member";
+  const isCaptain = userRole === "captain";
+
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -56,25 +79,28 @@ export default function PermanentDrawerLeft() {
     setAnchorElUser(null);
   };
 
+  const menuItems = [
+    { text: 'Match', icon: <Scoreboard />, path: `/events/${eventId}/matches` },
+    { text: 'Sport & Rules', icon: <SportsEsportsOutlined />, path: `/events/${eventId}/sports` },
+    { text: 'Team', icon: <GroupsOutlined />, path: `/events/${eventId}/teams` },
+    { text: 'Absence', icon: <EditNoteOutlined />, path: `/events/${eventId}/schedules` },
+    { text: 'Recap Poin', icon: <EventNoteOutlined />, path: `/events/${eventId}/recap` },
+    { text: 'Leaderboard', icon: <LeaderboardOutlined />, path: `/events/${eventId}/leaderboard` },
+    ...(isMember ? [] : [{ text: 'Data User', icon: <PeopleOutlineOutlined />, path: `/events/${eventId}/user` }]),
+    ...(isMember || isCaptain ? [] : [{ text: 'Settings', icon: <Settings />, path: `/events/${eventId}/detail` }]),
+  ];
+  
+
   const drawerContent = (
     <div>
       <Toolbar />
       <Typography sx={{ mt: -5, mb: 2, mx: 5, display: 'flex' }}>
-        <SupportAgentOutlined />
-        Admin
+        {roleData.icon}
+        <Typography component={'span'} style={{ marginLeft: '8px' }}>{roleData.label}</Typography>
       </Typography>
       <Divider />
       <List>
-        {[
-          { text: 'Match', icon: <Scoreboard />, path: `/events/${eventId}/matches` },
-          { text: 'Sport & Rules', icon: <SportsEsportsOutlined />, path: `/events/${eventId}/sports` },
-          { text: 'Team', icon: <GroupsOutlined />, path: `/events/${eventId}/teams` },
-          { text: 'Absence', icon: <EditNoteOutlined />, path: `/events/${eventId}/schedules` },
-          { text: 'Recap Poin', icon: <EventNoteOutlined />, path: `/events/${eventId}/recap` },
-          { text: 'Leaderboard', icon: <LeaderboardOutlined />, path: `/events/${eventId}/leaderboard` },
-          { text: 'Data User', icon: <PeopleOutlineOutlined />, path: `/events/${eventId}/user` },
-          { text: 'Settings', icon: <Settings />, path: `/events/${eventId}/detail` },
-        ].map(({ text, icon, path }) => (
+        {menuItems.map(({ text, icon, path }) => (
           <ListItem key={text} disablePadding>
             <ListItemButton
               selected={location.pathname === path}
@@ -116,13 +142,13 @@ export default function PermanentDrawerLeft() {
           <Toolbar sx={{ justifyContent: "space-between" }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <img src={Logo} alt="Logo" width="40px" />
-              <Typography variant="h6" noWrap component="div" sx={{ ml: 2 }} onClick={() => navigate(`/events`)}
+              <Typography variant="h6" noWrap component="div" sx={{ ml: 2 }} onClick={() => navigate(`/`)}
             style={{ cursor: "pointer" }}>
                 Sports Events
               </Typography>
             </Box>
             <Box>
-              <Tooltip title={isAuthenticated ? user?.name || "Profile" : "Login"}>
+              <Tooltip title={isAuthenticated ? user?.profile.name || "Profile" : "Login"}>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <AccountCircle />
                 </IconButton>
@@ -138,16 +164,16 @@ export default function PermanentDrawerLeft() {
                 onClose={handleCloseUserMenu}
               >
                 {isAuthenticated ? (
-                  <>
-                    <MenuItem>
-                      <Typography>{user?.email}</Typography>
+                  <div>
+                    <MenuItem onClick={() => navigate(`/profile/${user?.profile.sub}`)}>
+                      <ManageAccountsRounded/> My Profile
                     </MenuItem>
-                    <MenuItem onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
+                    <MenuItem onClick={() => signOutRedirect()}>
                       <Logout /> Logout
                     </MenuItem>
-                  </>
+                  </div>
                 ) : (
-                  <MenuItem onClick={() => loginWithRedirect()}>
+                  <MenuItem>
                     <Typography>Login</Typography>
                   </MenuItem>
                 )}

@@ -164,6 +164,14 @@ const Recap: React.FC = () => {
     );
   }
 
+  if (totalPoints.length === 0 ) {
+     return (
+      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+        <Typography variant="h6">No recap point found for this event</Typography>
+      </Box>
+     )
+  }
+
   return (
     <ThemeProvider theme={ColorTheme}>
       <Typography variant="h4" align="center" sx={{ mt: 3, ml: 80 }}>

@@ -30,35 +30,39 @@ export default function AddEventPage() {
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
 
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [registrationStartDate, setRegistrationStartDate] = useState<string>("");
   const [eventStartDate, setEventStartDate] = useState<string>("");
 
-  // Function to convert image file to base64
+  // untuk upload image
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("image", reader.result as string); 
-      };
-      reader.readAsDataURL(file);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+        setFile(selectedFile); // Store the actual file in state
+        setFileName(selectedFile.name);
+        setValue("image", selectedFile.name); // Set file name in form state if needed
     } else {
-      setFileName("");
+        setFile(null);
+        setFileName("");
     }
-  };
+};
 
   const onSubmit = (data: Event) => {
-    const formattedData = {
-      ...data,
-      registrationStartDate: formatDate(data.registrationStartDate),
-      registrationEndDate: formatDate(data.registrationEndDate),
-      eventStartDate: formatDate(data.eventStartDate),
-      eventEndDate: formatDate(data.eventEndDate),
-      allowedSportLimit:  Number(data.allowedSportLimit),
-
-    };
+    const formattedData = new FormData();
+    formattedData.append("title", data.title)
+    formattedData.append("description", data.description)
+    formattedData.append("registrationStartDate", formatDate(data.registrationStartDate))
+    formattedData.append("registrationEndDate", formatDate(data.registrationEndDate))
+    formattedData.append("eventStartDate", formatDate(data.eventStartDate))
+    formattedData.append("eventEndDate", formatDate(data.eventEndDate))
+    formattedData.append("allowedSportLimit",  String(data.allowedSportLimit))
+    
+    if (file) {
+      formattedData.append("image", file)
+    }
+    console.log(...formattedData)
+    
     mutate(formattedData, {
       onSuccess: () => {
         console.log(formattedData)
@@ -69,7 +73,7 @@ export default function AddEventPage() {
           confirmButtonText: "Ok",
         }).then((result) => {
           if (result.isConfirmed) {
-            navigate("/events");
+            navigate("/");
           }
         });
       },
@@ -102,7 +106,7 @@ export default function AddEventPage() {
       cancelButtonText: "No",
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/events");
+        navigate("/");
       }
     });
   };

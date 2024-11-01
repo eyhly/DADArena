@@ -220,6 +220,23 @@ const ExtraPointPage: React.FC = () => {
     );
   }
 
+  if (filteredExtraPoints.length === 0) {
+    return(
+      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+        <Typography variant="h6">No extra point found for this team</Typography>
+        <Button
+        size="small"
+        variant="contained"
+        sx={{ mt: 2}}
+        onClick={() => setOpenAdd(true)}
+      >
+        <AddOutlined /> Add Extra Point
+      </Button>
+      <AddExtraPoint open={openAdd} handleClose={() => setOpenAdd(false)} />
+      </Box>
+    )
+  }
+
   return (
     <ThemeProvider theme={ColorTheme}>
       <Typography variant="h4" align="center" sx={{ mt: 3, ml: 65 }}>

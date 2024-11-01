@@ -17,7 +17,7 @@ import {
   Container,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetAllAttendances, useGetAllTeams } from "../../services/queries";
+import { useGetAllAttendances, useGetAllSchedules, useGetAllTeams } from "../../services/queries";
 import { Attendance } from "../../types/attendance";
 import {
   useReactTable,
@@ -30,6 +30,7 @@ import {
 import { Team } from "../../types/team";
 import { AddOutlined, KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import AddAttendance from "./AddAttendance";
+import { useAuthState } from "../../hook/useAuth";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -63,7 +64,8 @@ const renderDate = (dateString: string) => {
 
 const AttendancePage: React.FC = () => {
   const { eventId, scheduleId } = useParams<{eventId: string; scheduleId: string;}>();
-  const {data: attendances,isLoading,isError,} = useGetAllAttendances(scheduleId!, eventId!);
+  const {data: attendances, isLoading, isError} = useGetAllAttendances(scheduleId!, eventId!);
+  const {data: schedules} = useGetAllSchedules(eventId!);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { data: teams } = useGetAllTeams(eventId!);
   const navigate = useNavigate();
@@ -72,17 +74,20 @@ const AttendancePage: React.FC = () => {
     return team ? team.name : "Unknown Team";
   };
   const [openAddModal, setOpenAddModal] = useState(false);
+  const { data } = useAuthState();
+  const user = data?.user;
 
-  const columns = React.useMemo<ColumnDef<Attendance>[]>(
-    () => [
-      // { accessorFn: (row, i) => i + 1, header: "No" },
-      { accessorFn: (row) => getTeamNameById(row.teamId), header: "Team Name" },
-      { accessorKey: "username", header: "User" },
-      { accessorKey: "name", header: "Email" },
-      { accessorFn: (row) => renderDate(row.time), header: "Attendance time" },
-    ],
-    [teams]
-  );
+  const currentSchedule = schedules?.find(schedule => schedule.id === scheduleId);
+  const isScheduleEnded = currentSchedule ? new Date() > new Date(currentSchedule.endAttendance) : true;
+  const hasUserAttended = attendances?.some(att => att.userId === user?.profile.sub);
+  const isButtonDisabled = isScheduleEnded || hasUserAttended;
+
+  const columns = React.useMemo<ColumnDef<Attendance>[]>(() => [
+    { accessorFn: (row) => getTeamNameById(row.teamId), header: "Team Name" },
+    { accessorKey: "fullname", header: "User" },
+    { accessorKey: "name", header: "Email" },
+    { accessorFn: (row) => renderDate(row.time), header: "Attendance time" },
+  ], [teams]);
 
   useEffect(() => {
     console.log("Event ID:", eventId);
@@ -92,9 +97,7 @@ const AttendancePage: React.FC = () => {
   const tableInstance = useReactTable({
     data: attendances || [],
     columns,
-    state: {
-      sorting
-    },
+    state: { sorting },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
@@ -124,46 +127,40 @@ const AttendancePage: React.FC = () => {
   if (attendances?.length === 0) {
     return (
       <>
-      <Box sx={{ml: 90, mt: -30}}>
-        <Breadcrumbs aria-label="breadcrumb">
-          {/* <Typography>Absence</Typography> */}
-          <Typography
-            onClick={() => navigate(`/events/${eventId}/schedules/`)}
-            style={{ cursor: "pointer" }}
-            color="inherit"
-          >
-            Schedule
+        <Box sx={{ ml: 90, mt: -30 }}>
+          <Breadcrumbs aria-label="breadcrumb">
+            <Typography
+              onClick={() => navigate(`/events/${eventId}/schedules/`)}
+              style={{ cursor: "pointer" }}
+              color="inherit"
+            >
+              Schedule
+            </Typography>
+            <Typography color="text.primary">Attendance</Typography>
+          </Breadcrumbs>
+        </Box>
+        <Box sx={{ textAlign: "center", mt: 40, ml: 90 }}>
+          <Typography variant="h6">
+            No attendance records found for this schedule
           </Typography>
-          <Typography color="text.primary">Attendance</Typography>
-        </Breadcrumbs>
-      </Box>
-      <Box sx={{ textAlign: "center", mt: 40, ml: 90 }}>
-        <Typography variant="h6">
-          No attendance records found for this schedule
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{ mb: 2 }}
-          onClick={() => setOpenAddModal(true)}
-        >
-          <AddOutlined /> Attendance
-        </Button>
-
-        <AddAttendance
-        open={openAddModal}
-        handleClose={() => setOpenAddModal(false)}
-      />
-      </Box>
+          <Button
+            variant="contained"
+            sx={{ mb: 2 }}
+            onClick={() => setOpenAddModal(true)}
+            disabled={isButtonDisabled}
+          >
+            <AddOutlined /> Create Attendance
+          </Button>
+          <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
+        </Box>
       </>
     );
   }
 
   return (
     <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
-      {/* Breadcrumbs */}
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
-          {/* <Typography>Absence</Typography> */}
           <Typography
             onClick={() => navigate(`/events/${eventId}/schedules/`)}
             style={{ cursor: "pointer" }}
@@ -180,16 +177,14 @@ const AttendancePage: React.FC = () => {
 
       <Button
         variant="contained"
-        sx={{ mb: 2, ml: 106 }}
+        sx={{ mb: 2, ml: 100 }}
         onClick={() => setOpenAddModal(true)}
+        disabled={isButtonDisabled}
       >
-        <AddOutlined /> Attendance
+        <AddOutlined /> Create Attendance
       </Button>
 
-      <AddAttendance
-        open={openAddModal}
-        handleClose={() => setOpenAddModal(false)}
-      />
+      <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
       <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
         <Table stickyHeader>
           <TableHead>
@@ -204,16 +199,9 @@ const AttendancePage: React.FC = () => {
                           style: { cursor: "pointer", display: "flex" },
                         }}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getIsSorted() === "asc" ? (
-                          <KeyboardArrowUp />
-                        ) : null}
-                        {header.column.getIsSorted() === "desc" ? (
-                          <KeyboardArrowDown />
-                        ) : null}
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getIsSorted() === "asc" ? <KeyboardArrowUp /> : null}
+                        {header.column.getIsSorted() === "desc" ? <KeyboardArrowDown /> : null}
                       </div>
                     )}
                   </StyledTableCell>
@@ -239,3 +227,4 @@ const AttendancePage: React.FC = () => {
 };
 
 export default AttendancePage;
+

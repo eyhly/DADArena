@@ -5,89 +5,41 @@ import { LoginUser } from "../types/login";
 import { UserLogin } from "../types/user";
 import { Team } from "../types/team";
 import { Match } from "../types/match";
-// import { useAuth0 } from "../auth0";
-import { useAuth0 } from "@auth0/auth0-react";
 import { SportPlayer } from "../types/sportPlayer";
 import { TeamMember } from "../types/teamMember";
 import { Point } from "../types/point";
 import { Notes } from "../types/notes";
-// import { Register } from "../types/register";
 import { Round } from "../types/round";
 import { Schedule } from "../types/schedule";
 import { Attendance } from "../types/attendance";
 import { ExtraPoint } from "../types/extraPoint";
 import { useEffect, useState } from "react";
-// import { useAuth0 } from '../pages/Auth/';
+import { useAuthState } from "../hook/useAuth";
+import { Profile } from "../types/profile";
 
-const BASE_URL = "http://localhost:5001/api";
-// const BASE_URL = "http://192.168.0.104:5001/api";
-// const BASE_URL = "http://192.168.53.149:5001/api";
+// const BASE_URL = "http://localhost:5001/api";
+const BASE_URL = "http://192.168.52.204:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 const useApi = () => {
-  const { handleRedirectCallback, getAccessTokenSilently, isAuthenticated } =
-    useAuth0();
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const [isAuthenticated, setIs]
+  const {data: authState} = useAuthState();
+  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('access_token'))
+
   useEffect(() => {
-    const handleAuth0Redirect = async () => {
-      if (window.location.search.includes("code=")) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get("code");
+    const handleAuthToken = async () => {
+      if (authState?.isAuthenticated && authState.user?.access_token) {
+        const token = authState?.user?.access_token;
+        if (token) {
+          setAccessToken(token)
+          localStorage.setItem('access_token', token)
 
-        if (code) {
-          try {
-            // ubah authorization code jadi tokens
-            const response = await axios.post(
-              "https://dev-wwlr6kvyhaa1e7bi.us.auth0.com/oauth/token",
-              {
-                client_id: "ClLkMpCvnDMhkOIkEoIXWtuc0iQT1uQ1",
-                client_secret:
-                  "J1APp7ZDupVL_Pb6_gjRx6uwadzDo-3kttcTc0B9Q1E4IQpei8e4T2CNxZoCnBxf",
-                audience: "http://localhost:5001",
-                grant_type: "password",
-                // redirect_uri: "http://localhost:5173",
-                // code
-                username: "wiliperdanatestapp@gmail.com",
-                password: "ASDasd00$",
-              },
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-
-            const { access_token } = response.data;
-            console.log("access token", access_token);
-            setAccessToken(access_token);
-            //menyimpan access token
-            localStorage.setItem('access_token', access_token);
-
-            //mengganti code dengan pathname page
-            const newUrl = window.location.origin + window.location.pathname;
-            window.history.replaceState(null, '', newUrl);
-          } catch (error) {
-            console.error("Error during token exchange", error);
-          }
+          //untuk mwnghilangkan code di url
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
-    };
-
-    handleAuth0Redirect();
-  }, [handleRedirectCallback]);
-
-  const getToken = async () => {
-    if (isAuthenticated) {
-      if (accessToken) {
-        return accessToken;
-      } else {
-        const token = await getAccessTokenSilently();
-        return token;
-      }
     }
-  };
+    handleAuthToken();
+  }, [authState])
 
   // //register
   //  const postRegister = async (data: Register) => {
@@ -110,7 +62,7 @@ const useApi = () => {
         // const token = await getToken();
         const response = await axios.get<UserLogin>(`${BASE_URL}/users`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
         return response.data;
@@ -120,38 +72,13 @@ const useApi = () => {
       }
     };
 
-  //get all user
-  //  const getAllUsers = () => {
-  //   const response = await axios.get()
-  // }
-
-  //  get all events
-  //  const getAllEvents = async () => {
-  //   const response = await axios.get<Event[]>(`${BASE_URL}/events`, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
-
-  // // get event by ID
-  //  const getEvent = async (id: string) => {
-  //   const response = await axios.get<Event>(`${BASE_URL}/events/${id}`, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
-
   //  get all events
 
   const getAllEvents = async (): Promise<Event[]> => {
     // const token = await getToken();
     const response = await axios.get<Event[]>(`${BASE_URL}/events`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
@@ -162,7 +89,7 @@ const useApi = () => {
     try {
       const response = await axios.get<Event>(`${BASE_URL}/events/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       return response.data;
@@ -173,11 +100,12 @@ const useApi = () => {
   };
 
   //create event
-  const createEvent = async (data: Event) => {
+  const createEvent = async (data: FormData) => {
     // const token = await getToken();
     const response = await axios.post(`${BASE_URL}/events`, data, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
+        // "Content-Type": "multipart/form-data; boundary=<calculated when request is sent>"
       },
     });
     return response.data;
@@ -188,7 +116,7 @@ const useApi = () => {
     // const token = await getToken();
     const response = await axios.put<Event>(`${BASE_URL}/events/${id}`, data, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
@@ -199,31 +127,11 @@ const useApi = () => {
     // const token = await getToken();
     const response = await axios.delete(`${BASE_URL}/events/${id}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
   };
-
-  // //  get all sports
-  //  const getAllSports = async () => {
-  //   const response = await axios.get<Sport[]>(`${BASE_URL}/sports`, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
-
-  // // get sport by ID
-  //  const getSport = async (id: string) => {
-  //   const response = await axios.get<Sport>(`${BASE_URL}/sports/${id}`, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
 
   //  get all sports
   const getAllSports = async (eventId: string): Promise<Sport[]> => {
@@ -234,7 +142,7 @@ const useApi = () => {
         `${BASE_URL}/events/${eventId}/sports`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
@@ -252,7 +160,7 @@ const useApi = () => {
     try {
       const response = await axios.get<Sport>(`${BASE_URL}/sports/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       return response.data;
@@ -262,17 +170,6 @@ const useApi = () => {
     }
   };
 
-  //create sport
-  //get eventid
-  //  const createSport = async (data: { title: string; eventId: string}, eventId: string)  => {
-  //   const response = await axios.post<Sport[]>(`${BASE_URL}/events/${eventId}/sports`, data, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
-
   const createSport = async (data: Omit<Sport, "id">) => {
     // const token = await getToken();
     const response = await axios.post<Sport>(
@@ -280,22 +177,12 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
     return response.data;
   };
-
-  //update sport
-  //  const updateSport = async (id: string, data: Sport) => {
-  //   const response = await axios.put<Sport>(`${BASE_URL}/sports/${id}`, data, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
 
   const updateSport = async (
     id: string,
@@ -308,7 +195,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -322,7 +209,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/sports/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         data: {
           eventId: eventId,
@@ -339,29 +226,19 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/teams`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
     return response.data;
   };
-  //  get all teams
-  //  const getAllTeams = async (eventTitle: string): Promise<Team[]> => {
-  //   const eventId = getEventIdByTitle(eventTitle);
-  //   const response = await axios.get<Team[]>(`${BASE_URL}/events/${eventId}/teams`, {
-  //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-  //     },
-  //   });
-  //   return response.data;
-  // };
 
   // get teams by ID
   const getTeam = async (id: string) => {
     // const token = await getToken();
     const response = await axios.get<Team>(`${BASE_URL}/teams/${id}`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
@@ -375,7 +252,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -390,7 +267,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -404,7 +281,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/teams/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -416,7 +293,7 @@ const useApi = () => {
   //   try {
   //     const response = await axios.get<Match[]>(`${BASE_URL}/events/${eventId}/sports/${sportId}/matches`, {
   //       headers: {
-  //         Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+  //         Authorization: `Bearer ${accessToken}`,
   //       },
   //     });
   //     return response.data;
@@ -434,7 +311,7 @@ const useApi = () => {
         `${BASE_URL}/events/${eventId}/matches`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
@@ -452,7 +329,7 @@ const useApi = () => {
     try {
       const response = await axios.get<Match>(`${BASE_URL}/matches/${id}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       return response.data;
@@ -470,7 +347,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -485,7 +362,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -496,7 +373,7 @@ const useApi = () => {
   //  const updateMatch = async (id: string, eventId: string, data: { match: Match; rounds: Round[] }) => {
   //   const response = await axios.put(`${BASE_URL}/events/${eventId}/matches/${id}`, data, {
   //     headers: {
-  //       Authorization: `Bearer ${localStorage.getItem('access_token')}`
+  //       Authorization: `Bearer ${accessToken}`
   //     }
   //   });
   //   return response.data;
@@ -509,7 +386,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -523,7 +400,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/schedules`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -537,7 +414,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/schedules/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -552,7 +429,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -571,7 +448,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -585,7 +462,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/schedules/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -602,7 +479,7 @@ const useApi = () => {
       `${BASE_URL}/events/${scheduleId}/schedules/${eventId}/attendances`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -621,7 +498,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -641,7 +518,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -659,7 +536,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/schedules/${scheduleId}/attendances/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -673,7 +550,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${matchId}/rounds`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -688,7 +565,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -708,7 +585,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -722,7 +599,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${matchId}/rounds/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -734,7 +611,7 @@ const useApi = () => {
     // const token = await getToken();
     const response = await axios.get(`${BASE_URL}/events/${eventId}/points`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
     return response.data;
@@ -748,7 +625,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -768,7 +645,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -782,7 +659,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${matchId}/points/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -796,7 +673,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/extrapoints`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -815,7 +692,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -835,7 +712,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -853,7 +730,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/teams/${teamId}/extrapoints/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -867,7 +744,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${matchId}/notes`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -882,7 +759,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -902,7 +779,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -916,7 +793,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matches/${matchId}/notes/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -930,7 +807,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/totalpoints`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -944,7 +821,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/matchPoints`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -958,7 +835,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/sports/${sportId}/sportPlayers`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -979,7 +856,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -999,7 +876,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1017,7 +894,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/sports/${sportId}/sportPlayers/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1031,7 +908,7 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/teams/${teamId}/teamMembers`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1050,7 +927,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1071,7 +948,7 @@ const useApi = () => {
       data,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1089,7 +966,56 @@ const useApi = () => {
       `${BASE_URL}/events/${eventId}/teams/${teamId}/teamMembers/${userId}`,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
+  //get profile
+  const getProfile = async (userId: string) => {
+    const response = await axios.get(`${BASE_URL}/profile/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+    return response.data;
+  }
+
+  //update profile
+  const updateProfile = async (userId: string, data: Profile) => {
+    const response = await axios.patch(`${BASE_URL}/profile/${userId}`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    return response.data;
+  }
+
+  //export team member
+  const exportTeamMembers = async (eventId: string, teamId: string) => {
+    // const token = await getToken();
+    const response = await axios.get(
+      `${BASE_URL}/events/${eventId}/teams/${teamId}/teamMembers/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
+  };
+
+  //export sportPlayer
+  const exportSportPlayers = async (eventId: string, sportId: string) => {
+    // const token = await getToken();
+    const response = await axios.get(
+      `${BASE_URL}/events/${eventId}/sports/${sportId}/sportPlayers/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -1097,7 +1023,6 @@ const useApi = () => {
   };
 
   return {
-    getToken,
     getAllEvents,
     getEvent,
     createEvent,
@@ -1155,6 +1080,10 @@ const useApi = () => {
     deleteSportPlayer,
     postLogin,
     getUserInfo,
+    getProfile,
+    updateProfile,
+    exportTeamMembers,
+    exportSportPlayers,
   };
 };
 

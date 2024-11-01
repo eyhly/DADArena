@@ -2,7 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { useCreateSportPlayer } from "../../../services/mutation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import { SportPlayer } from "../../../types/sportPlayer";
 import Swal from "sweetalert2";
 import {
@@ -12,10 +12,12 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
+  IconButton,
   MenuItem,
   TextField,
 } from "@mui/material";
 import { useGetAllTeams } from "../../../services/queries";
+import { Add, Remove } from "@mui/icons-material";
 
 interface AddSportPlayerProps {
   open: boolean;
@@ -27,17 +29,31 @@ const AddSportPlayer: React.FC<AddSportPlayerProps> = ({
   handleClose,
 }) => {
   const { eventId, sportId } = useParams();
-  const { data: teams } = useGetAllTeams(eventId!);
+  const { data: teams } = useGetAllTeams(eventId!); 
   const { mutate } = useCreateSportPlayer();
   const queryClient = useQueryClient();
-  const { handleSubmit, control } = useForm<SportPlayer>();
+  const { handleSubmit, control, reset } = useForm<SportPlayer>({
+    defaultValues: {
+      userId: [""]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "userId"
+  })
 
   const onSubmit: SubmitHandler<SportPlayer> = (data) => {
     if (!eventId) {
       console.log("event id?", eventId);
     }
+
+    const payload = data.userId
+    .filter((id) => id)
+    .map((id) => ({userId: id}))
+
     mutate(
-      { data, eventId: eventId!, sportId: sportId! },
+      { data: payload, eventId: eventId!, sportId: sportId! },
       {
         onSuccess: () => {
           Swal.fire({
@@ -67,12 +83,14 @@ const AddSportPlayer: React.FC<AddSportPlayerProps> = ({
       }
     );
   };
+
   return (
     <Dialog open={open} onClose={handleClose}>
+      <DialogTitle>Add Sport Player</DialogTitle>
       <DialogContent>
-        <DialogTitle>Add Sport Player</DialogTitle>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Grid container spacing={3}>
+          {fields.map((field, index) => (
+            <Grid container spacing={3} key={field.id}>
             <Grid item xs={12}>
               <Controller
                 name="teamId"
@@ -95,22 +113,38 @@ const AddSportPlayer: React.FC<AddSportPlayerProps> = ({
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={11}>
               <Controller
-                name="userId"
+                name={`userId.${index}`}
                 control={control}
                 defaultValue=""
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Player"
+                    label={`Player ${index + 1}`}
                     variant="outlined"
                     fullWidth
                   />
                 )}
               />
             </Grid>
+            <Grid item xs={1}>
+            <IconButton onClick={() => remove(index)}>
+                    <Remove />
+                  </IconButton>
+            </Grid>
           
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                onClick={() => append("")}
+                startIcon={<Add />}
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                Add Player
+              </Button>
+            </Grid>
           <Grid item xs={6}>
             <Button type="submit" variant="contained" fullWidth>
               Add Player
@@ -122,6 +156,7 @@ const AddSportPlayer: React.FC<AddSportPlayerProps> = ({
             </Button>
           </Grid>
           </Grid>
+          ))}
         </Box>
       </DialogContent>
     </Dialog>
