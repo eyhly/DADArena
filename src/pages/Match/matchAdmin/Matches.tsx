@@ -23,8 +23,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteMatch } from "../../../services/mutation";
 import AddMatch from "./AddMatch";
 import UpdateMatch from "./UpdateMatch";
-import { useGetAllMatches, useGetProfile } from "../../../services/queries";
-import { useAuthState } from "../../../hook/useAuth";
+import useRoles from "../../../hook/useRoles";
+import { useGetAllMatches } from "../../../services/queries";
 
 const renderDate = (dateString: string) => {
   if (!dateString) return 'Unknown Date';
@@ -50,13 +50,7 @@ const Matches = () => {
   const queryClient = useQueryClient();
   const deleteMatch = useDeleteMatch();
 
-  //untuk mengetahui user dan role nya
-  const {data} = useAuthState();
-  const user = data?.user;
-  const userId = user?.profile.sub;
-  const {data: profile } = useGetProfile(userId!);
-  const roles = profile?.roles || [];
-
+  const roles = useRoles();
   const isMemberOrKapten = roles.includes("member") || roles.includes("captain")
 
   const { data: matches, isLoading: matchesLoading, isError: matchesError } = useGetAllMatches(eventId!);

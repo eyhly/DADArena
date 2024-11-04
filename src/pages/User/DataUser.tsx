@@ -38,12 +38,12 @@ const DataUser: React.FC = () => {
                 header: "ID"
             },
             {
-                accessorKey: 'nickname',
-                header: "Name"
+              accessorKey: "user_Metadata.fullname",
+              header: "Name"
             },
             {
-                accessorKey: "user_Metadata.fullname",
-                header: "Username"
+                accessorKey: 'user_Metadata.gender',
+                header: "Gender"
             },
             {
                 accessorKey: 'email',
@@ -68,7 +68,7 @@ const DataUser: React.FC = () => {
 
     if (isLoading) {
         return (
-          <Box sx={{ textAlign: "center", marginTop: 4, ml: 90 }}>
+          <Box sx={{ textAlign: "center", marginTop: 4, ml: 95 }}>
             <CircularProgress />
             <Typography variant="h6" sx={{ marginTop: 2 }}>
               Loading users...

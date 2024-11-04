@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useExportTeamMembers, useGetAllTeamMembers } from "../../../services/queries";
+import { useGetAllTeamMembers, useGetProfile } from "../../../services/queries";
 import {
   Table,
   TableBody,
@@ -32,6 +32,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteTeamMember } from "../../../services/mutation"; 
 import AddMember from './AddTeamMember'; 
 import { TeamMember } from "../../../types/teamMember";
+import { useAuthState } from "../../../hook/useAuth";
+import useApi from "../../../services/api";
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.primary.main,
@@ -53,7 +55,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const TeamMembers: React.FC = () => {
   const { eventId, teamId } = useParams();
   const { data, isLoading, isError } = useGetAllTeamMembers(eventId!, teamId!);
-  const exportTM = useExportTeamMembers(eventId!, teamId!);
+  const {exportTeamMembers} = useApi();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const navigate = useNavigate();
@@ -62,6 +64,17 @@ const TeamMembers: React.FC = () => {
 
   const handleOpenCreate = () => setOpenCreate(true);
   const handleCloseCreate = () => setOpenCreate(false);
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMember = roles.includes("member");
+
+  const handleDownload = () => {
+    exportTeamMembers(eventId!, teamId!)
+  }
 
   const handleDelete = async (userId: string, eventId: string, teamId: string) => {
     if (!userId) {
@@ -121,24 +134,23 @@ const TeamMembers: React.FC = () => {
         accessorKey: "gender",
         header: "Gender",
       },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          
-          <>
-            <Button
-              onClick={() => handleDelete(row.original.userId, eventId!, teamId!)}
-              sx={{ color: "red" }}
-            >
-              <DeleteOutlineOutlined /> {/* Delete */}
-            </Button>
-          </>
-        ),
-      },
+      ...(isMember
+        ? []
+        : [{
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => (
+              <Button
+                onClick={() => handleDelete(row.original.userId, eventId!, teamId!)}
+                sx={{ color: "red" }}
+              >
+                <DeleteOutlineOutlined />
+              </Button>
+            ),
+          }]
+      )
     ],
     [eventId, teamId]
-    
   );
 
   const table = useReactTable({
@@ -174,16 +186,18 @@ const TeamMembers: React.FC = () => {
         <Typography variant="h6">
           No team members found.
         </Typography>
-        <Button variant="contained" onClick={handleOpenCreate}>
-        <AddOutlined /> Create Member
-      </Button>
+        {!isMember && (
+          <Button variant="contained" onClick={handleOpenCreate}>
+          <AddOutlined /> Create Member
+        </Button>
+        )}
       <AddMember eventId={eventId!} teamId={teamId!} open={openCreate} onClose={handleCloseCreate} />
       </Box>
     )
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
+    <Container sx={{ ml: 50, mb: 4, minHeight: 550, maxHeight: 550 }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
@@ -191,24 +205,29 @@ const TeamMembers: React.FC = () => {
             style={{ cursor: "pointer" }}
             color="inherit"
           >
-            Teams
+            Team
           </Typography>
           <Typography color="text.primary">Team Members</Typography>
         </Breadcrumbs>
       </Box>
-      <Typography variant="h4">
+      <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
         List Team Members
       </Typography>
-      <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
-      <Button variant="contained" sx={{maxWidth: 150}} onClick={() => navigate(`events/${eventId}/teams/${teamId}/teammembers/export`)}>
-        <SaveAltRounded/> Download
-      </Button>
-      <Button variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
-        <AddOutlined /> Create Member
-      </Button>
-      </Box>
+      {!isMember && (
+        <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
+        <Button variant="contained" sx={{maxWidth: 150}} onClick={handleDownload}>
+          <SaveAltRounded/> Download
+        </Button>
+        {/* <a href={`http://localhost:5001/api/events/${eventId}/teams/${teamId}/teammembers/export`}>
+          download
+        </a> */}
+        <Button variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
+          <AddOutlined /> Create Member
+        </Button>
+        </Box>
+      )}
 
-      <TableContainer component={Paper} sx={{ maxWidth: 900 }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
         <Table>
           <TableHead>
             <StyledTableRow>

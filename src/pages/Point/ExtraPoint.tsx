@@ -18,14 +18,14 @@ import {
   CircularProgress,
   Typography,
   Box,
-  ThemeProvider,
   tableCellClasses,
   Button,
+  Container,
+  Breadcrumbs,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllExtraPoints, useGetAllTeams } from "../../services/queries";
+import { useGetAllExtraPoints, useGetAllTeams, useGetProfile } from "../../services/queries";
 import { styled } from "@mui/system";
-import ColorTheme from "../../utils/colorTheme";
 import { ExtraPoint } from "../../types/extraPoint";
 import {
   AddOutlined,
@@ -39,6 +39,7 @@ import AddExtraPoint from "./AddExtraPoint";
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
 import UpdateExtraPoint from "./UpdateExtraPoint";
+import { useAuthState } from "../../hook/useAuth";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -79,6 +80,14 @@ const ExtraPointPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
+
 
   const filteredExtraPoints = useMemo(
     () =>
@@ -155,10 +164,6 @@ const ExtraPointPage: React.FC = () => {
 
   const columns = useMemo<ColumnDef<ExtraPoint>[]>(
     () => [
-      // {
-      //   accessorFn: (row, i) => i + 1,
-      //   header: "No",
-      // },
       {
         accessorKey: "week",
         header: "Week",
@@ -175,11 +180,13 @@ const ExtraPointPage: React.FC = () => {
           return value < 0 ? value : value.toString();
         },
       },
-      {
+      ...(isMemberOrKapten
+        ? []
+        : [{
         id: "action",
         header: "Actions",
         cell: ({ row }) => (
-          <>
+          <div>
             <Button onClick={() => handleOpenUpdate(row.original)}>
               <EditOutlined />
             </Button>
@@ -188,9 +195,10 @@ const ExtraPointPage: React.FC = () => {
             >
               <DeleteOutlineOutlined sx={{ color: "red" }} />
             </Button>
-          </>
+          </div>
         ),
-      },
+      }]
+      ),
     ],
     [navigate]
   );
@@ -224,34 +232,50 @@ const ExtraPointPage: React.FC = () => {
     return(
       <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
         <Typography variant="h6">No extra point found for this team</Typography>
-        <Button
-        size="small"
-        variant="contained"
-        sx={{ mt: 2}}
-        onClick={() => setOpenAdd(true)}
-      >
-        <AddOutlined /> Add Extra Point
-      </Button>
+        {!isMemberOrKapten && (
+          <Button
+          size="small"
+          variant="contained"
+          sx={{ mt: 2}}
+          onClick={() => setOpenAdd(true)}
+        >
+          <AddOutlined /> Add Extra Point
+        </Button>
+        )}
       <AddExtraPoint open={openAdd} handleClose={() => setOpenAdd(false)} />
       </Box>
     )
   }
 
   return (
-    <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h4" align="center" sx={{ mt: 3, ml: 65 }}>
+    <Container sx={{ ml: 50, mb: 4, minHeight: 550, maxHeight: 550 }}>
+      <Box>
+        <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            onClick={() => navigate(`/events/${eventId}/recap/`)}
+            style={{ cursor: "pointer" }}
+            color="inherit"
+          >
+            Recap
+          </Typography>
+          <Typography color="text.primary">Extra Point</Typography>
+        </Breadcrumbs>
+      </Box>
+      <Typography variant="h4" sx={{ mt: 3, mb: 2}}>
         Extra Points for {getTeamNameById(teamId!)}
       </Typography>
-      <Button
+      {!isMemberOrKapten && (
+        <Button
         size="small"
         variant="contained"
-        sx={{ mt: 2, ml: 145 }}
+        sx={{ mt: -3, mb: 3, ml: 105}}
         onClick={() => setOpenAdd(true)}
       >
         <AddOutlined /> Add Extra Point
       </Button>
+      )}
       <AddExtraPoint open={openAdd} handleClose={() => setOpenAdd(false)} />
-      <TableContainer component={Paper} sx={{ mt: 5, maxWidth: 800, ml: 65 }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1000,}}>
         <Table>
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (
@@ -302,7 +326,7 @@ const ExtraPointPage: React.FC = () => {
           extrapoint={selectedExtraPoint}
         />
       )}
-    </ThemeProvider>
+    </Container>
   );
 };
 

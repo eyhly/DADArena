@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllTeams } from "../../services/queries";
+import { useGetAllTeams, useGetProfile } from "../../services/queries";
 import {
   Table,
   TableBody,
@@ -23,12 +23,12 @@ import {
   styled,
   tableCellClasses,
   Button,
-  ThemeProvider,
   Tooltip,
+  Breadcrumbs,
+  Container,
 } from "@mui/material";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { Team } from "../../types/team";
-import ColorTheme from "../../utils/colorTheme";
 import {
   DeleteOutlineOutlined,
   AddOutlined,
@@ -41,6 +41,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteTeam } from "../../services/mutation";
 import CreateTeam from "./teamsOfficial/AddTeam";
 import UpdateTeam from "./teamsOfficial/UpdateTeam";
+import { useAuthState } from "../../hook/useAuth";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -70,6 +71,20 @@ const ListTeam: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const deleteTeam = useDeleteTeam();
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMember = roles.includes("member");
+
+
+  const filteredData = React.useMemo(
+    () =>
+      data?.filter((team: Team) => team.eventId === eventId) ?? [],
+    [data, eventId]
+  );
 
   const handleOpenCreate = () => setOpenCreate(true);
   const handleCloseCreate = () => setOpenCreate(false);
@@ -126,9 +141,11 @@ const ListTeam: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <>
+          <Box sx={{display: 'flex'}}>
+          {!isMember && (
+            <div>
             <Button onClick={() => handleOpenUpdate(row.original)}>
-              <EditOutlined /> {/*  Update */}
+              <EditOutlined /> 
             </Button>
             <Button
               onClick={() =>
@@ -136,8 +153,11 @@ const ListTeam: React.FC = () => {
               }
               sx={{ color: "red" }}
             >
-              <DeleteOutlineOutlined /> {/*Delete*/}
+              <DeleteOutlineOutlined /> 
             </Button>
+            </div>
+          )}
+            <div>
             <Tooltip title='View Members' placement="right-end">
             <Button variant="contained"
               onClick={() =>
@@ -147,7 +167,8 @@ const ListTeam: React.FC = () => {
               <VisibilityOutlinedIcon /> View Members
             </Button>
             </Tooltip>
-          </>
+          </div>
+          </Box>
         ),
       },
     ],
@@ -181,15 +202,49 @@ const ListTeam: React.FC = () => {
     );
   }
 
+  if (filteredData.length === 0) {
+    return (
+      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+        <Typography variant="h6">No teams found for this event</Typography>
+        {!isMember && (
+          <Button
+          size="small"
+          variant="contained"
+          sx={{ maxHeight: 50, maxWidth: "100%" }}
+          onClick={handleOpenCreate}
+        >
+          <AddOutlined /> Create Team
+        </Button>
+        )}
+      <CreateTeam eventId={eventId!} open={openCreate} onClose={handleCloseCreate} />
+      </Box>
+    );
+  }
+
   return (
-    <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h3" sx={{ ml: 90, mb: 3, mt: 10 }}>
-        List Teams
-      </Typography>
-      <Button variant="contained" onClick= {handleOpenCreate} sx={{ml: 145, mb: 2}}>
-        <AddOutlined/> Create Team
-      </Button>
-      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 900}}>
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
+        <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            color="text.primary"
+          >
+            Team
+          </Typography>
+        </Breadcrumbs>
+        <Box>
+        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+          List of Team
+        </Typography>
+        {!isMember && (
+          <Button
+          variant="contained"
+          sx={{ mb: 2, ml: 100, maxHeight: 50}}
+          onClick={handleOpenCreate}
+        >
+          <AddOutlined /> Create Team
+        </Button>
+        )}
+      </Box>
+      <TableContainer component={Paper} sx={{maxWidth: 1000}}>
         <Table>
           <TableHead>
             <StyledTableRow>
@@ -239,7 +294,7 @@ const ListTeam: React.FC = () => {
 
       {/* Update Modal */}
       <UpdateTeam eventId={eventId!} open={openUpdate} onClose={handleCloseUpdate} selectedTeam={selectedTeam} />
-    </ThemeProvider>
+    </Container>
   );
 };
 

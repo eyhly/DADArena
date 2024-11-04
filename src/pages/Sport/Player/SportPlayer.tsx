@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllTeams, useGetAllSportPlayers } from "../../../services/queries";
+import { useGetAllTeams, useGetAllSportPlayers, useGetProfile } from "../../../services/queries";
 import {
   Table,
   TableBody,
@@ -28,13 +28,13 @@ import {
 } from "@mui/material";
 import { Team } from "../../../types/team";
 import { SportPlayer } from "../../../types/sportPlayer";
-import { AddOutlined, DeleteOutlineOutlined } from "@mui/icons-material";
-import AddSportPlayer from "./AddSportPlayer";
+import { AddOutlined, DeleteOutlineOutlined, KeyboardArrowDown, KeyboardArrowUp, SaveAltRounded } from "@mui/icons-material";
 import { useDeleteSportPlayer } from "../../../services/mutation";
 import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
+import { useAuthState } from "../../../hook/useAuth";
+import useApi from "../../../services/api";
 
-// Styled components
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.primary.main,
@@ -57,7 +57,6 @@ const SportPlayerTable: React.FC = () => {
   const { eventId, sportId } = useParams(); 
   const { data: teams, isLoading, isError } = useGetAllTeams(eventId!);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [open, setOpen] = useState(false);
   const deletePlayer = useDeleteSportPlayer();
   const queryClient = useQueryClient();
   const { data: allPlayers, isLoading: isLoadingPlayers } = useGetAllSportPlayers(
@@ -65,8 +64,19 @@ const SportPlayerTable: React.FC = () => {
     sportId!
   );
   const navigate = useNavigate();
+  const {exportSportPlayers} = useApi();
+  
+  const handleDownload = () =>{
+    exportSportPlayers(eventId!, sportId!)
+  }
 
-  // Filter players by teamId
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMember = roles.includes("member");
+
   const getTeamNameById = (teamId: string) => {
     const team = teams?.find((team: Team) => team.id=== teamId);
     return team?  team.name : 'Team not found';
@@ -113,21 +123,34 @@ const SportPlayerTable: React.FC = () => {
       header: "Team Name",
     },
     {
+      accessorKey: "fullname",
+      header: "Players",
+    },
+    {
       accessorKey: "userId",
       header: "Players",
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({row}) => (
-        <Button 
-        onClick={() => handleDelete(row.original.id, row.original.eventId, row.original.sportId)}
-        sx={{color: 'red'}}
-        >
-          <DeleteOutlineOutlined/>
-        </Button>
-      )
-    }
+      accessorKey: "gender",
+      header: "Gender",
+    },
+    ...(isMember
+      ? []
+      : [{
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ row }) => (
+            <Button
+              onClick={() =>
+                handleDelete(row.original.id, row.original.eventId, row.original.sportId)
+              }
+              sx={{ color: 'red' }}
+            >
+              <DeleteOutlineOutlined />
+            </Button>
+          ),
+        }]
+    )
   ], [allPlayers, isLoadingPlayers]);
 
   const table = useReactTable({
@@ -141,7 +164,7 @@ const SportPlayerTable: React.FC = () => {
     onSortingChange: setSorting,
   });
 
-  if (isLoading) {
+  if (isLoading || isLoadingPlayers) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
         <CircularProgress />
@@ -161,28 +184,28 @@ const SportPlayerTable: React.FC = () => {
     return (
         <Box sx={{ textAlign: "center", marginTop: 3,ml: 90 }}>
         <Typography variant="h6">
-          No sports found for this event
+          No players found for this sport
         </Typography>
-        <Button
+        {!isMember && (
+          <Button
           size="small"
           variant="contained"
           sx={{ mt: 2, mb: 3, maxHeight: 50, maxWidth: "100%" }}
-          onClick={() => setOpen(true)}
+          onClick={() => navigate(`/events/${eventId}/sports/${sportId}/sportplayers/add`)}
         >
           <AddOutlined /> Create Player
         </Button>
-        {/* modal add sport */}
-        <AddSportPlayer open={open} handleClose={() => setOpen(false)} />
+        )}
+        
       </Box>
       
     );
   }
 
   return (
-      <Container sx={{ width: "1000px", ml: 50 }}>       
-        <Box sx={{ mt: -20  }}>
+      <Container sx={{ ml: 50, mb: 4, minHeight: 550, }}>       
+        <Box>
         <Breadcrumbs aria-label="breadcrumb">
-        {/* <Typography>Absence</Typography> */}
           <Typography
             onClick={() => navigate(`/events/${eventId}/sports/`)}
             style={{ cursor: "pointer" }}
@@ -190,29 +213,54 @@ const SportPlayerTable: React.FC = () => {
           >
             Sports
           </Typography>
-          <Typography color="text.primary">Sport Player</Typography>
+          <Typography color="text.primary">Sport Players</Typography>
         </Breadcrumbs>
       </Box>
       <Typography variant="h3" sx={{ mt: 2, mb: 3 }}>
           List SportPlayer
         </Typography>
-        <Button
+        {!isMember && (
+          <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
+            <Button variant='contained' onClick={handleDownload}>
+              <SaveAltRounded/> Download
+            </Button>
+          <Button
           size="small"
           variant="contained"
-          sx={{ mt: 2, mb: 3, maxHeight: 50, ml: 94 }}
-          onClick={() => setOpen(true)}
+          sx={{maxWidth: 250}}
+          onClick={() => navigate(`/events/${eventId}/sports/${sportId}/sportplayers/add`)}
         >
           <AddOutlined /> Create Player
         </Button>
-        <TableContainer component={Paper}>
+        </Box>
+        )}
+        <TableContainer component={Paper} sx={{maxWidth: 1200}}>
           <Table>
             <TableHead>
               <StyledTableRow>
                 {table.getHeaderGroups().map((headerGroup) =>
                   headerGroup.headers.map((header) => (
                     <StyledTableCell key={header.id} colSpan={header.colSpan}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </StyledTableCell>
+                    {header.isPlaceholder ? null : (
+                      <div
+                        {...{
+                          onClick: header.column.getToggleSortingHandler(),
+                          style: { cursor: "pointer", display: "flex" },
+                        }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() === "asc" ? (
+                          <KeyboardArrowUp />
+                        ) : null}
+                        {header.column.getIsSorted() === "desc" ? (
+                          <KeyboardArrowDown />
+                        ) : null}
+                      </div>
+                    )}
+                  </StyledTableCell>
                   ))
                 )}
               </StyledTableRow>
@@ -230,8 +278,6 @@ const SportPlayerTable: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        {/* modal add sport */}
-        <AddSportPlayer open={open} handleClose={() => setOpen(false)} />
       </Container>
   );
 };

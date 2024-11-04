@@ -6,4 +6,6 @@ export interface SportPlayer {
     teamId: string;
     sportTitle: string;
     teamName: string;
+    fullname: string;
+    gender: string;
 }

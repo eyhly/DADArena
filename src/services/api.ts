@@ -17,8 +17,8 @@ import { useEffect, useState } from "react";
 import { useAuthState } from "../hook/useAuth";
 import { Profile } from "../types/profile";
 
-// const BASE_URL = "http://localhost:5001/api";
-const BASE_URL = "http://192.168.52.204:5001/api";
+const BASE_URL = "http://localhost:5001/api";
+// const BASE_URL = "http://192.168.52.204:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 const useApi = () => {
@@ -1003,8 +1003,17 @@ const useApi = () => {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        responseType: 'blob'
       }
     );
+    //mmebuat url untuk mengunduh datanya
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${teamId} Members.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode!.removeChild(link);
     return response.data;
   };
 
@@ -1012,13 +1021,22 @@ const useApi = () => {
   const exportSportPlayers = async (eventId: string, sportId: string) => {
     // const token = await getToken();
     const response = await axios.get(
-      `${BASE_URL}/events/${eventId}/sports/${sportId}/sportPlayers/export`,
+      `${BASE_URL}/events/${eventId}/sports/${sportId}/sportplayers/export`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
+        responseType: 'blob'
       }
     );
+    //mmebuat url untuk mengunduh datanya
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${sportId} Members.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode!.removeChild(link);
     return response.data;
   };
 

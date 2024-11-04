@@ -340,14 +340,17 @@ const DetailMatchPoint: React.FC<DetailMatchPointProps> = ({
                 <TableCell>{point.matchPoint}</TableCell>
               </TableRow>
             ))}
+            <TableRow>
+          <TableCell colSpan={2} align="right" sx={{ fontWeight: 'bold' }}>
+            Total Points:
+          </TableCell>
+          <TableCell sx={{ fontWeight: 'bold' }}>
+            {totalPoints}
+          </TableCell>
+        </TableRow>
           </TableBody>
         </Table>
-
-        {/* Total Points Section */}
-        <Typography variant="body1" sx={{ fontWeight: 'bold', mt: 2 }}>
-          Total Points: {totalPoints}
-        </Typography>
-      <Button onClick={onClose} variant='contained'>
+      <Button onClick={onClose} variant='contained' sx={{mt: 2}}>
         Close
       </Button>
       </Box>

@@ -30,6 +30,7 @@ import { Event } from "../../types/event";
 import { useNavigate } from "react-router-dom";
 import { useAuthState, useSigninRedirect, useSignOutRedirect } from "../../hook/useAuth";
 import DetailEvents from "../Events/eventsAdmin/DetailEvents";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface HideScrollProps {
   children: ReactElement;
@@ -45,20 +46,42 @@ const LandingPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { data: events } = useGetAllEvents();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {mutate: signOutRedirect} = useSignOutRedirect();
   const {refetch: signInRedirect} = useSigninRedirect();
-  const {data } = useAuthState();
+  const [redirected, setRedirected] = useState(false);
+  const { data, isLoading: authLoading, isSuccess: authSuccess, refetch: refetchAuth } = useAuthState();
 
   const user = data?.user;
   const userId = user?.profile.sub;
   const isAuthenticated = data?.isAuthenticated;
   const { data: profile } = useGetProfile(userId!);
+  const [roles, setRoles] = useState<string[]>(() => {
+    const storedRoles = localStorage.getItem('roles')
+    return storedRoles ? JSON.parse(storedRoles) : [];
+  })
+
+  useEffect(() => {
+    if (authSuccess && !redirected) {
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      refetchAuth();
+      setRedirected(true);
+    }
+  }, [authSuccess, redirected, queryClient, refetchAuth])
+
+  useEffect(() => {
+
+      if (profile) {
+        const userRoles = profile?.roles || [];
+        setRoles(userRoles)
+        localStorage.setItem('roles', JSON.stringify(userRoles))
+      }
+  })
 
   //cek role nya apaan
-  const roles = profile?.roles || [];
   const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
-  console.log(profile?.roles, "role")
+  console.log(roles, "role")
   
   console.log(isAuthenticated, 'authenticeeeeet')
 
@@ -117,7 +140,7 @@ const LandingPage = () => {
     setAnchorElUser(null);
   };
   
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <Container sx={{ textAlign: "center", marginTop: 8, ml: 55 }}>
         <CircularProgress />
@@ -205,7 +228,7 @@ const LandingPage = () => {
                   </div>
                 ) : (
                   <div>
-                    <MenuItem onClick={() => signInRedirect()}>
+                    <MenuItem onClick={() => {signInRedirect()}}>
                       <Typography>Login</Typography>
                     </MenuItem>
                     <MenuItem>

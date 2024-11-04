@@ -27,7 +27,7 @@ import {
   // Tooltip,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllSchedules } from "../../services/queries";
+import { useGetAllSchedules, useGetProfile } from "../../services/queries";
 import { useDeleteSchedule } from "../../services/mutation";
 import Swal from "sweetalert2";
 import { Schedule } from "../../types/schedule";
@@ -41,6 +41,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import UpdateSchedule from "./UpdateSchedule";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthState } from "../../hook/useAuth";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -97,6 +98,13 @@ const SchedulesTable: React.FC = () => {
     [data, eventId]
   );
 
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
+
   const handleOpenModalUpdate = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
     setUpdateScheduleOpen(true);
@@ -145,7 +153,6 @@ const SchedulesTable: React.FC = () => {
 
   const columns = React.useMemo<ColumnDef<Schedule>[]>(
     () => [
-      // { accessorFn: (row, i) => i + 1, header: "No" },
       { accessorKey: "week", header: "Week" },
       { accessorFn: (row) => renderDate(row.startAttendance), header: "Date" },
       {
@@ -161,7 +168,9 @@ const SchedulesTable: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <>
+          <Box sx={{display: 'flex', justifyContent: 'space-evenly'}}>
+          {!isMemberOrKapten && (
+            <div>
             <Button onClick={() => handleOpenModalUpdate(row.original)}>
               <EditOutlinedIcon />
             </Button>
@@ -171,9 +180,11 @@ const SchedulesTable: React.FC = () => {
               }
               sx={{ color: "red" }}
             >
-              <DeleteOutlineOutlined /> {/*Delete*/}
+              <DeleteOutlineOutlined /> 
             </Button>
-            <Tooltip title={"attendances"} placement="top-end">
+            </div>
+          )}
+            <Tooltip title={"attendances"} placement="right-end">
               <Button
                 variant="contained"
                 onClick={() =>
@@ -182,10 +193,11 @@ const SchedulesTable: React.FC = () => {
                   )
                 }
               >
-                <VisibilityOutlinedIcon /> Attendances{/*View*/}
+                <VisibilityOutlinedIcon /> Attendances
               </Button>
             </Tooltip>
-          </>
+          
+          </Box>
         ),
       },
     ],
@@ -226,13 +238,15 @@ const SchedulesTable: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", ml: 85 }}>
         <Typography variant="h6">No schedules found for this event</Typography>
-        <Button
+        {!isMemberOrKapten && (
+          <Button
           variant="contained"
           sx={{ mt: 2 }}
           onClick={() => setOpenAddModal(true)}
         >
           <AddOutlinedIcon /> Create Schedule
         </Button>
+        )}
         <AddSchedule
           open={openAddModal}
           handleClose={() => setOpenAddModal(false)}
@@ -242,14 +256,9 @@ const SchedulesTable: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
-      {/* Breadcrumbs */}
-      
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
         <Breadcrumbs aria-label="breadcrumb">
-          {/* <Typography>Absence</Typography> */}
           <Typography
-            // onClick={() => navigate(`/events/${eventId}/schedules/`)}
-            // style={{ cursor: "pointer" }}
             color="text.primary"
           >
             Schedule
@@ -259,13 +268,15 @@ const SchedulesTable: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List of Schedules
         </Typography>
-        <Button
+        {!isMemberOrKapten && (
+          <Button
           variant="contained"
           sx={{ mb: 2, ml: 95, maxHeight: 50}}
           onClick={() => setOpenAddModal(true)}
         >
           <AddOutlinedIcon /> Create Schedule
         </Button>
+        )}
         <AddSchedule
           open={openAddModal}
           handleClose={() => setOpenAddModal(false)}

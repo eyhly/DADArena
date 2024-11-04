@@ -19,21 +19,18 @@ import {
   Typography,
   Box,
   Button,
-  ThemeProvider,
   tableCellClasses,
   Tooltip,
+  Container,
+  Breadcrumbs,
 } from "@mui/material";
-// import { AddOutlined } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetAllTeams, useGetAllTotalPoints } from "../../services/queries";
 import { styled } from "@mui/system";
-import ColorTheme from "../../utils/colorTheme";
 import { TotalPoint } from "../../types/totalPoint";
 import { KeyboardArrowDown, KeyboardArrowUp, RemoveRedEyeOutlined } from "@mui/icons-material";
 import { Team } from "../../types/team";
 import DetailMatchPoint from "./DetailMatchPoint";
-// import DetailMatchPoint from "./DetailMatchPoint"; // Import modal
-
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -73,7 +70,6 @@ const Recap: React.FC = () => {
     setOpenModal(true);
   };
   console.log(selectedTeamPoints);
-  
 
   const handleCloseModal = () => {
     setOpenModal(false);
@@ -88,10 +84,6 @@ const Recap: React.FC = () => {
 
   const columns = React.useMemo<ColumnDef<TotalPoint>[]>(
     () => [
-      // {
-      //   accessorFn: (row, i) => i + 1,
-      //   header: "No",
-      // },
       {
         accessorFn: (row) => getTeamNameById(row.teamId),
         header: "Team Name",
@@ -118,13 +110,8 @@ const Recap: React.FC = () => {
         cell: ({ row }) => (
           <Box sx={{display: 'flex', justifyContent: 'space-evenly'}}>
           <Button variant="contained" onClick={() => navigate(`/events/${eventId}/recap/${row.original.teamId}/extrapoints`)}>
-            {/*<AddOutlined /> Add*/} Extra Point
+             Extra Point
           </Button>
-          {/* <Tooltip title="Detail Match Point" placement="right-end">
-            <Button variant="contained" onClick={() => navigate(`/events/${eventId}/recap/${row.original.teamId}/detailmatchpoints`)}>
-              <RemoveRedEyeOutlined/>
-            </Button>
-          </Tooltip> */}
           <Tooltip title="Detail Match Point" placement="right-end">
             <Button variant="contained" onClick={() => handleOpenModal(row.original)}>
               <RemoveRedEyeOutlined />
@@ -173,11 +160,18 @@ const Recap: React.FC = () => {
   }
 
   return (
-    <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h4" align="center" sx={{ mt: 3, ml: 80 }}>
-        Recap Points
-      </Typography>
-      <TableContainer component={Paper} sx={{ mt: 5, maxWidth: 1000, ml: 50 }}>
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+      <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            color="text.primary"
+          >
+          Recap
+          </Typography>
+        </Breadcrumbs>
+        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+          Recap Point
+        </Typography>
+      <TableContainer component={Paper} sx={{maxWidth: 1000}}>
         <Table>
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (
@@ -228,7 +222,7 @@ const Recap: React.FC = () => {
         selectedTeamPoints={selectedTeamPoints}
         getTeamNameById={getTeamNameById}
       />
-    </ThemeProvider>
+    </Container>
   );
 };
 

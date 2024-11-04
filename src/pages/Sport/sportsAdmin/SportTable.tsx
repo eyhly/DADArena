@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllSports, useGetProfile } from "../../../services/queries";
+import { useGetAllSports } from "../../../services/queries";
 import {
   Table,
   TableBody,
@@ -25,6 +25,7 @@ import {
   Button,
   Tooltip,
   Container,
+  Breadcrumbs,
 } from "@mui/material";
 // import ScoreboardIcon from '@mui/icons-material/Diversity3';
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
@@ -41,7 +42,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
-import { useAuthState } from "../../../hook/useAuth";
+import useRoles from "../../../hook/useRoles";
 // import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -74,11 +75,7 @@ const SportsTable: React.FC = () => {
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const navigate = useNavigate();
 
-  const {data : bio} = useAuthState();
-  const user = bio?.user;
-  const userId = user?.profile.sub;
-  const {data: profile} = useGetProfile(userId!);
-  const roles = profile?.roles || [];
+  const roles = useRoles();
   const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
 
   const filteredData = React.useMemo(
@@ -138,10 +135,6 @@ const SportsTable: React.FC = () => {
 
   const columns = React.useMemo<ColumnDef<Sport>[]>(
     () => [
-      // {
-      //   accessorFn: (row, i) => i + 1,
-      //   header: "No",
-      // },
       {
         accessorKey: "title",
         header: "Title ",
@@ -166,44 +159,43 @@ const SportsTable: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <Box sx={{display: 'flex', justifyContent: 'space-evenly'}}>
-            {!isMemberOrKapten && (
-              <div>
-                <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
-              <EditOutlined /> {/*  Update */}
-            </Button>
-            <Button
-              onClick={() =>
-                handleDelete(row.original.id, row.original.eventId)
-              }
-              sx={{ color: "red" }}
-            >
-              <DeleteOutlineOutlined /> {/*Delete*/}
-            </Button>
-            <Tooltip title="More Rules" placement="top">
-              <Button
-                onClick={() => handleOpenDescriptionModal(row.original)}
-                sx={{ color: "#24aed4" }}
-              >
-                <VisibilityOutlinedIcon /> {/*More Rules*/}
-              </Button>
-            </Tooltip>
-              </div>
-            )}
-            <Tooltip title="Sport Player" placement="top">
-              <Button
-                onClick={() =>
-                  navigate(
-                    `/events/${eventId}/sports/${row.original.id}/sportplayers`
-                  )
-                }
-              >
-                <Diversity3 />
-              </Button>
-            </Tooltip>
-          </Box>
+            <Box sx={{ display: 'flex' }}>
+                {!isMemberOrKapten && (
+                    <Box>
+                        <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
+                            <EditOutlined />
+                        </Button>
+                        <Button
+                            onClick={() => handleDelete(row.original.id, row.original.eventId)}
+                            sx={{ color: "red" }}
+                        >
+                            <DeleteOutlineOutlined />
+                        </Button>
+                    </Box>
+                )}
+                <Box>
+                    <Tooltip title="More Rules" placement="top">
+                        <Button
+                            onClick={() => handleOpenDescriptionModal(row.original)}
+                            sx={{ color: "#24aed4" }}
+                        >
+                            <VisibilityOutlinedIcon />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip title="Sport Player" placement="right-end">
+                        <Button
+                            onClick={() =>
+                                navigate(`/events/${eventId}/sports/${row.original.id}/sportplayers`)
+                            }
+                            variant="contained"
+                        >
+                            <Diversity3 />
+                        </Button>
+                    </Tooltip>
+                </Box>
+            </Box>
         ),
-      },
+    }
     ],
     []
   );
@@ -255,28 +247,36 @@ const SportsTable: React.FC = () => {
           <AddOutlinedIcon /> Create Sport
         </Button>
         )}
-        {/* modal add sport */}
         <AddSport open={open} handleClose={() => setOpen(false)} />
       </Box>
     );
   }
 
   return (
-    <Container sx={{ textAlign: "center", marginTop: 3, ml: 50 }}>
-      <Typography variant="h3" sx={{ color: "black" }}>
-        List Sport
-      </Typography>
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+      <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            color="text.primary"
+          >
+          Sport
+          </Typography>
+        </Breadcrumbs>
+        <Box>
+        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+          List Sports
+        </Typography>
       {!isMemberOrKapten && (
         <Button
         size="small"
         variant="contained"
-        sx={{ mb: 2, mt: 5, maxHeight: 50, ml: 90, maxWidth: "100%" }}
+        sx={{ mb: 2, mt: -3, ml: 100, maxWidth: "100%" }}
         onClick={() => setOpen(true)}
       >
         <AddOutlinedIcon /> Create Sport
       </Button>
       )}
       <AddSport open={open} handleClose={() => setOpen(false)} />
+      </Box>
       <TableContainer
         component={Paper}
         sx={{ maxWidth: 1000, maxHeight: 400, overflow: "auto" }}

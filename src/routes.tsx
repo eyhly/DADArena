@@ -22,6 +22,7 @@ import DataUser from './pages/User/DataUser';
 // import DetailMatchPoint from './pages/Point/DetailMatchPoint';
 import ProfilePage from './pages/User/Profile';
 import ProtectedRoute from './hook/protectedRoute';
+import AddSportPlayer from './pages/Sport/Player/AddSportPlayer';
 
 const router = createBrowserRouter([
   {
@@ -87,6 +88,10 @@ const router = createBrowserRouter([
     {
       path: '/events/:eventId/sports/:sportId/sportplayers',
       element: <ProtectedRoute element={<SportPlayerTable/>} />
+    },
+    {
+      path: '/events/:eventId/sports/:sportId/sportplayers/add',
+      element: <ProtectedRoute element={<AddSportPlayer/>} />
     },
     {
       path: '/events/:eventId/matches',

@@ -69,9 +69,19 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
   const { data: teams } = useGetAllTeams(eventId!);
   const [error] = React.useState<string | null>(null);
   const queryClient = useQueryClient();
-  const { fields: roundFields, append: appendRound, remove: removeRound } = useFieldArray({ 
-    control, name: "rounds", });
-  const {fields: noteFields, append: appendNote, remove: removeNote } = useFieldArray({
+  const {
+    fields: roundFields,
+    append: appendRound,
+    remove: removeRound,
+  } = useFieldArray({
+    control,
+    name: "rounds",
+  });
+  const {
+    fields: noteFields,
+    append: appendNote,
+    remove: removeNote,
+  } = useFieldArray({
     control,
     name: "notes",
   });
@@ -380,118 +390,117 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
             Add Round
           </Button>
           {/* notes untuk Team Red */}
-          {noteFields
-  .map((field, index) => 
-    field.teamId === matchData.teamRedId && (
-      <Grid container spacing={2} key={field.id} mb={2}>
-        <Grid item xs={10}>
-          <Controller
-            name={`notes.${index}.description`}
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Note for Team Red"
-                variant="outlined"
-                multiline
-                rows={3}
-                fullWidth
-              />
-            )}
-          />
-        </Grid>
-        <Grid item xs={2}>
-          <IconButton onClick={() => removeNote(index)}>
-            <Remove />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              const noteData = {
-                eventId: eventId!,
-                matchId: matchData.id,
-                teamId: matchData.teamRedId,
-                description: watch(`notes.${index}.description`),
-              };
-              handleSubmit(() => noteRedSubmit(noteData))();
-            }}
+          {noteFields.map(
+            (field, index) =>
+              field.teamId === matchData.teamRedId && (
+                <Grid container spacing={2} key={field.id} mb={2}>
+                  <Grid item xs={10}>
+                    <Controller
+                      name={`notes.${index}.description`}
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Note for Team Red"
+                          variant="outlined"
+                          multiline
+                          rows={3}
+                          fullWidth
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={2}>
+                    <IconButton onClick={() => removeNote(index)}>
+                      <Remove />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        const noteData = {
+                          eventId: eventId!,
+                          matchId: matchData.id,
+                          teamId: matchData.teamRedId,
+                          description: watch(`notes.${index}.description`),
+                        };
+                        handleSubmit(() => noteRedSubmit(noteData))();
+                      }}
+                    >
+                      <Check />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              )
+          )}
+
+          <Button
+            variant="contained"
+            onClick={() =>
+              appendNote({ teamId: matchData.teamRedId, description: "" })
+            }
+            startIcon={<Add />}
+            fullWidth
+            sx={{ mb: 2 }}
           >
-            <Check />
-          </IconButton>
-        </Grid>
-      </Grid>
-    )
-  )}
+            Add Note for Team Red
+          </Button>
 
-<Button
-  variant="contained"
-  onClick={() =>
-    appendNote({ teamId: matchData.teamRedId, description: "" })
-  }
-  startIcon={<Add />}
-  fullWidth
-  sx={{ mb: 2 }}
->
-  Add Note for Team Red
-</Button>
+          {/* notes untuk Team Blue */}
+          {noteFields.map(
+            (field, index) =>
+              field.teamId === matchData.teamBlueId && (
+                <Grid container spacing={2} key={field.id} mb={2}>
+                  <Grid item xs={10}>
+                    <Controller
+                      name={`notes.${index}.description`}
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <TextField
+                          {...field}
+                          label="Note for Team Blue"
+                          variant="outlined"
+                          multiline
+                          rows={3}
+                          fullWidth
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={2}>
+                    <IconButton onClick={() => removeNote(index)}>
+                      <Remove />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => {
+                        const noteData = {
+                          eventId: eventId!,
+                          matchId: matchData.id,
+                          teamId: matchData.teamBlueId,
+                          description: watch(`notes.${index}.description`),
+                        };
+                        handleSubmit(() => noteBlueSubmit(noteData))();
+                      }}
+                    >
+                      <Check />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              )
+          )}
 
- {/* notes untuk Team Blue */}
-{noteFields
-  .map((field, index) => 
-    field.teamId === matchData.teamBlueId && (
-      <Grid container spacing={2} key={field.id} mb={2}>
-        <Grid item xs={10}>
-          <Controller
-            name={`notes.${index}.description`}
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Note for Team Blue"
-                variant="outlined"
-                multiline
-                rows={3}
-                fullWidth
-              />
-            )}
-          />
-        </Grid>
-        <Grid item xs={2}>
-          <IconButton onClick={() => removeNote(index)}>
-            <Remove />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              const noteData = {
-                eventId: eventId!,
-                matchId: matchData.id,
-                teamId: matchData.teamBlueId,
-                description: watch(`notes.${index}.description`),
-              };
-              handleSubmit(() => noteBlueSubmit(noteData))();
-            }}
+          <Button
+            variant="contained"
+            onClick={() =>
+              appendNote({ teamId: matchData.teamBlueId, description: "" })
+            }
+            startIcon={<Add />}
+            fullWidth
+            sx={{ mb: 2 }}
           >
-            <Check />
-          </IconButton>
-        </Grid>
-      </Grid>
-    )
-  )}
+            Add Note for Team Blue
+          </Button>
 
-<Button
-  variant="contained"
-  onClick={() =>
-    appendNote({ teamId: matchData.teamBlueId, description: "" })
-  }
-  startIcon={<Add />}
-  fullWidth
-  sx={{ mb: 2 }}
->
-  Add Note for Team Blue
-</Button>
-
-          
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <Controller
