@@ -8,6 +8,7 @@ import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { scheduleSchema } from '../../utils/schema';
+import axios from 'axios';
 
 interface UpdateModalSchedule {
     open: boolean;
@@ -74,12 +75,14 @@ const UpdateSchedule: React.FC<UpdateModalSchedule> = ({ open, handleClose, sche
                     handleClose();
                 },
                 onError: (error) => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error instanceof Error ? error.message : 'An unexpected error occurred',
-                        confirmButtonText: 'Ok',
-                    });
+                    if (axios.isAxiosError(error)) {
+                        Swal.fire({
+                          icon: "error",
+                          title: "Failed!",
+                          text: error.response?.data ,
+                          confirmButtonText: "Ok",
+                        });
+                      }
                     handleClose();
                 },
             }

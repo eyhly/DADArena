@@ -42,6 +42,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import UpdateSchedule from "./UpdateSchedule";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthState } from "../../hook/useAuth";
+import axios from "axios";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -136,15 +137,15 @@ const SchedulesTable: React.FC = () => {
 
           },
           onError: (error) => {
-            Swal.fire({
-              icon: "error",
-              title: "Failed!",
-              text:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred.",
-              confirmButtonText: "Ok",
-            });
+            if (axios.isAxiosError(error)) {
+              console.log(error.response?.data)
+              Swal.fire({
+                icon: "error",
+                title: "Failed!",
+                text: error.response?.data ,
+                confirmButtonText: "Ok",
+              });
+            }
           },
         }
       );

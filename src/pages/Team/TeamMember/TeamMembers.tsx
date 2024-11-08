@@ -34,6 +34,7 @@ import AddMember from './AddTeamMember';
 import { TeamMember } from "../../../types/teamMember";
 import { useAuthState } from "../../../hook/useAuth";
 import useApi from "../../../services/api";
+import axios from "axios";
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.primary.main,
@@ -56,6 +57,7 @@ const TeamMembers: React.FC = () => {
   const { eventId, teamId } = useParams();
   const { data, isLoading, isError } = useGetAllTeamMembers(eventId!, teamId!);
   const {exportTeamMembers} = useApi();
+  const [isPending, setIsPending] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const navigate = useNavigate();
@@ -72,8 +74,10 @@ const TeamMembers: React.FC = () => {
   const roles = profile?.roles || [];
   const isMember = roles.includes("member");
 
-  const handleDownload = () => {
-    exportTeamMembers(eventId!, teamId!)
+  const handleDownload = async () => {
+    setIsPending(true)
+    await exportTeamMembers(eventId!, teamId!)
+    setIsPending(false)
   }
 
   const handleDelete = async (userId: string, eventId: string, teamId: string) => {
@@ -104,12 +108,14 @@ const TeamMembers: React.FC = () => {
           queryClient.invalidateQueries({ queryKey: ["teamMembers", eventId, teamId] });
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Failed!",
-            text: error instanceof Error ? error.message : "An unexpected error occurred.",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
           console.log(userId);
         }
       });
@@ -214,14 +220,15 @@ const TeamMembers: React.FC = () => {
         List Team Members
       </Typography>
       {!isMember && (
-        <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
-        <Button variant="contained" sx={{maxWidth: 150}} onClick={handleDownload}>
-          <SaveAltRounded/> Download
+        <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end'}}>
+        <Button size="small" variant="contained" sx={{maxWidth: 150, gap: 1}} onClick={handleDownload} disabled={isPending}>
+          {isPending ? (
+            <CircularProgress size={24} color="inherit"/>
+          ) : (
+            <SaveAltRounded/> 
+          )} {isPending ? 'Downloading...' : 'Download'}
         </Button>
-        {/* <a href={`http://localhost:5001/api/events/${eventId}/teams/${teamId}/teammembers/export`}>
-          download
-        </a> */}
-        <Button variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
+        <Button size="small" variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
           <AddOutlined /> Create Member
         </Button>
         </Box>

@@ -10,15 +10,17 @@ export const queryKeySignInRedirect = (redirect?: string) => [
     {navigator: 'signInRedirect', redirect},
 ]
 
+let authStatusUpdated = false;
+
 export const queryFn = async ({queryKey}) => {
     let user: User | null = null
     let isAuthenticated = false
 
     try {
-        if (hasAuthParams()){
+        if (hasAuthParams() && !authStatusUpdated){
             user = await mgr.signinRedirectCallback()
             isAuthenticated = true
-
+            authStatusUpdated = true;
             //bentar kayaknya ini salah 
             window.history.replaceState({}, document.title, window.location.pathname);
 
@@ -130,5 +132,6 @@ export function useAuthState() {
   return useQuery({
     queryKey: queryKeyAuthState,
     queryFn: queryFnAuthState,
+
   })
 }

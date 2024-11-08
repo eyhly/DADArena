@@ -34,6 +34,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { useAuthState } from "../../../hook/useAuth";
 import useApi from "../../../services/api";
+import axios from "axios";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -65,24 +66,17 @@ const SportPlayerTable: React.FC = () => {
   );
   const navigate = useNavigate();
   const {exportSportPlayers} = useApi();
+  const [isPending, setIsPending] = useState(false);
   
-  const handleDownload = () =>{
-    exportSportPlayers(eventId!, sportId!)
-  }
-
-  const {data : bio} = useAuthState();
-  const user = bio?.user;
-  const userId = user?.profile.sub;
-  const {data: profile} = useGetProfile(userId!);
-  const roles = profile?.roles || [];
-  const isMember = roles.includes("member");
-
-  const getTeamNameById = (teamId: string) => {
-    const team = teams?.find((team: Team) => team.id=== teamId);
-    return team?  team.name : 'Team not found';
-  };
+  const handleDownload = async () =>{
+    setIsPending(true)
+    await exportSportPlayers(eventId!, sportId!)
+    setIsPending(false)
+  }  
 
   const handleDelete = async (id: string, eventId: string, sportId: string) => {
+    console.log(eventId, 'ada eventid??');
+    
     const confirmation = await Swal.fire({
       title: "Are you sure you want to delete this player?",
       text: "You can cancel this!",
@@ -103,19 +97,34 @@ const SportPlayerTable: React.FC = () => {
               text: 'Player deleted successfully',
               confirmButtonText: 'Ok'
             })
-            queryClient.invalidateQueries({ queryKey: ['sportplayers',  eventId, sportId] });
+            queryClient.invalidateQueries({ queryKey: ['sportplayers', eventId, sportId] });
           },
           onError: (error) => {
+            if (axios.isAxiosError(error)){
             Swal.fire({
               icon: 'error',
-              title: 'Error',
-              text: error instanceof Error ? error.message : 'An unexpected error occured'
+              title: 'Failed!',
+              text: error.response?.data,
+              confirmButtonText: "Ok"
             })
+          }
           }
         }
       )
     }
   }
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isMember = roles.includes("member");
+
+  const getTeamNameById = (teamId: string) => {
+    const team = teams?.find((team: Team) => team.id=== teamId);
+    return team?  team.name : 'Team not found';
+  };
 
   const columns = useMemo<ColumnDef<SportPlayer>[]>(() => [
     {
@@ -142,7 +151,7 @@ const SportPlayerTable: React.FC = () => {
           cell: ({ row }) => (
             <Button
               onClick={() =>
-                handleDelete(row.original.id, row.original.eventId, row.original.sportId)
+                handleDelete(row.original.eventId, row.original.sportId, row.original.id)
               }
               sx={{ color: 'red' }}
             >
@@ -220,21 +229,25 @@ const SportPlayerTable: React.FC = () => {
           List SportPlayer
         </Typography>
         {!isMember && (
-          <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap : 2, alignItems: 'flex-end'}}>
-            <Button variant='contained' onClick={handleDownload}>
-              <SaveAltRounded/> Download
+          <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end', mr: 8}}>
+            <Button variant='contained' size="small" sx={{gap: 1}} onClick={handleDownload} disabled={isPending}>
+              {isPending ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <SaveAltRounded/>
+              )}
+              {isPending ? 'Downloading...' : 'Download'}
             </Button>
           <Button
           size="small"
           variant="contained"
-          sx={{maxWidth: 250}}
           onClick={() => navigate(`/events/${eventId}/sports/${sportId}/sportplayers/add`)}
         >
           <AddOutlined /> Create Player
         </Button>
         </Box>
         )}
-        <TableContainer component={Paper} sx={{maxWidth: 1200}}>
+        <TableContainer component={Paper} sx={{maxWidth: 1000}}>
           <Table>
             <TableHead>
               <StyledTableRow>

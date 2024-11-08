@@ -7,6 +7,7 @@ import { Event } from '../../../types/event';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Team } from '../../../types/team';
+import axios from 'axios';
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -87,17 +88,18 @@ export default function UpdateEventPage() {
         });
       },
       onError: (error) => {
-        console.error("Error updating event:", error);
+        if (axios.isAxiosError(error)){
         Swal.fire({
           icon: "error",
           title: "Failed to update event!",
-          text: error.toString(),
+          text: error.response?.data,
           confirmButtonText: "Ok",
         }).then((result) => {
           if (result.isConfirmed) {
             navigate(`/events/edit/${eventId}`);
           }
         });
+      }
       },
     });
   };

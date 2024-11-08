@@ -20,16 +20,21 @@ import {
 import {
   useCreateNote,
   useCreateRound,
+  useDeleteNote,
+  useDeleteRound,
   useUpdateMatch,
-} from "../../../services/mutation";
+  useUpdateNote,
+  useUpdateRound,
+} from "../../services/mutation";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Match } from "../../../types/match";
-import { useGetAllSports, useGetAllTeams } from "../../../services/queries";
+import { Match } from "../../types/match";
+import { useGetAllNotes, useGetAllRound, useGetAllSports, useGetAllTeams } from "../../services/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { Add, Check, Remove } from "@mui/icons-material";
-import { Round } from "../../../types/round";
-import { Notes } from "../../../types/notes";
+import { Round } from "../../types/round";
+import { Notes } from "../../types/notes";
+import axios from "axios";
 
 interface UpdateMatchModalProps {
   open: boolean;
@@ -63,8 +68,19 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
   });
   const { id, eventId } = useParams<{ id: string; eventId: string }>();
   const updateMatch = useUpdateMatch();
+
+  //round
   const createRound = useCreateRound();
+  const updateRound = useUpdateRound();
+  const deleteRound = useDeleteRound();
+
+  //notes
   const createNotes = useCreateNote();
+  const updateNotes = useUpdateNote();
+  const deleteNotes = useDeleteNote();
+ 
+  const {data: notes} = useGetAllNotes(eventId!, matchData.id!)
+  const {data: rounds} = useGetAllRound(eventId!, matchData.id!)
   const { data: sports } = useGetAllSports(eventId!);
   const { data: teams } = useGetAllTeams(eventId!);
   const [error] = React.useState<string | null>(null);
@@ -77,14 +93,14 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
     control,
     name: "rounds",
   });
-  const {
-    fields: noteFields,
-    append: appendNote,
-    remove: removeNote,
-  } = useFieldArray({
-    control,
-    name: "notes",
-  });
+    const {
+      fields: noteFields,
+      append: appendNote,
+      remove: removeNote,
+    } = useFieldArray({
+      control,
+      name: "notes",
+    });
 
   const teamRedId = watch("teamRedId");
   const teamBlueId = watch("teamBlueId");
@@ -94,8 +110,10 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
       ...matchData,
       startTime: formatDate(matchData.startTime),
       endTime: formatDate(matchData.endTime),
+      rounds: rounds || [],
+      notes: notes || []
     });
-  }, [matchData, reset]);
+  }, [matchData, rounds, notes, reset]);
 
   const roundSubmit: SubmitHandler<Round> = (data) => {
     const formattedData: Round = {
@@ -115,6 +133,7 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
           queryClient.invalidateQueries({
             queryKey: ["rounds", eventId, matchData.id],
           });
+          console.log('add round');
         },
         onError: (error) => {
           console.log(error.message, "failed add round");
@@ -125,7 +144,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
     console.log(data);
   };
 
-  // const handleDeleteRound = async
+  const handleDeleteRound = async (id: string, eventId: string, matchId: string ) => {
+    deleteRound.mutateAsync({id, eventId, matchId: matchData.id })
+  }
 
   const noteRedSubmit: SubmitHandler<Notes> = (data) => {
     const noteRed: Notes = {
@@ -162,9 +183,32 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
       eventId: eventId!,
       matchId: matchData.id,
       data: noteBlue,
-    });
+    },
+  {
+    onSuccess: () => {console.log('doneee');
+    }
+  });
   };
 
+  const handleDeleteNote = (id: string, index: number) => {
+    deleteNotes.mutate(
+      { id, eventId: matchData.eventId!, matchId: matchData.id! },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["notes", matchData.eventId, matchData.id],
+          });
+          removeNote(index)
+          console.log('success delete note awokawoak');
+        },
+        onError: (error) => {
+          console.log("Error deleting note:", error);
+        },
+      }
+      
+    );
+  };
+  
   const onSubmit: SubmitHandler<Match> = async (data) => {
     const formattedData: Match = {
       ...data,
@@ -192,21 +236,23 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
           queryClient.invalidateQueries({ queryKey: ["matches", eventId] });
         },
         onError: (error) => {
-          Swal.fire({
-            icon: "error",
-            title: "Failed!",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred.",
-            confirmButtonText: "Ok",
-          });
+          if (axios.isAxiosError(error)) {
+            console.log(error.response?.data)
+            Swal.fire({
+              icon: "error",
+              title: "Failed!",
+              text: error.response?.data ,
+              confirmButtonText: "Ok",
+            });
+          }
           handleClose();
         },
       }
     );
   };
 
+  const teamRedNotes = notes?.filter(note => note.teamId === matchData.teamRedId) || []
+  const teamBlueNotes = notes?.filter(note => note.teamId === matchData.teamBlueId) || []
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle variant="h6" component="h2">
@@ -390,15 +436,15 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
             Add Round
           </Button>
           {/* notes untuk Team Red */}
-          {noteFields.map(
-            (field, index) =>
-              field.teamId === matchData.teamRedId && (
-                <Grid container spacing={2} key={field.id} mb={2}>
+          {teamRedNotes.map(
+            (note, index) =>
+               (
+                <Grid container spacing={2} key={note.id} mb={2}>
                   <Grid item xs={10}>
                     <Controller
                       name={`notes.${index}.description`}
                       control={control}
-                      defaultValue=""
+                      defaultValue={note.description || ""}
                       render={({ field }) => (
                         <TextField
                           {...field}
@@ -412,7 +458,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     />
                   </Grid>
                   <Grid item xs={2}>
-                    <IconButton onClick={() => removeNote(index)}>
+                    <IconButton onClick={() => {
+               
+                      handleDeleteNote(note.id, index);}}>
                       <Remove />
                     </IconButton>
                     <IconButton
@@ -454,7 +502,7 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     <Controller
                       name={`notes.${index}.description`}
                       control={control}
-                      defaultValue=""
+                      defaultValue={field.description || ""}
                       render={({ field }) => (
                         <TextField
                           {...field}
@@ -468,7 +516,8 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     />
                   </Grid>
                   <Grid item xs={2}>
-                    <IconButton onClick={() => removeNote(index)}>
+                    <IconButton onClick={() => {
+                      handleDeleteNote(field.id, matchData.eventId, matchData.id); removeNote(index)}}>
                       <Remove />
                     </IconButton>
                     <IconButton

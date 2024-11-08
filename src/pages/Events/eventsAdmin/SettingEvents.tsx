@@ -22,6 +22,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Team } from "../../../types/team";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { eventSchema } from "../../../utils/schema";
+import axios from "axios";
+
+const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL;
+
+const getImageUrl = (imagePath) => {
+  return `${baseUrl}${imagePath}`;
+};
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -50,6 +57,8 @@ export default function SettingEvents() {
     resolver: zodResolver(eventSchema)
   });
   const { data: event, isLoading } = useEvent(eventId);
+  console.log(getImageUrl(event?.image));
+
   const { mutate: updateEvent } = useUpdateEvent();
   const { mutate: deleteEvent } = useDeleteEvent();
   const navigate = useNavigate();
@@ -63,6 +72,7 @@ export default function SettingEvents() {
 
   const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isEditable, setIsEditable] = useState(false);
   const [registrationStartDate, setRegistrationStartDate] = useState<string>("");
   const [eventStartDate, setEventStartDate] = useState<string>("");
@@ -72,9 +82,16 @@ export default function SettingEvents() {
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-        setFile(selectedFile); // Store the actual file in state
+        setFile(selectedFile); 
         setFileName(selectedFile.name);
-        setValue("image", selectedFile.name); // Set file name in form state if needed
+
+        if (selectedFile) {
+          const previewUrl = URL.createObjectURL(selectedFile);
+          setFilePreview(previewUrl);
+        } else {
+          setFilePreview(null);
+        }
+        setValue("image", selectedFile.name); 
     } else {
         setFile(null);
         setFileName("");
@@ -104,8 +121,10 @@ export default function SettingEvents() {
     formattedData.append("eventEndDate", submitDate(data.eventEndDate))
     formattedData.append("allowedSportLimit", String(data.allowedSportLimit))
   
-    if(file){
-      formattedData.append("image", file)
+    if (file) {
+      formattedData.append("image", file);
+    } else if (event?.image) {
+      formattedData.append("image", event.image);
     }
     console.log('yangdisubmit?', ...formattedData);
     
@@ -127,13 +146,15 @@ export default function SettingEvents() {
           });
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           console.error("Error updating event:", error);
           Swal.fire({
             icon: "error",
             title: "Failed to update event!",
-            text: error.toString(),
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
         },
       }
     );
@@ -181,11 +202,13 @@ export default function SettingEvents() {
         ml: 65,
         display: "column",
         justifyContent: "center",
+        minHeight: 550,
+        maxHeight: 550
       }}
     >
         <CardMedia
           component="img"
-          image={event?.image}
+          image={filePreview ? filePreview : getImageUrl(event?.image)} 
           sx={{ objectFit: 'cover', width: 200, height: 150, borderRadius: 5, mx:40 }}        
         />
 
@@ -196,8 +219,9 @@ export default function SettingEvents() {
             <Button variant="contained" component="label">
               Change Image 
               <input type="file" hidden onChange={handleImageUpload} />
+
             </Button>
-            <Typography>{fileName}</Typography> {/*ini aku gatau mau ngapain pake ini, biar fileNamenya kepake ajasih*/}
+            <Typography>{fileName}</Typography>
           </Box>
         ) : null}
 
@@ -227,7 +251,8 @@ export default function SettingEvents() {
             </Typography>
            </Grid>
            <Grid item  xs={2}>
-           <Typography variant="body1" gutterBottom color={'blue'}>
+           <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold', backgroundColor: 'blue', display: "inline-block", borderRadius: 2,  color: 'white', p: 1, mx: 1 }}>
+
              
              {formatStatus(event?.status ?? '')}
             </Typography>

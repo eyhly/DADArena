@@ -17,6 +17,7 @@ import Swal from "sweetalert2";
 import { Sport } from "../../../types/sport";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sportSchema } from "../../../utils/schema";
+import axios from "axios";
 
 const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
   open,
@@ -53,15 +54,14 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
           reset();
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Failed!",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred.",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
           handleClose();
         },
       }

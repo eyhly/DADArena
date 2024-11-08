@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { TeamMember } from "../../../types/teamMember"; 
 import { Add, Remove } from "@mui/icons-material";
+import axios from "axios";
 
 interface AddModalTeamMemberProps {
   open: boolean;
@@ -65,12 +66,14 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
           onClose();
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Error",
-            text: error instanceof Error ? error.message : "An unexpected error occurred.",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
           onClose();
         },
       }

@@ -16,15 +16,16 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
 import FmdGoodOutlinedIcon from '@mui/icons-material/FmdGoodOutlined';
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import { Match } from "../../../types/match";
+import { Match } from "../../types/match";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
-import { useDeleteMatch } from "../../../services/mutation";
+import { useDeleteMatch } from "../../services/mutation";
 import AddMatch from "./AddMatch";
 import UpdateMatch from "./UpdateMatch";
-import useRoles from "../../../hook/useRoles";
-import { useGetAllMatches } from "../../../services/queries";
+import useRoles from "../../hook/useRoles";
+import { useGetAllMatches } from "../../services/queries";
+import axios from "axios";
 
 const renderDate = (dateString: string) => {
   if (!dateString) return 'Unknown Date';
@@ -100,14 +101,16 @@ const Matches = () => {
           confirmButtonText: "Ok",
         });
           }, 
-          onError: (error) => { 
+          onError: (error) => {
+            if (axios.isAxiosError(error)){ 
         Swal.fire({
           icon: "error",
           title: "Failed!",
-          text: error instanceof Error ? error.message : "An unexpected error occurred.",
+          text: error.response?.data,
           confirmButtonText: "Ok",
         });
       }
+    }
         }
     )}
   };
@@ -238,7 +241,7 @@ const Matches = () => {
 
   return (
     <Container>
-      {/* Filter Section */}
+      {/* inii Filter */}
       <Typography variant="h4" sx={{  ml: 42, mb: 3, mt: 10, fontWeight: 500}}>List Matches</Typography>
       <Container sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, ml: 40, minWidth: 1200 }}>
         

@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { extraPointSchema } from "../../utils/schema";
+import axios from "axios";
 
 interface AddExtraPointModalProps {
   open: boolean;
@@ -63,15 +64,14 @@ const AddExtraPoint: React.FC<AddExtraPointModalProps> = ({
           handleClose();
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Error",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred.",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
           handleClose();
         },
       }

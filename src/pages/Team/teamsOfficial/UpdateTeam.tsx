@@ -13,6 +13,7 @@ import { useUpdateTeam } from '../../../services/mutation';
 import { useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
 import { Team } from '../../../types/team';
+import axios from 'axios';
 
 interface UpdateModalProps {
   open: boolean;
@@ -50,12 +51,14 @@ const UpdateTeam: React.FC<UpdateModalProps> = ({ open, onClose, selectedTeam })
       queryClient.invalidateQueries({queryKey:['teams', eventId]});
     }, 
     onError: (error) => {
+      if (axios.isAxiosError(error)){
       Swal.fire({
         icon: 'error',
         title: 'Error!',
-        text: error instanceof Error ? error.message : 'Failed to update team!',
+        text: error.response?.data,
         confirmButtonText: 'Ok',
       });
+    }
       onClose();
     }
   })

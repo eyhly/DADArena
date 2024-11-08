@@ -28,6 +28,8 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import { Profile } from "../../types/profile";
+import axios from "axios";
+import Navbar from "../Navigation/Navbar";
 
 const ProfilePage = () => {
   const { data } = useAuthState();
@@ -42,6 +44,17 @@ const ProfilePage = () => {
   const handleEdit = () => setIsEditable(!isEditable);
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
   };
 
   const onSubmit = (data: Profile) => {
@@ -61,13 +74,14 @@ const ProfilePage = () => {
           });
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Error",
-            text: error instanceof Error ? error.message : "An error occurred",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
-          console.error("errorrrr",error.message)
+        }
         },
       }
     );
@@ -106,6 +120,7 @@ const ProfilePage = () => {
 
   return (
     <Container sx={{ ml: 55 }}>
+      <Navbar onOpenUserMenu={handleOpenUserMenu} anchorElUser={anchorElUser} onCloseUserMenu={handleCloseUserMenu}/>
       <Box sx={{ display: "flex", justifyContent: "left", gap: 2, mt: 2 }}>
         <Button variant="contained" color="primary" onClick={handleBack}>
           Back

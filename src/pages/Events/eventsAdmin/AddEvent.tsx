@@ -16,6 +16,7 @@ import { Event } from "../../../types/event";
 import Swal from "sweetalert2";
 import { useNavigate} from "react-router-dom";
 import { eventSchema } from "../../../utils/schema";
+import axios from "axios";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -78,18 +79,18 @@ export default function AddEventPage() {
         });
       },
       onError: (error) => {
-        Swal.fire({
-          icon: "error",
-          title: "Failed to add event!",
-          text: error instanceof Error
-          ? error.message 
-          : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
-        }).then((result) => {
+        if (axios.isAxiosError(error)) {
+          Swal.fire({
+            icon: "error",
+            title: "Failed!",
+            text: error.response?.data ,
+            confirmButtonText: "Ok",
+          }).then((result) => {
           if (result.isConfirmed) {
             navigate("/events/add");
           }
         });
+      }
       },
     });
   };

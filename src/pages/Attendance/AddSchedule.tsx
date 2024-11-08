@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { Box, Button, Dialog, DialogContent, DialogTitle, Grid, TextField, Typography } from '@mui/material';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { scheduleSchema } from '../../utils/schema';
+import axios from 'axios';
 
 interface AddModalSchedule {
     open: boolean;
@@ -63,12 +64,14 @@ const AddSchedule:React.FC<AddModalSchedule>= ({open, handleClose}) => {
                     handleClose();
                 },
                 onError: (error) => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error instanceof Error ? error.message : 'An unexpected error occurred.',
-                        confirmButtonText: 'Ok',
-                    });
+                    if (axios.isAxiosError(error)) {
+                        Swal.fire({
+                          icon: "error",
+                          title: "Failed!",
+                          text: error.response?.data ,
+                          confirmButtonText: "Ok",
+                        });
+                      }
                     handleClose();
                 },
             }

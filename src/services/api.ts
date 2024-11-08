@@ -2,7 +2,7 @@ import axios from "axios";
 import { Event } from "../types/event";
 import { Sport } from "../types/sport";
 import { LoginUser } from "../types/login";
-import { UserLogin } from "../types/user";
+import { Roles, UserLogin } from "../types/user";
 import { Team } from "../types/team";
 import { Match } from "../types/match";
 import { SportPlayer } from "../types/sportPlayer";
@@ -18,7 +18,7 @@ import { useAuthState } from "../hook/useAuth";
 import { Profile } from "../types/profile";
 
 const BASE_URL = "http://localhost:5001/api";
-// const BASE_URL = "http://192.168.52.204:5001/api";
+// const BASE_URL = "http://192.168.54.243:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 const useApi = () => {
@@ -26,9 +26,9 @@ const useApi = () => {
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('access_token'))
 
   useEffect(() => {
-    const handleAuthToken = async () => {
+    const handleAuthToken =  () => {
       if (authState?.isAuthenticated && authState.user?.access_token) {
-        const token = authState?.user?.access_token;
+        const token =  authState?.user?.access_token;
         if (token) {
           setAccessToken(token)
           localStorage.setItem('access_token', token)
@@ -105,7 +105,6 @@ const useApi = () => {
     const response = await axios.post(`${BASE_URL}/events`, data, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        // "Content-Type": "multipart/form-data; boundary=<calculated when request is sent>"
       },
     });
     return response.data;
@@ -288,20 +287,6 @@ const useApi = () => {
     return response.data;
   };
 
-  // //get all match
-  //  const getAllMatches = async (eventId: string, sportId: string): Promise<Match[]> => {
-  //   try {
-  //     const response = await axios.get<Match[]>(`${BASE_URL}/events/${eventId}/sports/${sportId}/matches`, {
-  //       headers: {
-  //         Authorization: `Bearer ${accessToken}`,
-  //       },
-  //     });
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error("Error fetching matches:", error);
-  //     throw new Error("Failed to fetch matches");
-  //   }
-  // };
   //get all match
   const getAllMatches = async (eventId: string): Promise<Match[]> => {
     // const token = await getToken();
@@ -368,16 +353,6 @@ const useApi = () => {
     );
     return response.data;
   };
-
-  // API endpoint
-  //  const updateMatch = async (id: string, eventId: string, data: { match: Match; rounds: Round[] }) => {
-  //   const response = await axios.put(`${BASE_URL}/events/${eventId}/matches/${id}`, data, {
-  //     headers: {
-  //       Authorization: `Bearer ${accessToken}`
-  //     }
-  //   });
-  //   return response.data;
-  // };
 
   //delete match
   const deleteMatch = async (id: string, eventId: string) => {
@@ -1033,12 +1008,39 @@ const useApi = () => {
     const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${sportId} Members.xlsx`);
+      link.setAttribute('download', `${sportId} Players.xlsx`);
       document.body.appendChild(link);
       link.click();
       link.parentNode!.removeChild(link);
     return response.data;
   };
+
+  const getAllRoles = async () => {
+    const response = await axios.get(`${BASE_URL}/roles`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+    return response.data;
+  }
+
+  const createRoles = async (userId: string, data: Roles) => {
+    const response = await axios.post(`${BASE_URL}/users/${userId}/roles`, data, {
+      headers : {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+    return response.data;
+  }
+
+  const deleteRoles = async (userId: string) => {
+    const response = await axios.delete(`${BASE_URL}/users/${userId}/roles`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    })
+    return response.data;
+  }
 
   return {
     getAllEvents,
@@ -1102,6 +1104,9 @@ const useApi = () => {
     updateProfile,
     exportTeamMembers,
     exportSportPlayers,
+    getAllRoles,
+    createRoles,
+    deleteRoles,
   };
 };
 

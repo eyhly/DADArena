@@ -1,8 +1,5 @@
 import React from 'react';
-// import { Event } from '../../../types/event';
 import { Button, CardMedia, Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from '@mui/material';
-import ColorTheme from '../../../utils/colorTheme';
-import { ThemeProvider } from '@emotion/react';
 import { useEvent } from '../../../services/queries';
 import { AccessTimeOutlined, HourglassTopOutlined } from '@mui/icons-material';
 
@@ -10,6 +7,13 @@ interface DetailEventsProps {
   open: boolean;
   onClose: () => void;
   eventId?: string;
+}
+
+const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL;
+
+const getImageUrl = (imagePath) => {
+  return `${baseUrl}${imagePath}`;
+
 }
 
 const formatStatus = (status: string) => {
@@ -21,6 +25,8 @@ const formatStatus = (status: string) => {
 const DetailEvents: React.FC<DetailEventsProps> = ({ open, onClose, eventId }) => {
 
   const {data: event} = useEvent(eventId);
+  console.log(event);
+  
 
   const renderDate = (dateString: string) => {
     if (!dateString) return 'Unknown Date';
@@ -33,16 +39,14 @@ const DetailEvents: React.FC<DetailEventsProps> = ({ open, onClose, eventId }) =
 
   return (
     <Container maxWidth="xs" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <ThemeProvider theme={ColorTheme}>
-        {/* Menambahkan properti `onClose` di Dialog untuk bisa di-close dengan backdrop */}
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
           <DialogTitle>Event Details: {event?.title}</DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={1}>
               <Grid item xs={6}>
-                <CardMedia
+                  <CardMedia
                   component="img"
-                  image={event?.image}
+                  image={getImageUrl(event?.image)}
                   sx={{ objectFit: 'cover', width: 300, height: 200, borderRadius: 5}}
                   alt={event?.title}
                 />
@@ -86,7 +90,6 @@ const DetailEvents: React.FC<DetailEventsProps> = ({ open, onClose, eventId }) =
             </Button>
           </DialogActions>
         </Dialog>
-      </ThemeProvider>
     </Container>
   );
 };

@@ -8,7 +8,6 @@ const Leaderboard = () => {
   const { eventId } = useParams(); 
   const { data: totalPoints, isLoading, isError } = useGetAllTotalPoints(eventId!);
 
-  // Handle loading state
   if (isLoading) {
     return (
       <Box sx={{ ml: 95, height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -28,7 +27,6 @@ const Leaderboard = () => {
     );
   }
 
-  // Handle empty data state
   if (!totalPoints || totalPoints.length === 0) {
     return (
       <Box sx={{ ml: 95, height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -40,8 +38,8 @@ const Leaderboard = () => {
   }
 
   return (
-    <Container sx={{ mt: 4, ml: 65 }}>
-      <Typography variant="h4" align="center" mb={4}>
+    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+      <Typography variant="h4" align="center"sx={{mb: 2, mt: 5}}>
         Leaderboard
       </Typography>
       <Paper elevation={4} sx={{ padding: 2, marginBottom: 2 }}>

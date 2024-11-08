@@ -12,14 +12,15 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { useCreateMatch } from "../../../services/mutation";
+import { useCreateMatch } from "../../services/mutation";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Match } from "../../../types/match";
-import { useGetAllSports, useGetAllTeams } from "../../../services/queries";
+import { Match } from "../../types/match";
+import { useGetAllSports, useGetAllTeams } from "../../services/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { matchSchema } from "../../../utils/schema";
+import { matchSchema } from "../../utils/schema";
+import axios from "axios";
 
 interface AddMatchModalProps {
   open: boolean;
@@ -84,15 +85,14 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
           queryClient.invalidateQueries({ queryKey: ["matches", eventId] });
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Failed!",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred.",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
           handleClose();
         },
       }

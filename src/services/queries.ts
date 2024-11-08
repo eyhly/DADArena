@@ -33,13 +33,6 @@ export function useEvent(id: string | undefined) {
 
 
 // // get all sports
-// export function useGetAllSports() {
-//   return useQuery({
-//     queryKey: ["sports"],
-//     queryFn: getAllSports, 
-//   });
-// }
-
 export function useGetAllSports(eventId: string) {
   const {getAllSports} = useApi()
   return useQuery({
@@ -87,14 +80,6 @@ export function useTeam(id: string | undefined) {
   })
 }
 
-// //get all matches
-// export function useGetAllMatches(eventId: string, sportId: string) {
-//   return useQuery({
-//     queryKey: ["matches", eventId, sportId],
-//     queryFn: () => getAllMatches(eventId, sportId),
-//     enabled: !!eventId && !!sportId,
-//   });
-// }
 //get all matches
 export function useGetAllMatches(eventId: string) {
   const {getAllMatches} = useApi();
@@ -220,20 +205,29 @@ export function useGetProfile (userId: string){
   })
 }
 
-//export Tmember
-export function useExportTeamMembers (eventId: string, teamId: string){
-  const {exportTeamMembers} = useApi();
+//get roles
+export function useGetAllRoles (){
+  const { getAllRoles } = useApi();
   return useQuery({
-    queryKey: ['exportTeamMembers', eventId, teamId],
-    queryFn: () => exportTeamMembers(eventId, teamId)
+    queryKey: ['roles'],
+    queryFn: () => getAllRoles()
   })
 }
 
-//export Splayer
-export function useExportSportPlayers (eventId: string, sportId: string){
-  const {exportSportPlayers} = useApi();
-  return useQuery({
-    queryKey: ['exportSportPllayers', eventId, sportId],
-    queryFn: () => exportSportPlayers(eventId, sportId)
-  })
-}
+// //export Tmember
+// export function useExportTeamMembers (eventId: string, teamId: string){
+//   const {exportTeamMembers} = useApi();
+//   return useQuery({
+//     queryKey: ['exportTeamMembers', eventId, teamId],
+//     queryFn: () => exportTeamMembers(eventId, teamId)
+//   })
+// }
+
+// //export Splayer
+// export function useExportSportPlayers (eventId: string, sportId: string){
+//   const {exportSportPlayers} = useApi();
+//   return useQuery({
+//     queryKey: ['exportSportPllayers', eventId, sportId],
+//     queryFn: () => exportSportPlayers(eventId, sportId)
+//   })
+// }

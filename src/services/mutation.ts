@@ -15,6 +15,7 @@ import { Schedule } from "../types/schedule";
 import { ExtraPoint } from "../types/extraPoint";
 import { Attendance } from "../types/attendance";
 import { Profile } from "../types/profile";
+import { Roles } from "../types/user";
 
 // login
 export function useLogin() {
@@ -267,27 +268,6 @@ export function useUpdateMatch() {
     },
   });
 }
-// //update match
-// export function useUpdateMatch() {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationKey: ['update match'],
-//     mutationFn: ({id, eventId, data}: {id: string, eventId: string, data: { match: Match; rounds: Round[]; }}) => updateMatch(id, eventId, data),
-
-//     onError: (error) => {
-//       console.error('Error updating match:', error);
-//     },
-
-//     onSuccess: (data) => {
-//       console.log('Match updated successfully:', data);
-//       queryClient.invalidateQueries({queryKey: ['match']});
-//       queryClient.invalidateQueries({queryKey: ['round']});
-//       // queryClient.invalidateQueries({queryKey: ['point']});
-//       // queryClient.invalidateQueries({queryKey: ['notes']});
-//     }
-//   });
-// }
 
 //delete match
 export function useDeleteMatch() {
@@ -911,6 +891,36 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+    }
+  })
+}
+
+export function useCreateRoles() {
+  const {createRoles} = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['create roles'],
+    mutationFn: ({userId, data}: {userId: string; data: Roles}) => createRoles(userId, data),
+    onError: () => {
+      console.log('error');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['role']})
+    }
+  })
+}
+
+export function useDeleteRoles() {
+  const {deleteRoles} = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ['delete roles'],
+    mutationFn: ({userId}: {userId: string;}) => deleteRoles(userId),
+    onError: () => {
+       console.log('error');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['role']})
     }
   })
 }

@@ -17,6 +17,7 @@ import { useParams } from "react-router-dom";
 import { Team } from "../../../types/team";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { teamSchema } from "../../../utils/schema";
+import axios from "axios";
 
 interface CreateTeamModalProps {
   open: boolean;
@@ -60,16 +61,14 @@ const CreateTeam: React.FC<CreateTeamModalProps> = ({ open, onClose }) => {
           console.log('yang disubmit?',data);
         },
         onError: (error) => {
-          console.log("Error:", error);
-          Swal.fire({
-            icon: "error",
-            title: "Failed!",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred.",
-            confirmButtonText: "Ok",
-          });
+          if (axios.isAxiosError(error)) {
+            Swal.fire({
+              icon: "error",
+              title: "Failed!",
+              text: error.response?.data ,
+              confirmButtonText: "Ok",
+            });
+          }
           onClose();
         },
       }

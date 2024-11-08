@@ -43,6 +43,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
 import useRoles from "../../../hook/useRoles";
+import axios from "axios";
 // import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -118,15 +119,14 @@ const SportsTable: React.FC = () => {
             });
           },
           onError: (error) => {
-            Swal.fire({
-              icon: "error",
-              title: "Failed!",
-              text:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred.",
-              confirmButtonText: "Ok",
-            });
+            if (axios.isAxiosError(error)) {
+              Swal.fire({
+                icon: "error",
+                title: "Failed!",
+                text: error.response?.data ,
+                confirmButtonText: "Ok",
+              });
+            }
           },
         }
       );
@@ -160,7 +160,7 @@ const SportsTable: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => (
             <Box sx={{ display: 'flex' }}>
-                {!isMemberOrKapten && (
+                {isMemberOrKapten && (
                     <Box>
                         <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
                             <EditOutlined />

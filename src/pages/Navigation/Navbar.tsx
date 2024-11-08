@@ -1,84 +1,87 @@
-// import { AppBar, Box, CssBaseline, IconButton, MenuItem, Slide, ThemeProvider, Toolbar, Tooltip, Typography, useScrollTrigger } from '@mui/material'
-// import React from 'react'
-// import ColorTheme from '../../utils/ColorTheme'
-// import { AccountCircle } from '@mui/icons-material';
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  Tooltip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+} from "@mui/material";
+import { AccountCircle, ManageAccountsRounded } from "@mui/icons-material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useNavigate } from "react-router-dom";
+import { useSignOutRedirect, useAuthState } from "../../hook/useAuth";
+import Logo from "/img/logo.png";
 
+interface NavbarProps {
+  onOpenUserMenu: (event: React.MouseEvent<HTMLElement>) => void;
+  anchorElUser: HTMLElement | null;
+  onCloseUserMenu: () => void;
+}
 
+const Navbar: React.FC<NavbarProps> = ({ onOpenUserMenu, anchorElUser, onCloseUserMenu }) => {
+  const navigate = useNavigate();
+  const { mutate: signOutRedirect } = useSignOutRedirect();
+  const { data } = useAuthState();
+  const user = data?.user;
+  const isAuthenticated = data?.isAuthenticated;
 
-// const Navbar = () => {
-//  function HideOnScroll(props: any) {
-//     const { children, window } = props;
-//     const trigger = useScrollTrigger({
-//       target: window ? window() : undefined,
-//     });
-//     return (
-//       <Slide appear={false} direction="down" in={!trigger}>
-//         {children}
-//       </Slide>
-//     ); return (
-//     <ThemeProvider theme={ColorTheme}>
-//      <HideOnScroll>
-//         <AppBar position="fixed" sx={{ width: "100%" }}>
-//           <Toolbar sx={{ justifyContent: "space-between" }}>
-//             <Box>
-//               <Typography
-//                 variant="h6"
-//                 noWrap
-//                 component="div"
-//                 sx={{ display: "flex" }}
-//               >
-//                 <img src={Logo} alt="Logo" width="40px" />
-//                 DAD Sports League
-//               </Typography>
-//             </Box>
-//             <Box sx={{ flexGrow: 0 }}>
-//               <Tooltip title={isAuthenticated ? user?.name || "Profile" : "Login"}>
-//                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-//                   <AccountCircle />
-//                 </IconButton>
-//               </Tooltip>
-//               <Menu 
-//                 sx={{ mt: "45px", ml: 175, width:500 }}
-//                 id="menu-appbar"
-//                 anchorEl={anchorElUser}
-//                 anchorOrigin={{
-//                   vertical: "top",
-//                   horizontal: "right",
-//                 }}
-//                 keepMounted
-//                 transformOrigin={{
-//                   vertical: "top",
-//                   horizontal: "right",
-//                 }}
-//                 open={Boolean(anchorElUser)}
-//                 onClose={handleCloseUserMenu}
-//               >
-//                 {isAuthenticated ? (
-//                   <>
-//                     <MenuItem>
-//                       <Typography>{user?.email}</Typography>
-//                     </MenuItem>
-//                     <MenuItem onClick={handleLogout}>
-//                       <Typography sx={{ textAlign: "center", display: "flex" }}>
-//                         <LogoutIcon />
-//                         Logout
-//                       </Typography>
-//                     </MenuItem>
-//                   </>
-//                 ) : (
-//                   <MenuItem onClick={() => loginWithRedirect()}>
-//                     <Typography>Login</Typography>
-//                   </MenuItem>
-//                 )}
-//               </Menu>
-//             </Box>
-//           </Toolbar>
-//         </AppBar>
-//       </HideOnScroll>
-//         </ThemeProvider>
-// ) }
+  const handleProfileClick = () => {
+    if (user?.profile?.sub) {
+      navigate(`/profile/${user.profile.sub}`);
+      onCloseUserMenu();
+    }
+  };
 
+  const handleLogout = () => {
+    signOutRedirect();
+    onCloseUserMenu();
+  };
 
-// }
+  return (
+    <AppBar position="fixed" sx={{ width: "100%" }}>
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Box>
+          <Typography variant="h6" noWrap component="div" sx={{ display: "flex" }}>
+            <img src={Logo} alt="Logo" width="40px" />
+            Sports Events
+          </Typography>
+        </Box>
+        <Box sx={{ flexGrow: 0 }}>
+          <Tooltip title={isAuthenticated ? user?.profile?.name || "Profile" : "Login"}>
+            <IconButton onClick={onOpenUserMenu} sx={{ p: 0 }}>
+              <AccountCircle />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            sx={{ mt: "45px" }}
+            id="menu-appbar"
+            anchorEl={anchorElUser}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            open={Boolean(anchorElUser)}
+            onClose={onCloseUserMenu}
+          >
+                <MenuItem onClick={handleProfileClick}>
+                  <ManageAccountsRounded sx={{ mr: 1 }} /> My Profile
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <LogoutIcon sx={{ mr: 1 }} /> Logout
+                </MenuItem>
+          </Menu>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
 
-// export default Navbar
+export default Navbar;

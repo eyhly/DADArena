@@ -1,5 +1,4 @@
 import { createBrowserRouter } from 'react-router-dom';
-// import history from "./utils/history"
 import Login from './pages/Auth/Login';
 import EventsPage from './pages/Events/eventsAdmin/EventsPage';
 import LayoutPages from './pages/Layout/LayoutPages';
@@ -9,7 +8,7 @@ import SportsTable from './pages/Sport/sportsAdmin/SportTable';
 import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
 import ListTeam from './pages/Team/ListTeam';
 import LoginButton from './pages/Auth/LoginButton';
-import Matches from './pages/Match/matchAdmin/Matches';
+import Matches from './pages/Match/Matches';
 import SettingEvents from './pages/Events/eventsAdmin/SettingEvents';
 import Attendance from './pages/Attendance/Attendance';
 import Leaderboard from './pages/Leaderboard/Leaderboard';
@@ -19,7 +18,6 @@ import ExtraPointPage from './pages/Point/ExtraPoint';
 import TeamMembers from './pages/Team/TeamMember/TeamMembers';
 import SportPlayerTable from './pages/Sport/Player/SportPlayer';
 import DataUser from './pages/User/DataUser';
-// import DetailMatchPoint from './pages/Point/DetailMatchPoint';
 import ProfilePage from './pages/User/Profile';
 import ProtectedRoute from './hook/protectedRoute';
 import AddSportPlayer from './pages/Sport/Player/AddSportPlayer';
@@ -38,12 +36,8 @@ const router = createBrowserRouter([
     element: <LandingPage/>
   },
   // {
-  //   path: '/login',
-  //   element: <SignIn/>
-  // },
-  // {
-  //   path: '/register',
-  //   element: <SignUp/>
+  //   path: '/',
+  //   element: <ProtectedRoute element={<LandingPage/>}/>
   // },
   {
     path: '/events',
@@ -91,7 +85,7 @@ const router = createBrowserRouter([
     },
     {
       path: '/events/:eventId/sports/:sportId/sportplayers/add',
-      element: <ProtectedRoute element={<AddSportPlayer/>} />
+      element: <ProtectedRoute element={<AddSportPlayer/>} />, 
     },
     {
       path: '/events/:eventId/matches',

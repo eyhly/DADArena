@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Attendance } from '../../types/attendance';
 import { useAuthState } from '../../hook/useAuth';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 interface AddModalAttendance {
   open: boolean;
@@ -46,12 +47,14 @@ const AddAttendance: React.FC<AddModalAttendance> = ({ open, handleClose }) => {
           handleClose(); 
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: 'error',
-            title: 'Failed',
-            text: error instanceof Error ? error.message : "An error occured",
+            title: 'Failed!',
+            text: error.response?.data,
             confirmButtonText: 'Ok'
           })
+        }
           handleClose();
         },
       }

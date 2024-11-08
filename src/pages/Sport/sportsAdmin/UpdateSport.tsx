@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { sportSchema } from "../../../utils/schema";
+import axios from "axios";
 
 interface UpdateSportProps {
   open: boolean;
@@ -85,15 +86,14 @@ const UpdateSport: React.FC<UpdateSportProps> = ({
             handleClose();
           },
           onError: (error) => {
+            if (axios.isAxiosError(error)){
             Swal.fire({
               icon: "error",
               title: "Update Failed",
-              text:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred.",
+              text: error.response?.data,
               confirmButtonText: "OK",
             });
+          }
             handleClose();
           },
         }

@@ -40,6 +40,7 @@ import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
 import UpdateExtraPoint from "./UpdateExtraPoint";
 import { useAuthState } from "../../hook/useAuth";
+import axios from "axios";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -147,15 +148,14 @@ const ExtraPointPage: React.FC = () => {
             });
           },
           onError: (error) => {
+            if (axios.isAxiosError(error)){
             Swal.fire({
               icon: "error",
               title: "Error",
-              text:
-                error instanceof Error
-                  ? error.message
-                  : "An unexpected error occurred.",
+              text: error.response?.data,
               confirmButtonText: "Ok",
             });
+          }
           },
         }
       );

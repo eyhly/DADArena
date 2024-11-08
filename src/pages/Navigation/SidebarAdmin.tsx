@@ -36,13 +36,25 @@ import { useGetProfile } from '../../services/queries';
 const drawerWidth = 260;
 
 //untuk merubah icon di drawer
-const roleLabels = {
+const roleLabels= {
   committee: { label: "Admin", icon: <SupportAgentOutlined /> },
   member: { label: "Member", icon: <PeopleOutlineOutlined /> },
   captain: { label: "Captain", icon: <GroupsOutlined /> },
   official: { label: "Official", icon: <HowToRegRounded /> },
 };
 
+const getRoleLabel = (userRoles) => {
+  if (userRoles.includes("official")) {
+    return roleLabels.official; // Prioritaskan role official
+  }
+  if (userRoles.includes("captain")) {
+    return roleLabels.captain; // Jika ada captain
+  }
+  if (userRoles.includes("member")) {
+    return roleLabels.member; // Jika ada member
+  }
+  return roleLabels.committee || { label: "Unknown Role", icon: null }; // Default ke committee jika tidak ada yang dikenal
+};
 export default function PermanentDrawerLeft() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,12 +69,13 @@ export default function PermanentDrawerLeft() {
   const { data: profile } = useGetProfile(userId!);
 
   //untuk mendapatkan data roles
-  const userRole = profile?.roles?.[0]?.toLowerCase() || 'member'; // default role ya member
-  const roleData = roleLabels[userRole] || { label: "Unknown Role", icon: null };
+  const userRole = profile?.roles?.[0]?.toLowerCase() || 'member'; 
+  const secondUserRole = profile?.roles?.[1]?.toLowerCase()// default role ya member
+  const roleData = getRoleLabel(userRole);
+  const secondRole = getRoleLabel(secondUserRole)
   const isMember = userRole === "member";
   const isCaptain = userRole === "captain";
-
-
+  
   const handleNavigation = (path: string) => {
     navigate(path);
   };
@@ -77,6 +90,18 @@ export default function PermanentDrawerLeft() {
 
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
+  };
+
+  const handleProfileClick = () => {
+    if (user?.profile?.sub) {
+      navigate(`/profile/${user.profile.sub}`);
+      handleCloseUserMenu();
+    }
+  };
+
+  const handleLogout = () => {
+    signOutRedirect();
+    handleCloseUserMenu();
   };
 
   const menuItems = [
@@ -97,6 +122,7 @@ export default function PermanentDrawerLeft() {
       <Typography sx={{ mt: -5, mb: 2, mx: 5, display: 'flex' }}>
         {roleData.icon}
         <Typography component={'span'} style={{ marginLeft: '8px' }}>{roleData.label}</Typography>
+        { secondUserRole ? <Typography component={'span'} style={{ marginLeft: '8px' }}>({secondRole.label})</Typography> : <></> }
       </Typography>
       <Divider />
       <List>
@@ -165,10 +191,10 @@ export default function PermanentDrawerLeft() {
               >
                 {isAuthenticated ? (
                   <div>
-                    <MenuItem onClick={() => navigate(`/profile/${user?.profile.sub}`)}>
+                    <MenuItem onClick={handleProfileClick}>
                       <ManageAccountsRounded/> My Profile
                     </MenuItem>
-                    <MenuItem onClick={() => signOutRedirect()}>
+                    <MenuItem onClick={handleLogout}>
                       <Logout /> Logout
                     </MenuItem>
                   </div>

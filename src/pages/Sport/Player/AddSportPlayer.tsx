@@ -18,6 +18,7 @@ import {
 import { Add, Remove } from "@mui/icons-material";
 import { useAuthState } from "../../../hook/useAuth"; 
 import { useGetProfile } from "../../../services/queries"; 
+import axios from "axios";
 
 const AddSportPlayer: React.FC = () => {
   const navigate = useNavigate();
@@ -62,15 +63,14 @@ const AddSportPlayer: React.FC = () => {
           navigate(`events/${eventId}/sports/${sportId}/sportplayers`); // Navigate to the players page
         },
         onError: (error) => {
+          if (axios.isAxiosError(error)){
           Swal.fire({
             icon: "error",
             title: "Error",
-            text:
-              error instanceof Error
-                ? error.message
-                : "An unexpected error occurred",
+            text: error.response?.data,
             confirmButtonText: "Ok",
           });
+        }
         },
       }
     );

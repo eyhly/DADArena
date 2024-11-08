@@ -42,6 +42,7 @@ import { useDeleteTeam } from "../../services/mutation";
 import CreateTeam from "./teamsOfficial/AddTeam";
 import UpdateTeam from "./teamsOfficial/UpdateTeam";
 import { useAuthState } from "../../hook/useAuth";
+import axios from "axios";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -117,15 +118,13 @@ const ListTeam: React.FC = () => {
             });
             queryClient.invalidateQueries({ queryKey: ["teams", eventId] });
       }, onError: (error) => {
+        if (axios.isAxiosError(error)){
         Swal.fire({
           icon: "error",
           title: "Failed!",
-          text:
-            error instanceof Error
-              ? error.message
-              : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
+          text: error.response?.data,
         });
+      }
       }
     }
   )}
