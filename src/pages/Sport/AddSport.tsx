@@ -10,13 +10,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
-import { useCreateSport } from "../../../services/mutation";
+import { useCreateSport } from "../../services/mutation";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
-import { Sport } from "../../../types/sport";
+import { Sport } from "../../types/sport";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sportSchema } from "../../../utils/schema";
+import { sportSchema } from "../../utils/schema";
 import axios from "axios";
 
 const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({

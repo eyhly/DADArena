@@ -9,10 +9,10 @@ import {
   Box,
 } from '@mui/material';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import { useUpdateTeam } from '../../../services/mutation';
+import { useUpdateTeam } from '../../services/mutation';
 import { useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
-import { Team } from '../../../types/team';
+import { Team } from '../../types/team';
 import axios from 'axios';
 
 interface UpdateModalProps {

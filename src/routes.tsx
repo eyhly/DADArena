@@ -4,7 +4,7 @@ import EventsPage from './pages/Events/eventsAdmin/EventsPage';
 import LayoutPages from './pages/Layout/LayoutPages';
 import AddEventPage from './pages/Events/eventsAdmin/AddEvent';
 import LandingPage from './pages/User/LandingPage';
-import SportsTable from './pages/Sport/sportsAdmin/SportTable';
+import SportsTable from './pages/Sport/SportTable';
 import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
 import ListTeam from './pages/Team/ListTeam';
 import LoginButton from './pages/Auth/LoginButton';

@@ -213,21 +213,3 @@ export function useGetAllRoles (){
     queryFn: () => getAllRoles()
   })
 }
-
-// //export Tmember
-// export function useExportTeamMembers (eventId: string, teamId: string){
-//   const {exportTeamMembers} = useApi();
-//   return useQuery({
-//     queryKey: ['exportTeamMembers', eventId, teamId],
-//     queryFn: () => exportTeamMembers(eventId, teamId)
-//   })
-// }
-
-// //export Splayer
-// export function useExportSportPlayers (eventId: string, sportId: string){
-//   const {exportSportPlayers} = useApi();
-//   return useQuery({
-//     queryKey: ['exportSportPllayers', eventId, sportId],
-//     queryFn: () => exportSportPlayers(eventId, sportId)
-//   })
-// }

@@ -5,5 +5,5 @@ export interface Profile {
     fullname: string;
     gender: string;
     roles: string[];
-    teams: {team: string; event: string}[];
+    teams: {team: string; event: string; teamId: string}[];
 }

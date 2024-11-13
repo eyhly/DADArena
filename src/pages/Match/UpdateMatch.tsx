@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -29,7 +29,12 @@ import {
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { Match } from "../../types/match";
-import { useGetAllNotes, useGetAllRound, useGetAllSports, useGetAllTeams } from "../../services/queries";
+import {
+  useGetAllNotes,
+  useGetAllRound,
+  useGetAllSports,
+  useGetAllTeams,
+} from "../../services/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { Add, Check, Remove } from "@mui/icons-material";
 import { Round } from "../../types/round";
@@ -66,7 +71,10 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
   const { handleSubmit, control, watch, reset } = useForm<Match>({
     defaultValues: matchData,
   });
+  
   const { id, eventId } = useParams<{ id: string; eventId: string }>();
+  const status = watch("status");
+  const isComingSoon = status.includes("comingSoon");
   const updateMatch = useUpdateMatch();
 
   //round
@@ -78,13 +86,20 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
   const createNotes = useCreateNote();
   const updateNotes = useUpdateNote();
   const deleteNotes = useDeleteNote();
- 
-  const {data: notes} = useGetAllNotes(eventId!, matchData.id!)
-  const {data: rounds} = useGetAllRound(eventId!, matchData.id!)
+
+  const { data: notes } = useGetAllNotes(
+    eventId!,
+    matchData.id!
+  );
+  const { data: rounds } = useGetAllRound(eventId!, matchData.id!);
   const { data: sports } = useGetAllSports(eventId!);
   const { data: teams } = useGetAllTeams(eventId!);
-  const [error] = React.useState<string | null>(null);
+
+  // State buat add note round
+  const [editingNoteIndex, setEditingNoteIndex] = useState<number | null>(null);
+
   const queryClient = useQueryClient();
+
   const {
     fields: roundFields,
     append: appendRound,
@@ -93,122 +108,189 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
     control,
     name: "rounds",
   });
-    const {
-      fields: noteFields,
-      append: appendNote,
-      remove: removeNote,
-    } = useFieldArray({
-      control,
-      name: "notes",
-    });
-
+  const {
+    fields: noteFields,
+    append: appendNote,
+    remove: removeNote,
+  } = useFieldArray({
+    control,
+    name: "notes",
+  });
   const teamRedId = watch("teamRedId");
   const teamBlueId = watch("teamBlueId");
-
+ 
   useEffect(() => {
     reset({
       ...matchData,
       startTime: formatDate(matchData.startTime),
       endTime: formatDate(matchData.endTime),
       rounds: rounds || [],
-      notes: notes || []
+      notes: notes || [],
     });
   }, [matchData, rounds, notes, reset]);
 
-  const roundSubmit: SubmitHandler<Round> = (data) => {
-    const formattedData: Round = {
-      ...data,
-      teamRedScore: Number(data.teamRedScore),
-      teamBlueScore: Number(data.teamBlueScore),
+  const handleRoundSubmit = async (index: number) => {
+    const teamRedScore = Number(watch(`rounds.${index}.teamRedScore`));
+    const teamBlueScore = Number(watch(`rounds.${index}.teamBlueScore`));
+
+    // Cari round yang sudah ada di database
+    const existingRound = rounds?.find((r) => r.matchRound === index + 1);
+    console.log("exiting rounds", existingRound);
+
+    const roundData: Round = {
+      matchId: matchData.id,
+      matchRound: index + 1,
+      teamRedScore,
+      teamBlueScore,
     };
 
-    createRound.mutate(
+    if (existingRound) {
+      // jika ada roundnya, yang dipanggil update
+      await updateRound.mutateAsync({
+        id: existingRound.id,
+        eventId: matchData.eventId!,
+        matchId: matchData.id!,
+        data: roundData,
+      },
       {
-        eventId: eventId!,
-        matchId: matchData.id,
-        data: formattedData,
+        onSuccess: ()=> {
+          queryClient.invalidateQueries({queryKey: ['rounds', eventId, matchData.id]})
+          console.log("berhasil update round coyy");
+        },
+        onError : (error) => {
+          console.error("gabisa update round cik", error);
+        }
+      });
+    } else {
+      //kalo belum ada ya buat baru
+      await createRound.mutateAsync(
+        {
+          eventId: matchData.eventId!,
+          matchId: matchData.id!,
+          data: roundData,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: ["rounds", eventId, matchData.id],
+            });
+            console.log("berhasil add round coyy");
+          },
+          onError: (error) => {
+            console.error("gabisa add round cik", error);
+          },
+        }
+      );
+    }
+  };
+
+  const handleDeleteRound = async (index: number) => {
+    // Cari round yang akan dihapus
+    const roundToDelete = rounds?.[index];
+
+    if (!roundToDelete) {
+      console.log("gada round nya kah???");
+      return;
+    }
+    // Hapus round dari database
+    await deleteRound.mutateAsync(
+      {
+        eventId: matchData.eventId!,
+        matchId: matchData.id!,
+        id: roundToDelete.id,
       },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({
             queryKey: ["rounds", eventId, matchData.id],
           });
-          console.log('add round');
+          removeRound(index);
+          console.log("berhasil hapus round coyyyyy");
         },
         onError: (error) => {
-          console.log(error.message, "failed add round");
-          handleClose();
-        },
-      }
-    );
-    console.log(data);
-  };
-
-  const handleDeleteRound = async (id: string, eventId: string, matchId: string ) => {
-    deleteRound.mutateAsync({id, eventId, matchId: matchData.id })
-  }
-
-  const noteRedSubmit: SubmitHandler<Notes> = (data) => {
-    const noteRed: Notes = {
-      ...data,
-      description: data.description,
-      teamId: matchData.teamRedId,
-    };
-    createNotes.mutate(
-      {
-        eventId: eventId!,
-        matchId: matchData.id,
-        data: noteRed,
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["notes", eventId, matchData.id],
-          });
-        },
-        onError: (error) => {
-          console.log(error.message, "error add notes");
+          console.error("gagal delete round cik", error);
         },
       }
     );
   };
 
-  const noteBlueSubmit: SubmitHandler<Notes> = (data) => {
-    const noteBlue: Notes = {
-      ...data,
-      description: data.description,
-      teamId: matchData.teamBlueId,
-    };
-    createNotes.mutate({
-      eventId: eventId!,
+  const handleNoteSubmit = async (
+    index: { id: string; teamId: string }[],
+    teamId: string,
+    noteId: string,
+    indexPosition: number,
+  ) => {
+
+    const description = watch(
+      `notes.${noteFields.findIndex((n) => n.id === index[0].id)}.description`
+    );
+
+    const noteData: Notes = {
+      teamId,
+      description,
       matchId: matchData.id,
-      data: noteBlue,
-    },
-  {
-    onSuccess: () => {console.log('doneee');
-    }
-  });
+      eventId: matchData.eventId,
+    };
+
+    const noteToCheck = notes?.[indexPosition] 
+
+      if (noteToCheck) {
+        // Update the note if it exists
+        await updateNotes.mutateAsync({
+          id: noteToCheck.id,
+          eventId: matchData.eventId!,
+          matchId: matchData.id!,
+          data: noteData,
+        }, 
+      {
+        onSuccess : () => {
+          queryClient.invalidateQueries({queryKey:['notes', eventId, matchData.id]})
+          console.log("berhhasil update note");
+        },
+        onError : (error) => {
+          console.error("gagal update note", error);
+        }
+      });
+      } else {
+        // Create a new note if it doesn't exist
+        await createNotes.mutateAsync({
+          eventId: matchData.eventId!,
+          matchId: matchData.id!,
+          data: noteData,
+        },
+        {
+          onSuccess : () => {
+            queryClient.invalidateQueries({queryKey:['notes', eventId, matchData.id]})
+            console.log("berhhasil add note");
+          },
+          onError : (error) => {
+            console.error("gagal add note", error);
+          }
+        });
+      }
   };
 
-  const handleDeleteNote = (id: string, index: number) => {
-    deleteNotes.mutate(
-      { id, eventId: matchData.eventId!, matchId: matchData.id! },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["notes", matchData.eventId, matchData.id],
-          });
-          removeNote(index)
-          console.log('success delete note awokawoak');
-        },
-        onError: (error) => {
-          console.log("Error deleting note:", error);
-        },
+  const handleDeleteNote = async (id: string, index: number) => {
+    const noteToDelete = notes?.[index];
+      // Hapus note dari database
+      await deleteNotes.mutateAsync({
+        id: noteToDelete.id,
+        eventId: matchData.eventId!,
+        matchId: matchData.id!,
+      }, 
+    {
+      onSuccess : () => {
+        queryClient.invalidateQueries({queryKey:['notes', eventId, matchData.id]})
+        console.log("berhasil delete note hehe");
+        removeNote(index);
+      },
+      onError : (error) => {
+        console.log("gagal delete note :(((", error);
       }
-      
-    );
+    });
+
   };
-  
+
   const onSubmit: SubmitHandler<Match> = async (data) => {
     const formattedData: Match = {
       ...data,
@@ -218,7 +300,7 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
 
     console.log("dapet id?", id, eventId);
     console.log("Submitting data:", formattedData);
-    updateMatch.mutateAsync(
+    await updateMatch.mutateAsync(
       {
         id: matchData.id,
         eventId: eventId!,
@@ -237,11 +319,11 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
         },
         onError: (error) => {
           if (axios.isAxiosError(error)) {
-            console.log(error.response?.data)
+            console.log(error.response?.data);
             Swal.fire({
               icon: "error",
               title: "Failed!",
-              text: error.response?.data ,
+              text: error.response?.data,
               confirmButtonText: "Ok",
             });
           }
@@ -251,19 +333,12 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
     );
   };
 
-  const teamRedNotes = notes?.filter(note => note.teamId === matchData.teamRedId) || []
-  const teamBlueNotes = notes?.filter(note => note.teamId === matchData.teamBlueId) || []
   return (
     <Dialog open={open} onClose={handleClose}>
       <DialogTitle variant="h6" component="h2">
         Update Match
       </DialogTitle>
       <DialogContent>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2} sx={{ mb: 2, mt: 2 }}>
             <Grid item xs={8}>
@@ -359,8 +434,8 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
             </Grid>
           </Grid>
           {/* for adding rounds + delete */}
-          {roundFields.map((field, index) => (
-            <Grid container spacing={2} key={field.id} mb={2}>
+          {roundFields.map((round, index) => (
+            <Grid container spacing={2} key={round.id} mb={2}>
               <Grid item xs={6}>
                 <Controller
                   name={`rounds.${index}.teamRedScore`}
@@ -393,26 +468,12 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
               </Grid>
               <Grid item xs={1}>
                 <IconButton sx={{ maxHeight: 8 }}>
-                  <Remove onClick={() => removeRound(index)} />
+                  <Remove onClick={() => handleDeleteRound(index)} />
                 </IconButton>
                 <IconButton
                   sx={{ maxHeight: 8 }}
                   onClick={() => {
-                    const teamRedScore = Number(
-                      watch(`rounds.${index}.teamRedScore`)
-                    );
-                    const teamBlueScore = Number(
-                      watch(`rounds.${index}.teamBlueScore`)
-                    );
-                    const roundData = {
-                      matchId: matchData.id,
-                      matchRound: index + 1,
-                      // teamRedScore: watch(`rounds.${index}.teamRedScore`),
-                      // teamBlueScore: watch(`rounds.${index}.teamBlueScore`),
-                      teamRedScore: teamRedScore,
-                      teamBlueScore: teamBlueScore,
-                    };
-                    handleSubmit(() => roundSubmit(roundData))();
+                    handleRoundSubmit(index);
                   }}
                 >
                   <Check />
@@ -420,31 +481,34 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
               </Grid>
             </Grid>
           ))}
+
           <Button
             variant="contained"
-            onClick={() =>
+            onClick={() => {
               appendRound({
-                matchRound: length + 1,
+                matchRound: (roundFields.length || 0) + 1,
                 teamRedScore: 0,
                 teamBlueScore: 0,
-              })
-            }
+              });
+            }}
             startIcon={<Add />}
             fullWidth
             sx={{ mb: 2 }}
+            disabled={isComingSoon}
           >
             Add Round
           </Button>
+
           {/* notes untuk Team Red */}
-          {teamRedNotes.map(
-            (note, index) =>
-               (
+          {noteFields
+            .filter((note) => note.teamId === matchData.teamRedId)
+            .map((note) => {              
+              return (
                 <Grid container spacing={2} key={note.id} mb={2}>
                   <Grid item xs={10}>
                     <Controller
-                      name={`notes.${index}.description`}
+                      name={`notes.${noteFields.findIndex((n) => n.id === note.id)}.description`}
                       control={control}
-                      defaultValue={note.description || ""}
                       render={({ field }) => (
                         <TextField
                           {...field}
@@ -458,20 +522,32 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     />
                   </Grid>
                   <Grid item xs={2}>
-                    <IconButton onClick={() => {
-               
-                      handleDeleteNote(note.id, index);}}>
+                    <IconButton
+                      onClick={() => {
+                        const originalIndex = noteFields.findIndex(
+                          (n) => n.id === note.id
+                        );
+                      
+                        handleDeleteNote(note.id, originalIndex);
+                      }}
+                    >
                       <Remove />
                     </IconButton>
                     <IconButton
                       onClick={() => {
-                        const noteData = {
-                          eventId: eventId!,
-                          matchId: matchData.id,
-                          teamId: matchData.teamRedId,
-                          description: watch(`notes.${index}.description`),
-                        };
-                        handleSubmit(() => noteRedSubmit(noteData))();
+                        const originalIndex = noteFields.filter(
+                          (n) => n.id === note.id
+                        );
+                        const indexPosition = noteFields.findIndex(
+                          (n) => n.id === note.id
+                        )
+  
+                        handleNoteSubmit(
+                          originalIndex,
+                          matchData.teamRedId,
+                          note.id,
+                          indexPosition
+                        );
                       }}
                     >
                       <Check />
@@ -479,73 +555,86 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                   </Grid>
                 </Grid>
               )
-          )}
+            })}
 
           <Button
             variant="contained"
-            onClick={() =>
-              appendNote({ teamId: matchData.teamRedId, description: "" })
-            }
+            onClick={() => {
+              appendNote({ teamId: matchData.teamRedId, description: "" });
+              setEditingNoteIndex(noteFields.length);
+            }}
             startIcon={<Add />}
             fullWidth
             sx={{ mb: 2 }}
+            disabled={isComingSoon}
           >
             Add Note for Team Red
           </Button>
 
-          {/* notes untuk Team Blue */}
-          {noteFields.map(
-            (field, index) =>
-              field.teamId === matchData.teamBlueId && (
-                <Grid container spacing={2} key={field.id} mb={2}>
-                  <Grid item xs={10}>
-                    <Controller
-                      name={`notes.${index}.description`}
-                      control={control}
-                      defaultValue={field.description || ""}
-                      render={({ field }) => (
-                        <TextField
-                          {...field}
-                          label="Note for Team Blue"
-                          variant="outlined"
-                          multiline
-                          rows={3}
-                          fullWidth
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={2}>
-                    <IconButton onClick={() => {
-                      handleDeleteNote(field.id, matchData.eventId, matchData.id); removeNote(index)}}>
-                      <Remove />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => {
-                        const noteData = {
-                          eventId: eventId!,
-                          matchId: matchData.id,
-                          teamId: matchData.teamBlueId,
-                          description: watch(`notes.${index}.description`),
-                        };
-                        handleSubmit(() => noteBlueSubmit(noteData))();
-                      }}
-                    >
-                      <Check />
-                    </IconButton>
-                  </Grid>
+          {/* Notes for Team Blue */}
+          {noteFields
+            .filter((note) => note.teamId === matchData.teamBlueId)
+            .map((note) => (
+              <Grid container spacing={2} key={note.id} mb={2}>
+                <Grid item xs={10}>
+                  <Controller
+                    name={`notes.${noteFields.findIndex((n) => n.id === note.id)}.description`}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label="Note for Team Blue"
+                        variant="outlined"
+                        multiline
+                        rows={3}
+                        fullWidth
+                      />
+                    )}
+                  />
                 </Grid>
-              )
-          )}
+                <Grid item xs={2}>
+                  <IconButton
+                    onClick={() => {
+                      const originalIndex = noteFields.findIndex(
+                        (n) => n.id === note.id
+                      );
+                      handleDeleteNote(note.id, originalIndex);
+                    }}
+                  >
+                    <Remove />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => {
+                      const originalIndex = noteFields.filter(
+                        (n) => n.id === note.id
+                      );
+                      const indexPosition = noteFields.findIndex(
+                        (n) => n.id === note.id
+                      )
+                      handleNoteSubmit(
+                        originalIndex,
+                        matchData.teamBlueId,
+                        note.id,
+                        indexPosition
+                      );
+                    }}
+                  >
+                    <Check />
+                  </IconButton>
+                </Grid>
+              </Grid>
+            ))}
 
           <Button
             variant="contained"
-            onClick={() =>
-              appendNote({ teamId: matchData.teamBlueId, description: "" })
-            }
+            onClick={() => {
+              appendNote({ teamId: matchData.teamBlueId, description: "" });
+              setEditingNoteIndex(noteFields.length);
+            }}
             startIcon={<Add />}
             fullWidth
             sx={{ mb: 2 }}
+            disabled={isComingSoon}
           >
             Add Note for Team Blue
           </Button>
@@ -563,6 +652,7 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     type="number"
                     variant="outlined"
                     fullWidth
+                    disabled={isComingSoon}
                     sx={{ mb: 2 }}
                   />
                 )}
@@ -580,6 +670,7 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     type="number"
                     variant="outlined"
                     fullWidth
+                    disabled={isComingSoon}
                     sx={{ mb: 2 }}
                   />
                 )}
@@ -635,7 +726,12 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
               />
             </Grid>
             <Grid item xs={6}>
-              <Button type="submit" variant="contained" fullWidth>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isComingSoon}
+              >
                 Update Match
               </Button>
             </Grid>

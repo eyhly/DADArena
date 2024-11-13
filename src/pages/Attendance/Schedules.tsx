@@ -283,8 +283,8 @@ const SchedulesTable: React.FC = () => {
           handleClose={() => setOpenAddModal(false)}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
-        <Table stickyHeader>
+      <TableContainer component={Paper} sx={{ maxWidth: 1000, maxHeight: 450, overflow: "auto" }}>
+        <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -294,7 +294,7 @@ const SchedulesTable: React.FC = () => {
                       <div
                         {...{
                           onClick: header.column.getToggleSortingHandler(),
-                          style: { cursor: "pointer" },
+                          style: { cursor: "pointer", display: "flex" },
                         }}
                       >
                         {flexRender(

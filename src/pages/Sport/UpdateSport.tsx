@@ -10,12 +10,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { useUpdateSport } from "../../../services/mutation";
-import { Sport } from "../../../types/sport";
+import { useUpdateSport } from "../../services/mutation";
+import { Sport } from "../../types/sport";
 import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sportSchema } from "../../../utils/schema";
+import { sportSchema } from "../../utils/schema";
 import axios from "axios";
 
 interface UpdateSportProps {

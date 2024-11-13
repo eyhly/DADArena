@@ -10,7 +10,7 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
-import { Sport } from "../../../types/sport";
+import { Sport } from "../../types/sport";
 
 interface DescriptionModalProps {
   open: boolean;

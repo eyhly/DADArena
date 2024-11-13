@@ -39,8 +39,8 @@ import {
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteTeam } from "../../services/mutation";
-import CreateTeam from "./teamsOfficial/AddTeam";
-import UpdateTeam from "./teamsOfficial/UpdateTeam";
+import CreateTeam from "./AddTeam";
+import UpdateTeam from "./UpdateTeam";
 import { useAuthState } from "../../hook/useAuth";
 import axios from "axios";
 
@@ -78,7 +78,7 @@ const ListTeam: React.FC = () => {
   const userId = user?.profile.sub;
   const {data: profile} = useGetProfile(userId!);
   const roles = profile?.roles || [];
-  const isMember = roles.includes("member");
+  const isAdmin = roles.includes("committee");
 
 
   const filteredData = React.useMemo(
@@ -141,7 +141,7 @@ const ListTeam: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => (
           <Box sx={{display: 'flex'}}>
-          {!isMember && (
+          {!!isAdmin && (
             <div>
             <Button onClick={() => handleOpenUpdate(row.original)}>
               <EditOutlined /> 
@@ -159,6 +159,7 @@ const ListTeam: React.FC = () => {
             <div>
             <Tooltip title='View Members' placement="right-end">
             <Button variant="contained"
+              size="small"
               onClick={() =>
                 navigate(`/events/${eventId}/teams/${row.original.id}/teamMembers`)
               }
@@ -205,7 +206,7 @@ const ListTeam: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
         <Typography variant="h6">No teams found for this event</Typography>
-        {!isMember && (
+        {!!isAdmin && (
           <Button
           size="small"
           variant="contained"
@@ -233,18 +234,19 @@ const ListTeam: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List of Team
         </Typography>
-        {!isMember && (
+        {!!isAdmin && (
           <Button
           variant="contained"
-          sx={{ mb: 2, ml: 100, maxHeight: 50}}
+          size="small"
+          sx={{ mb: 2, ml: 102, maxHeight: 50}}
           onClick={handleOpenCreate}
         >
           <AddOutlined /> Create Team
         </Button>
         )}
       </Box>
-      <TableContainer component={Paper} sx={{maxWidth: 1000}}>
-        <Table>
+      <TableContainer component={Paper} sx={{maxWidth: 1000, maxHeight: 450, overflow: "auto"}}>
+        <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             <StyledTableRow>
               {table.getHeaderGroups().map((headerGroup) =>

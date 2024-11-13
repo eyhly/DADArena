@@ -10,13 +10,13 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
-import { useCreateTeam } from "../../../services/mutation";
+import { useCreateTeam } from "../../services/mutation";
 import { useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { useParams } from "react-router-dom";
-import { Team } from "../../../types/team";
+import { Team } from "../../types/team";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { teamSchema } from "../../../utils/schema";
+import { teamSchema } from "../../utils/schema";
 import axios from "axios";
 
 interface CreateTeamModalProps {

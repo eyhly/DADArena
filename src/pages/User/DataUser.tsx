@@ -108,7 +108,7 @@ const DataUser: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4 }}>
+      <Box sx={{ textAlign: "center", marginTop: 4, ml: 95 }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading users...
@@ -144,11 +144,11 @@ const DataUser: React.FC = () => {
   }
 
   return (
-    <Container sx={{ mb: 4, width: "1000px", minHeight: 550, ml: 50 }}>
+    <Container sx={{ mb: 4, width: "1000px", minHeight: 500, maxHeight: 500, ml: 50 }}>
       <Typography variant="h3" sx={{ color: "black", textAlign: "center", mb: 4 }}>
         List User
       </Typography>
-      <TableContainer component={Paper} sx={{ maxWidth: 1000, maxHeight: 400, overflow: "auto" }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1000, maxHeight: 500, overflow: "auto" }}>
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (

@@ -1,5 +1,5 @@
 export interface TeamMember {
-    userId: string;
+    userId: string[];
     username: string;
     email: string;
     user_Metadata: {fullname: string; gender: string;}

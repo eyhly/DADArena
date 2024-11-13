@@ -10,14 +10,15 @@ import {
   Button,
   Grid,
   IconButton,
-  TextField,
+  Select,
+  MenuItem,
   Typography,
   Container,
   Breadcrumbs,
 } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
 import { useAuthState } from "../../../hook/useAuth"; 
-import { useGetProfile } from "../../../services/queries"; 
+import { useGetAllTeamMembers, useGetProfile } from "../../../services/queries"; 
 import axios from "axios";
 
 const AddSportPlayer: React.FC = () => {
@@ -27,15 +28,22 @@ const AddSportPlayer: React.FC = () => {
   const user = bio?.user;
   const userId = user?.profile.sub;
   const { data: profile } = useGetProfile(userId!);
-  const teamCaptain = profile?.teams || [];  
+  const teamCaptain = profile?.teams || [];
+  const team = teamCaptain.filter((t) => t.eventId == eventId);
+  const teamId = team[0].teamId;
+  console.log(team[0].teamId, "tem mana kamoe");
+  
   const { mutate } = useCreateSportPlayer();
   const queryClient = useQueryClient();
+  
   const { handleSubmit, control } = useForm<SportPlayer>({
     defaultValues: {
       userId: [""]
     }
   });
 
+  const { data: members = [], isLoading: membersLoading } = useGetAllTeamMembers(eventId!, teamId!);
+  
   const { fields, append, remove } = useFieldArray({
     control,
     name: "userId"
@@ -60,24 +68,24 @@ const AddSportPlayer: React.FC = () => {
             queryKey: ["sportplayers", eventId, sportId],
           });
 
-          navigate(`events/${eventId}/sports/${sportId}/sportplayers`); // Navigate to the players page
+          navigate(`/events/${eventId}/sports/${sportId}/sportplayers`); 
         },
         onError: (error) => {
           if (axios.isAxiosError(error)){
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: error.response?.data,
-            confirmButtonText: "Ok",
-          });
-        }
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: error.response?.data,
+              confirmButtonText: "Ok",
+            });
+          }
         },
       }
     );
   };
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550, }}>
+    <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
@@ -97,8 +105,8 @@ const AddSportPlayer: React.FC = () => {
           <Typography color="text.primary">Add Sport Player</Typography>
         </Breadcrumbs>
       </Box>
-      <Typography variant="h4" sx={{ mt: 2, mb: 3 }} >
-        Add Sport Player 
+      <Typography variant="h4" sx={{ mt: 2, mb: 3 }}>
+        Add Sport Player
       </Typography>
       <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mb: 3 }}>
         {fields.map((field, index) => (
@@ -109,13 +117,31 @@ const AddSportPlayer: React.FC = () => {
                 control={control}
                 defaultValue=""
                 render={({ field }) => (
-                  <TextField
+                  <Select
                     {...field}
-                    label={`Player ${index + 1}`}
-                    variant="outlined"
                     fullWidth
-                    sx={{mb: 2}}
-                  />
+                    displayEmpty
+                    variant="outlined"
+                    required
+                    sx={{ mb: 2 }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select Team Member
+                    </MenuItem>
+                    {membersLoading ? (
+                      <MenuItem disabled>
+                        <Typography>Loading team members...</Typography>
+                      </MenuItem>
+                    ) : (
+                      members
+                        .filter((member) => member.teamId === teamId)
+                        .map((member) => (
+                          <MenuItem key={member.userId} value={member.userId}>
+                            {member.fullname} ({member.email})
+                          </MenuItem>
+                        ))
+                    )}
+                  </Select>
                 )}
               />
             </Grid>
@@ -126,7 +152,7 @@ const AddSportPlayer: React.FC = () => {
             </Grid>
           </Grid>
         ))}
-        
+
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Button

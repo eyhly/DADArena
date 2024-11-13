@@ -134,6 +134,7 @@ const SportPlayerTable: React.FC = () => {
     {
       accessorKey: "fullname",
       header: "Players",
+      cell: ({getValue}) => getValue() || "—"
     },
     {
       accessorKey: "userId",
@@ -142,6 +143,7 @@ const SportPlayerTable: React.FC = () => {
     {
       accessorKey: "gender",
       header: "Gender",
+      cell: ({getValue}) => getValue() || "—"
     },
     ...(isMember
       ? []
@@ -175,7 +177,7 @@ const SportPlayerTable: React.FC = () => {
 
   if (isLoading || isLoadingPlayers) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 105 }}>
         <CircularProgress />
       </Box>
     );

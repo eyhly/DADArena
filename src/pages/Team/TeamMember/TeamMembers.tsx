@@ -131,6 +131,7 @@ const TeamMembers: React.FC = () => {
       {
         accessorKey: "fullname",
         header: "Name",
+        cell: ({getValue}) => getValue() || "—"
       },
       {
         accessorKey: "email",
@@ -139,6 +140,7 @@ const TeamMembers: React.FC = () => {
       {
         accessorKey: "gender",
         header: "Gender",
+        cell: ({getValue}) => getValue() || "—"
       },
       ...(isMember
         ? []
@@ -169,6 +171,8 @@ const TeamMembers: React.FC = () => {
     },
     onSortingChange: setSorting,
   });
+  console.log(data);
+  
 
   if (isLoading) {
     return (

@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useCreateTeamMember } from "../../../services/mutation";
+import { useGetUserInfo } from "../../../services/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { Controller, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
 import Swal from "sweetalert2";
@@ -12,9 +13,11 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  TextField,
+  Select,
+  MenuItem,
+  Typography,
 } from "@mui/material";
-import { TeamMember } from "../../../types/teamMember"; 
+import { TeamMember } from "../../../types/teamMember";
 import { Add, Remove } from "@mui/icons-material";
 import axios from "axios";
 
@@ -29,6 +32,8 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
   const { eventId, teamId } = useParams();
   const { mutate } = useCreateTeamMember();
   const queryClient = useQueryClient();
+  
+  const { data: users = [], isLoading: isUsersLoading } = useGetUserInfo();
   
   const { handleSubmit, control, reset } = useForm<TeamMember>({
     defaultValues: {
@@ -50,6 +55,8 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
     const payload = data.userId
       .filter((id) => id) 
       .map((id) => ({ userId: id }));
+      console.log(payload, "payload");
+      
 
     mutate(
       { data: payload, eventId, teamId },
@@ -61,19 +68,19 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
             text: "Team member added successfully!",
             confirmButtonText: "Ok",
           });
-          queryClient.invalidateQueries({queryKey : ["teamMembers", eventId, teamId]});
+          queryClient.invalidateQueries({ queryKey: ["teamMembers", eventId, teamId] });
           reset();
           onClose();
         },
         onError: (error) => {
-          if (axios.isAxiosError(error)){
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: error.response?.data,
-            confirmButtonText: "Ok",
-          });
-        }
+          if (axios.isAxiosError(error)) {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: error.response?.data,
+              confirmButtonText: "Ok",
+            });
+          }
           onClose();
         },
       }
@@ -94,20 +101,35 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
                   <Controller
                     name={`userId.${index}`}
                     control={control}
-                    defaultValue=""
+                    defaultValue={field.user_Id || ""}
                     render={({ field }) => (
-                      <TextField
+                      <Select
                         {...field}
-                        label={`Member ${index + 1}`}
-                        variant="outlined"
                         fullWidth
+                        displayEmpty
+                        variant="outlined"
                         required
-                        sx={{mt:2}}
-                      />
+                        sx={{ mt: 2 }}
+                      >
+                        <MenuItem value="" disabled>
+                          Select User
+                        </MenuItem>
+                        {isUsersLoading ? (
+                          <MenuItem disabled>
+                            <Typography>Loading users...</Typography>
+                          </MenuItem>
+                        ) : (
+                          users.map((user) => (
+                            <MenuItem key={user.user_Id} value={user.user_Id}>
+                              {user.user_Metadata.fullname} ({user.email})
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
                     )}
                   />
                 </Grid>
-                <Grid item xs={1}>
+                <Grid item xs={1} mt={2}>
                   <IconButton onClick={() => remove(index)}>
                     <Remove />
                   </IconButton>
@@ -127,7 +149,7 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
             </Grid>
             <Grid item xs={6}>
               <Button type="submit" variant="contained" fullWidth>
-                 Add Team Member
+                Add Team Member
               </Button>
             </Grid >
             <Grid item xs={6}>

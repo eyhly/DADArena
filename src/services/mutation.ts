@@ -915,12 +915,12 @@ export function useDeleteRoles() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['delete roles'],
-    mutationFn: ({userId}: {userId: string;}) => deleteRoles(userId),
+    mutationFn: ({userId, data}: {userId: string; data: {roles : string[]}}) => deleteRoles({userId, data}),
     onError: () => {
        console.log('error');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['role']})
+      queryClient.invalidateQueries({queryKey: ['roles']})
     }
   })
 }

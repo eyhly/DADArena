@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllSports } from "../../../services/queries";
+import { useGetAllSports } from "../../services/queries";
 import {
   Table,
   TableBody,
@@ -33,16 +33,16 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import Swal from "sweetalert2";
-import { useDeleteSport } from "../../../services/mutation";
+import { useDeleteSport } from "../../services/mutation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sport } from "../../../types/sport";
+import { Sport } from "../../types/sport";
 import AddSport from "./AddSport";
 import UpdateSport from "./UpdateSport";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
-import useRoles from "../../../hook/useRoles";
+import useRoles from "../../hook/useRoles";
 import axios from "axios";
 // import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
@@ -77,7 +77,7 @@ const SportsTable: React.FC = () => {
   const navigate = useNavigate();
 
   const roles = useRoles();
-  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
+  const isAdmin = roles.includes("committee")
 
   const filteredData = React.useMemo(
     () => data?.filter((sport) => sport.eventId === eventId) ?? [],
@@ -160,7 +160,7 @@ const SportsTable: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => (
             <Box sx={{ display: 'flex' }}>
-                {isMemberOrKapten && (
+                {!isAdmin && (
                     <Box>
                         <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
                             <EditOutlined />
@@ -237,7 +237,7 @@ const SportsTable: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
         <Typography variant="h6">No sports found for this event</Typography>
-        {!isMemberOrKapten && (
+        {!isAdmin && (
           <Button
           size="small"
           variant="contained"
@@ -265,7 +265,7 @@ const SportsTable: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List Sports
         </Typography>
-      {!isMemberOrKapten && (
+      {!!isAdmin && (
         <Button
         size="small"
         variant="contained"
@@ -279,7 +279,7 @@ const SportsTable: React.FC = () => {
       </Box>
       <TableContainer
         component={Paper}
-        sx={{ maxWidth: 1000, maxHeight: 400, overflow: "auto" }}
+        sx={{ maxWidth: 1000, maxHeight: 500, overflow: "auto" }}
       >
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>

@@ -14,5 +14,5 @@ export interface UserLogin {
 }
 
 export interface Roles {
-    roles: {name: string; id: string; } [];
+    roles: {name: string; id: string; }[];
 }

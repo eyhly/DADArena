@@ -1,6 +1,6 @@
 export interface SportPlayer {
     id: string;
-    userId: string;
+    userId: string[];
     eventId: string;
     sportId: string;
     teamId: string;

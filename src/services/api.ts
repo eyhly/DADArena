@@ -18,7 +18,7 @@ import { useAuthState } from "../hook/useAuth";
 import { Profile } from "../types/profile";
 
 const BASE_URL = "http://localhost:5001/api";
-// const BASE_URL = "http://192.168.54.243:5001/api";
+// const BASE_URL = "http://192.168.137.207:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 const useApi = () => {
@@ -817,8 +817,6 @@ const useApi = () => {
     return response.data;
   };
 
-  //get sportPlayer by id
-
   //create sportPlayer
   const createSportPlayer = async (
     eventId: string,
@@ -1033,10 +1031,12 @@ const useApi = () => {
     return response.data;
   }
 
-  const deleteRoles = async (userId: string) => {
+  const deleteRoles = async ({userId, data} : {userId: string, data: {roles: string[]}}) => {
     const response = await axios.delete(`${BASE_URL}/users/${userId}/roles`, {
+      data:{roles: data.roles},
       headers: {
-        Authorization: `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
       }
     })
     return response.data;

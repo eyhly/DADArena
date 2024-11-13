@@ -71,8 +71,8 @@ export default function PermanentDrawerLeft() {
   //untuk mendapatkan data roles
   const userRole = profile?.roles?.[0]?.toLowerCase() || 'member'; 
   const secondUserRole = profile?.roles?.[1]?.toLowerCase()// default role ya member
-  const roleData = getRoleLabel(userRole);
-  const secondRole = getRoleLabel(secondUserRole)
+  const roleData = getRoleLabel([userRole]);
+  const secondRole = secondUserRole ? getRoleLabel([secondUserRole]) : {label: "unknown role", icon: null}
   const isMember = userRole === "member";
   const isCaptain = userRole === "captain";
   
@@ -122,7 +122,7 @@ export default function PermanentDrawerLeft() {
       <Typography sx={{ mt: -5, mb: 2, mx: 5, display: 'flex' }}>
         {roleData.icon}
         <Typography component={'span'} style={{ marginLeft: '8px' }}>{roleData.label}</Typography>
-        { secondUserRole ? <Typography component={'span'} style={{ marginLeft: '8px' }}>({secondRole.label})</Typography> : <></> }
+        { secondUserRole && ( <Typography component={'span'} style={{ marginLeft: '8px' }}>({secondRole.label})</Typography> )}
       </Typography>
       <Divider />
       <List>
