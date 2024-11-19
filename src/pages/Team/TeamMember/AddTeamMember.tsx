@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCreateTeamMember } from "../../../services/mutation";
 import { useGetUserInfo } from "../../../services/queries";
@@ -13,9 +13,9 @@ import {
   DialogTitle,
   Grid,
   IconButton,
-  Select,
-  MenuItem,
-  Typography,
+  Autocomplete,
+  TextField,
+  CircularProgress
 } from "@mui/material";
 import { TeamMember } from "../../../types/teamMember";
 import { Add, Remove } from "@mui/icons-material";
@@ -28,13 +28,36 @@ interface AddModalTeamMemberProps {
   eventId: string;
 }
 
+interface UserOption {
+  label: string;
+  value: string;
+}
+
 const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => {
   const { eventId, teamId } = useParams();
   const { mutate } = useCreateTeamMember();
   const queryClient = useQueryClient();
   
-  const { data: users = [], isLoading: isUsersLoading } = useGetUserInfo();
-  
+  // Query untuk mendapatkan user
+  const { 
+    data, 
+    isPending: isUsersPending 
+  } = useGetUserInfo(1, 500);
+
+  // Transform data users langsung
+  const allUsers: UserOption[] = data?.data.map(user => ({
+    label: `${user.user_Metadata.fullname} (${user.email})`,
+    value: user.user_Id
+  })) || [];
+
+  // State untuk pencarian
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Filter user berdasarkan query
+  const filteredUserOptions = allUsers.filter((option) =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const { handleSubmit, control, reset } = useForm<TeamMember>({
     defaultValues: {
       userId: [""]
@@ -46,6 +69,7 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
     name: "userId"
   });
 
+  // Handler untuk submit form
   const onSubmit: SubmitHandler<TeamMember> = (data) => {
     if (!eventId || !teamId) {
       console.error("eventId or teamId not found!");
@@ -55,8 +79,6 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
     const payload = data.userId
       .filter((id) => id) 
       .map((id) => ({ userId: id }));
-      console.log(payload, "payload");
-      
 
     mutate(
       { data: payload, eventId, teamId },
@@ -88,54 +110,59 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle variant="h6" sx={{ mb: 2 }}>
         Add Team Member
       </DialogTitle>
       <DialogContent>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Grid container spacing={1}>
+          <Grid container mt={2} spacing={2}>
             {fields.map((field, index) => (
-              <Grid container spacing={2} key={field.id} mb={2}>
+              <Grid container spacing={2} key={field.id} mb={2} alignItems="center">
                 <Grid item xs={11}>
                   <Controller
                     name={`userId.${index}`}
                     control={control}
-                    defaultValue={field.user_Id || ""}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
+                    render={({ field: { onChange, value } }) => (
+                      <Autocomplete
                         fullWidth
-                        displayEmpty
-                        variant="outlined"
-                        required
-                        sx={{ mt: 2 }}
-                      >
-                        <MenuItem value="" disabled>
-                          Select User
-                        </MenuItem>
-                        {isUsersLoading ? (
-                          <MenuItem disabled>
-                            <Typography>Loading users...</Typography>
-                          </MenuItem>
-                        ) : (
-                          users.map((user) => (
-                            <MenuItem key={user.user_Id} value={user.user_Id}>
-                              {user.user_Metadata.fullname} ({user.email})
-                            </MenuItem>
-                          ))
+                        options={allUsers}
+                        loading={isUsersPending}
+                        value={filteredUserOptions.find(option => option.value === value) || null}
+                        onChange={(_, newValue) => {
+                          onChange(newValue ? newValue.value : '');
+                        }}
+                        renderInput={(params) => (
+                          <TextField 
+                            {...params} 
+                            label="Select User" 
+                            variant="outlined"
+                            InputProps={{
+                              ...params.InputProps,
+                              endAdornment: (
+                                <>
+                                  {isUsersPending ? <CircularProgress color="inherit" size={20} /> : null}
+                                  {params.InputProps.endAdornment}
+                                </>
+                              ),
+                            }}
+                          />
                         )}
-                      </Select>
+                        isOptionEqualToValue={(option, value) => option.value === value.value}
+                        getOptionLabel={(option) => option.label}
+                        onInputChange={(_, newInputValue) => setSearchQuery(newInputValue)}
+                      />
                     )}
                   />
                 </Grid>
-                <Grid item xs={1} mt={2}>
-                  <IconButton onClick={() => remove(index)}>
+                <Grid item xs={1}>
+                  <IconButton onClick={() => remove(index)} disabled={fields.length <= 1}>
                     <Remove />
                   </IconButton>
                 </Grid>
               </Grid>
             ))}
+            
             <Grid item xs={12}>
               <Button
                 variant="contained"
@@ -147,11 +174,12 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
                 Add Member
               </Button>
             </Grid>
+
             <Grid item xs={6}>
               <Button type="submit" variant="contained" fullWidth>
                 Add Team Member
               </Button>
-            </Grid >
+            </Grid>
             <Grid item xs={6}>
               <Button variant="contained" fullWidth onClick={onClose}>
                 Cancel

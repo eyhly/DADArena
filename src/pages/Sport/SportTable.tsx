@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllSports } from "../../services/queries";
+import { useGetAllSports, useGetProfile } from "../../services/queries";
 import {
   Table,
   TableBody,
@@ -42,8 +42,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { Diversity3 } from "@mui/icons-material";
 import DescriptionRule from "./DescriptionRule";
-import useRoles from "../../hook/useRoles";
 import axios from "axios";
+import { useAuthState } from "../../hook/useAuth";
 // import SettingEvents from "../../Events/eventsAdmin/SettingEvents";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -76,8 +76,12 @@ const SportsTable: React.FC = () => {
   const [selectedSport, setSelectedSport] = useState<Sport | null>(null);
   const navigate = useNavigate();
 
-  const roles = useRoles();
-  const isAdmin = roles.includes("committee")
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isAdmin = roles.includes("committee");
 
   const filteredData = React.useMemo(
     () => data?.filter((sport) => sport.eventId === eventId) ?? [],
@@ -160,7 +164,7 @@ const SportsTable: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => (
             <Box sx={{ display: 'flex' }}>
-                {!isAdmin && (
+                {!!isAdmin &&(
                     <Box>
                         <Button onClick={() => handleOpenUpdateSportModal(row.original)}>
                             <EditOutlined />
@@ -214,7 +218,7 @@ const SportsTable: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4, ml: 90 }}>
+      <Box sx={{ textAlign: "center", ml: 50 }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading sports...
@@ -237,7 +241,7 @@ const SportsTable: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
         <Typography variant="h6">No sports found for this event</Typography>
-        {!isAdmin && (
+        {isAdmin && (
           <Button
           size="small"
           variant="contained"
@@ -253,7 +257,7 @@ const SportsTable: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
       <Breadcrumbs aria-label="breadcrumb">
           <Typography
             color="text.primary"
@@ -265,7 +269,7 @@ const SportsTable: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List Sports
         </Typography>
-      {!!isAdmin && (
+      {isAdmin && (
         <Button
         size="small"
         variant="contained"

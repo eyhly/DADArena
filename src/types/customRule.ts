@@ -1,5 +1,3 @@
 export interface Custom_Rule {
-    id: string;
-    description: string;
-    sportId: string;
+  data: [id: string, description: string, sportId: string];
 }

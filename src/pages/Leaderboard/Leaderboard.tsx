@@ -10,8 +10,9 @@ const Leaderboard = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ ml: 95, height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ display: 'block', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
         <CircularProgress />
+        <Typography variant='h6'>Loading...</Typography>
       </Box>
     );
   }
@@ -19,7 +20,7 @@ const Leaderboard = () => {
   // Handle error state
   if (isError) {
     return (
-      <Box sx={{ ml: 95, height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography variant="h6" color="error">
           Error fetching leaderboard data
         </Typography>
@@ -29,7 +30,7 @@ const Leaderboard = () => {
 
   if (!totalPoints || totalPoints.length === 0) {
     return (
-      <Box sx={{ ml: 95, height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography variant="h6">
           No leaderboard data available
         </Typography>
@@ -38,7 +39,7 @@ const Leaderboard = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
       <Typography variant="h4" align="center"sx={{mb: 2, mt: 5}}>
         Leaderboard
       </Typography>

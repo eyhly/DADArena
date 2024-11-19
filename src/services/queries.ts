@@ -2,13 +2,14 @@ import {  useQuery } from "@tanstack/react-query";
 import 
   useApi
 from "./api";
+import { UserResponse } from "../types/user";
 
 // get user login
-export function useGetUserInfo() {
+export function useGetUserInfo(pageNumber: number, pageSize?: number) {
   const {getUserInfo} = useApi();
-  return useQuery({
-    queryKey: ["users"],
-    queryFn: getUserInfo,
+  return useQuery<UserResponse>({
+    queryKey: ["users", pageNumber],
+    queryFn: () => getUserInfo(pageNumber, pageSize),
   })
 }
 

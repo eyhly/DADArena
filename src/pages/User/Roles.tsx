@@ -24,6 +24,7 @@ import { useCreateRoles, useDeleteRoles } from '../../services/mutation';
 import { useGetAllRoles } from '../../services/queries';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import useRolesLevel from '../../hook/useRolesLevel';
 
 interface RolesProps {
   open: boolean;
@@ -37,8 +38,8 @@ const RolesModal: React.FC<RolesProps> = ({ open, onClose, selectedUser , getNam
   const { mutate: createRole } = useCreateRoles();
   const { mutate: deleteRole } = useDeleteRoles();
   const queryClient = useQueryClient();
+  const {isAdmin} = useRolesLevel();
   const userId = selectedUser ?.user_Id;
-  console.log("idddd", userId)
 
   const { handleSubmit, control, reset } = useForm<{ roles: { id: string }[] }>({
     defaultValues: { roles: [{ id: '' }] },
@@ -135,11 +136,11 @@ const RolesModal: React.FC<RolesProps> = ({ open, onClose, selectedUser , getNam
                 selectedUser .roles.map((role, index) => (
                   <TableRow key={index}>
                     <TableCell>{role}</TableCell>
-                    <TableCell align="right">
+                    {isAdmin &&<TableCell align="right">
                       <IconButton onClick={() => handleRemoveRole(role)} color="error">
                         <DeleteIcon />
                       </IconButton>
-                    </TableCell>
+                    </TableCell>}
                   </TableRow>
                 ))
               ) : (
@@ -154,7 +155,7 @@ const RolesModal: React.FC<RolesProps> = ({ open, onClose, selectedUser , getNam
             </TableBody>
           </Table>
 
-          <Box display="flex" alignItems="center" mt={2}>
+          {isAdmin && <Box display="flex" alignItems="center" mt={2}>
             {fields.map((field, index) => (
               <Box key={field.id} display="flex " alignItems="center" mb={2}>
                 <Controller
@@ -191,9 +192,9 @@ const RolesModal: React.FC<RolesProps> = ({ open, onClose, selectedUser , getNam
                 </IconButton>
               </Box>
             ))}
-          </Box>
+          </Box>}
 
-          <Button
+          {isAdmin && <Button
             variant="contained"
             onClick={() => append({ id: '' })}
             startIcon={<AddIcon />}
@@ -201,16 +202,16 @@ const RolesModal: React.FC<RolesProps> = ({ open, onClose, selectedUser , getNam
             sx={{ mb: 2 }}
           >
             Add Role
-          </Button>
+          </Button>}
         </Box>
       </DialogContent>
       <DialogActions>
         <Button variant="contained" onClick={onClose}>
           Close
         </Button>
-        <Button type="submit" variant="contained" onClick={handleSubmit(onSubmit)}>
+        {isAdmin && <Button type="submit" variant="contained" onClick={handleSubmit(onSubmit)}>
           Add Roles
-        </Button>
+        </Button>}
       </DialogActions>
     </Dialog>
   );

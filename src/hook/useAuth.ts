@@ -21,8 +21,6 @@ export const queryFn = async ({queryKey}) => {
             user = await mgr.signinRedirectCallback()
             isAuthenticated = true
             authStatusUpdated = true;
-            //bentar kayaknya ini salah 
-            window.history.replaceState({}, document.title, window.location.pathname);
 
           } else {
             await mgr.signinRedirect({url_state: queryKey[1].redirect})

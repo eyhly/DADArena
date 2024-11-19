@@ -20,17 +20,16 @@
   import { queryKeyAuthState, useAuthState, useSigninRedirect, useSignOutRedirect } from "../../hook/useAuth";
   import DetailEvents from "../Events/eventsAdmin/DetailEvents";
   import { useQueryClient } from "@tanstack/react-query";
-import Navbar from "../Navigation/Navbar";
+import Navbar from "../../components/Navigation/Navbar";
 import { AddOutlined } from "@mui/icons-material";
 
   const LandingPage = () => {
-    const { isLoading, isError } = useGetAllEvents();
+    const { isLoading, isError, data: events } = useGetAllEvents();
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
     const [eventTab, setEventTab] = useState(0);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [openModalDetail, setOpenModalDetail] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-    const { data: events } = useGetAllEvents();
     
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -132,7 +131,7 @@ import { AddOutlined } from "@mui/icons-material";
       return (
         <Container sx={{ textAlign: "center", marginTop: 8, ml: 55 }}>
           <CircularProgress />
-          <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
+          <Typography variant="h6" component="div" sx={{ marginTop: 2}}>
             Loading events...
           </Typography>
         </Container>
@@ -206,7 +205,7 @@ import { AddOutlined } from "@mui/icons-material";
             </Tabs>
             <Grid container spacing={6} justifyContent="center" sx={{ ml: 20, mt: 5 }}>
               {filteredEvents.length > 0 ? (
-                filteredEvents.map((event) => (
+                filteredEvents.map((event) => ( 
                   <Grid item xs={12} sm={6} md={4} key={event.id}>
                     <Card sx={{ maxWidth: 400, maxHeight: "100%", "&:hover": {
                       transform: 'scale(1.05)',

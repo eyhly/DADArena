@@ -1,5 +1,4 @@
 export interface MatchPoint {
-    teamId: string;
-    totalMatchPoints: string;
-    // eventId: string;
+  data: [teamId: string, totalMatchPoints: string];
+  // eventId: string,
 }

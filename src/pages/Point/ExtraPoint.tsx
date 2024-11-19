@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -24,7 +24,7 @@ import {
   Breadcrumbs,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllExtraPoints, useGetAllTeams, useGetProfile } from "../../services/queries";
+import { useGetAllExtraPoints, useGetAllTeams } from "../../services/queries";
 import { styled } from "@mui/system";
 import { ExtraPoint } from "../../types/extraPoint";
 import {
@@ -39,8 +39,8 @@ import AddExtraPoint from "./AddExtraPoint";
 import Swal from "sweetalert2";
 import { useQueryClient } from "@tanstack/react-query";
 import UpdateExtraPoint from "./UpdateExtraPoint";
-import { useAuthState } from "../../hook/useAuth";
 import axios from "axios";
+import useRolesLevel from "../../hook/useRolesLevel";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -81,14 +81,17 @@ const ExtraPointPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const navigate = useNavigate();
+  const {isAdmin, isCaptain, isOfficial, isMember} = useRolesLevel();
 
-  const {data : bio} = useAuthState();
-  const user = bio?.user;
-  const userId = user?.profile.sub;
-  const {data: profile} = useGetProfile(userId!);
-  const roles = profile?.roles || [];
-  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
+  const [columnVisibility, setColumnVisibility] = useState({
+    'action': true
+  })
 
+  useEffect(() => {
+    setColumnVisibility({
+      action: !(isCaptain || isOfficial || isMember)
+    })
+  }, [isCaptain, isOfficial, isMember])
 
   const filteredExtraPoints = useMemo(
     () =>
@@ -180,11 +183,10 @@ const ExtraPointPage: React.FC = () => {
           return value < 0 ? value : value.toString();
         },
       },
-      ...(isMemberOrKapten
-        ? []
-        : [{
+      {
         id: "action",
         header: "Actions",
+        enableHiding: true,
         cell: ({ row }) => (
           <div>
             <Button onClick={() => handleOpenUpdate(row.original)}>
@@ -197,8 +199,7 @@ const ExtraPointPage: React.FC = () => {
             </Button>
           </div>
         ),
-      }]
-      ),
+      }
     ],
     [navigate]
   );
@@ -206,16 +207,21 @@ const ExtraPointPage: React.FC = () => {
   const tableInstance = useReactTable({
     data: filteredExtraPoints,
     columns,
-    state: { sorting },
+    state: { sorting, columnVisibility },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    debugTable: true,
+    debugHeaders: true,
+    debugColumns: true,
   });
 
   if (isExtraPointsLoading || isTeamsLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 90 }}>
+      <Box sx={{ display: "block", justifyContent: "center", alignItems: 'center'}}>
         <CircularProgress />
+        <Typography>Loading Extra Point ...</Typography>
       </Box>
     );
   }
@@ -230,9 +236,9 @@ const ExtraPointPage: React.FC = () => {
 
   if (filteredExtraPoints.length === 0) {
     return(
-      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+      <Box sx={{ textAlign: "center", ml: 25 }}>
         <Typography variant="h6">No extra point found for this team</Typography>
-        {!isMemberOrKapten && (
+        {isAdmin && (
           <Button
           size="small"
           variant="contained"
@@ -248,7 +254,7 @@ const ExtraPointPage: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, width: '1000px',minHeight: 550, maxHeight: 550 }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
@@ -264,11 +270,11 @@ const ExtraPointPage: React.FC = () => {
       <Typography variant="h4" sx={{ mt: 3, mb: 2}}>
         Extra Points for {getTeamNameById(teamId!)}
       </Typography>
-      {!isMemberOrKapten && (
+      {isAdmin && (
         <Button
         size="small"
         variant="contained"
-        sx={{ mt: -3, mb: 3, ml: 105}}
+        sx={{ mt: -3, mb: 3, ml: 98}}
         onClick={() => setOpenAdd(true)}
       >
         <AddOutlined /> Add Extra Point

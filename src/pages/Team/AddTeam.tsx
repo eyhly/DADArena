@@ -39,13 +39,13 @@ const CreateTeam: React.FC<CreateTeamModalProps> = ({ open, onClose }) => {
     resolver: zodResolver(teamSchema),
   });
 
-  const onSubmit = async (data: Team) => {
+  const onSubmit = (data: Team) => {
     if (!eventId) {
       console.log("Event ID is not available.", eventId);
       return;
     }
 
-    mutate(
+     mutate(
       { data: data, eventId },
       {
         onSuccess: () => {

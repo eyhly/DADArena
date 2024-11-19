@@ -12,6 +12,7 @@ import {
   Select,
   MenuItem,
   CardMedia,
+  CircularProgress,
 } from "@mui/material";
 import { useUpdateEvent, useDeleteEvent } from "../../../services/mutation";
 import { useEvent, useGetAllTeams } from "../../../services/queries";
@@ -191,7 +192,12 @@ export default function SettingEvents() {
   const handleEdit = () => setIsEditable(!isEditable);
 
   if (isLoading) {
-    return <Typography variant="h6">Loading...</Typography>;
+    return (
+    <Box sx={{alignItems: 'center', textAlign: 'center'}}>
+      <CircularProgress/>
+      <Typography variant="h6">Loading...</Typography>
+    </Box> 
+    );
   }
 
   return (
@@ -199,7 +205,6 @@ export default function SettingEvents() {
       maxWidth="md"
       sx={{
         marginTop: -5,
-        ml: 65,
         display: "column",
         justifyContent: "center",
         minHeight: 550,
@@ -251,7 +256,7 @@ export default function SettingEvents() {
             </Typography>
            </Grid>
            <Grid item  xs={2}>
-           <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold', backgroundColor: 'blue', display: "inline-block", borderRadius: 2,  color: 'white', p: 1, mx: 1 }}>
+           <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold', backgroundColor: '#006BFF', display: "inline-block", borderRadius: 2,  color: 'white', p: 1, mx: 1 }}>
 
              
              {formatStatus(event?.status ?? '')}

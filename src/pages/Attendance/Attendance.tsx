@@ -105,7 +105,7 @@ const AttendancePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4, ml: 90 }}>
+      <Box sx={{ textAlign: "center", }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading attendance data...
@@ -126,8 +126,8 @@ const AttendancePage: React.FC = () => {
 
   if (attendances?.length === 0) {
     return (
-      <>
-        <Box sx={{ ml: 90, mt: -30 }}>
+      <Box sx={{ display:'block', textAlign: 'center', justifyContent:'center', ml: 40 }}>
+        {/* <Box>
           <Breadcrumbs aria-label="breadcrumb">
             <Typography
               onClick={() => navigate(`/events/${eventId}/schedules/`)}
@@ -138,8 +138,8 @@ const AttendancePage: React.FC = () => {
             </Typography>
             <Typography color="text.primary">Attendance</Typography>
           </Breadcrumbs>
-        </Box>
-        <Box sx={{ textAlign: "center", mt: 40, ml: 90 }}>
+        </Box> */}
+        {/* <Box sx={{ textAlign: "center", mt: 35 }}> */}
           <Typography variant="h6">
             No attendance records found for this schedule
           </Typography>
@@ -152,13 +152,13 @@ const AttendancePage: React.FC = () => {
             <AddOutlined /> Create Attendance
           </Button>
           <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
-        </Box>
-      </>
+        {/* </Box> */}
+      </Box>
     );
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
+    <Container sx={{ mb: 4, minHeight: 550 }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography

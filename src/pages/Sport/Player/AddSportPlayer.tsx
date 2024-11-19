@@ -85,7 +85,7 @@ const AddSportPlayer: React.FC = () => {
   };
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550 }}>
+    <Container sx={{ mb: 4, minHeight: 550, width: '1000px' }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography

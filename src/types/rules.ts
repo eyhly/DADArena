@@ -1,7 +1,7 @@
 export interface Rule {
-    id: string;
+    data: [id: string,
     minPlayer: number,
     maxPlayer: number,
     minWomen: number,
-    sportId: string,
+    sportId: string,]
 }

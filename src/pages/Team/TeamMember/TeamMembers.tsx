@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -32,9 +32,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteTeamMember } from "../../../services/mutation"; 
 import AddMember from './AddTeamMember'; 
 import { TeamMember } from "../../../types/teamMember";
-import { useAuthState } from "../../../hook/useAuth";
 import useApi from "../../../services/api";
 import axios from "axios";
+import { useAuthState } from "../../../hook/useAuth";
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
     backgroundColor: theme.palette.primary.main,
@@ -55,10 +55,32 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 
 const TeamMembers: React.FC = () => {
   const { eventId, teamId } = useParams();
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isCaptain = roles.includes("captain");
+  const isMember = roles.includes("member");
+  const isOrganizer = roles.includes("committee") || roles.includes("official");
+  
   const { data, isLoading, isError } = useGetAllTeamMembers(eventId!, teamId!);
   const {exportTeamMembers} = useApi();
   const [isPending, setIsPending] = useState(false)
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const [columnVisibility, setColumnVisibility] = useState({
+    // eslint-disable-next-line no-extra-boolean-cast
+    'actions': true
+  });
+
+  useEffect(() => {
+    setColumnVisibility({
+      actions: !(isMember || isOrganizer  ), 
+    });
+  }, [isMember, isOrganizer ]);
+
   const [openCreate, setOpenCreate] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -67,18 +89,11 @@ const TeamMembers: React.FC = () => {
   const handleOpenCreate = () => setOpenCreate(true);
   const handleCloseCreate = () => setOpenCreate(false);
 
-  const {data : bio} = useAuthState();
-  const user = bio?.user;
-  const userId = user?.profile.sub;
-  const {data: profile} = useGetProfile(userId!);
-  const roles = profile?.roles || [];
-  const isMember = roles.includes("member");
-
   const handleDownload = async () => {
     setIsPending(true)
     await exportTeamMembers(eventId!, teamId!)
     setIsPending(false)
-  }
+  }; 
 
   const handleDelete = async (userId: string, eventId: string, teamId: string) => {
     if (!userId) {
@@ -142,11 +157,10 @@ const TeamMembers: React.FC = () => {
         header: "Gender",
         cell: ({getValue}) => getValue() || "—"
       },
-      ...(isMember
-        ? []
-        : [{
+          {
           id: "actions",
           header: "Actions",
+          enableHiding: true,
           cell: ({ row }) => (
               <Button
                 onClick={() => handleDelete(row.original.userId, eventId!, teamId!)}
@@ -155,8 +169,7 @@ const TeamMembers: React.FC = () => {
                 <DeleteOutlineOutlined />
               </Button>
             ),
-          }]
-      )
+          }
     ],
     [eventId, teamId]
   );
@@ -167,17 +180,23 @@ const TeamMembers: React.FC = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting,
+      columnVisibility,
+      sorting
     },
+    onColumnVisibilityChange: setColumnVisibility,
     onSortingChange: setSorting,
+    debugTable: true,
+    debugHeaders: true,
+    debugColumns: true,
   });
   console.log(data);
   
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3, ml: 95 }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center' }}>
         <CircularProgress />
+      <Typography variant="h6">Loading...</Typography>
       </Box>
     );
   }
@@ -190,24 +209,24 @@ const TeamMembers: React.FC = () => {
     );
   }
 
-  if (data.length === 0 ) {
+  if (data?.length === 0 ) {
     return (
       <Box sx={{ml: 95, textAlign: 'center'}}>
         <Typography variant="h6">
           No team members found.
         </Typography>
-        {!isMember && (
+        {isCaptain && 
           <Button variant="contained" onClick={handleOpenCreate}>
           <AddOutlined /> Create Member
         </Button>
-        )}
+        }
       <AddMember eventId={eventId!} teamId={teamId!} open={openCreate} onClose={handleCloseCreate} />
       </Box>
     )
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, minHeight: 550, maxHeight: 550, width: '1000px' }}>
       <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
@@ -223,20 +242,20 @@ const TeamMembers: React.FC = () => {
       <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
         List Team Members
       </Typography>
-      {!isMember && (
-        <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end'}}>
-        <Button size="small" variant="contained" sx={{maxWidth: 150, gap: 1}} onClick={handleDownload} disabled={isPending}>
+      
+        <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end', maxWidth: '1000px'}}>
+        {isOrganizer || isCaptain ? [<Button size="small" variant="contained" sx={{maxWidth: 150, gap: 1}} onClick={handleDownload} disabled={isPending}>
           {isPending ? (
             <CircularProgress size={24} color="inherit"/>
           ) : (
             <SaveAltRounded/> 
           )} {isPending ? 'Downloading...' : 'Download'}
-        </Button>
-        <Button size="small" variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
+        </Button>] : null}
+        {isCaptain && <Button size="small" variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
           <AddOutlined /> Create Member
-        </Button>
+        </Button>}
         </Box>
-      )}
+      
 
       <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
         <Table>
@@ -277,7 +296,7 @@ const TeamMembers: React.FC = () => {
       </TableContainer>
 
       {/* Create Modal */}
-      <AddMember eventId={eventId!} teamId={teamId!} open={openCreate} onClose={handleCloseCreate} />
+      {isCaptain && <AddMember eventId={eventId!} teamId={teamId!} open={openCreate} onClose={handleCloseCreate} />}
       </Container>
   );
 };

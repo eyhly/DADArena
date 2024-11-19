@@ -23,9 +23,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteMatch } from "../../services/mutation";
 import AddMatch from "./AddMatch";
 import UpdateMatch from "./UpdateMatch";
-import useRoles from "../../hook/useRoles";
-import { useGetAllMatches } from "../../services/queries";
+import { useGetAllMatches, useGetProfile } from "../../services/queries";
 import axios from "axios";
+import { useAuthState } from "../../hook/useAuth";
 
 const renderDate = (dateString: string) => {
   if (!dateString) return 'Unknown Date';
@@ -51,9 +51,14 @@ const Matches = () => {
   const queryClient = useQueryClient();
   const deleteMatch = useDeleteMatch();
 
-  const roles = useRoles();
-  const isMemberOrKapten = roles.includes("member") || roles.includes("captain")
-
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isAdmin = roles.includes("committee");
+  const isOrganizer = roles.includes("committee") || roles.includes("official");
+  
   const { data: matches, isLoading: matchesLoading, isError: matchesError } = useGetAllMatches(eventId!);
 
   const [isAddMatchModalOpen, setAddMatchModalOpen] = useState(false);
@@ -205,18 +210,18 @@ const Matches = () => {
 
   if (matchesLoading) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 4 }}>
+      <Box sx={{ display:'block', textAlign: "center", ml: 25, alignItems:'center', justifyContent: 'center'}}>
         <CircularProgress />
         <Typography variant="h6" component="div" sx={{ marginTop: 2 }}>
           Loading data...
         </Typography>
-      </Container>
+      </Box>
     );
   }
 
   if (matchesError) {
     return (
-      <Container sx={{ textAlign: "center", marginTop: 4 }}>
+      <Container sx={{ textAlign: "center", marginTop: 4, ml: 60 }}>
         <Typography variant="h6" component="div" sx={{ color: "red" }}>
           Failed to load data.
         </Typography>
@@ -226,24 +231,24 @@ const Matches = () => {
 
   if (matches && matches.length === 0) {
     return (
-        <Container sx={{ textAlign: "center", marginTop: 3, ml: 60}}>
+        <Box sx={{ display:'block', textAlign: "center", ml: 25, alignItems:'center', justifyContent: 'center'}}>
         <Typography variant="h6">No matches found for this event.</Typography>
-        {!isMemberOrKapten && (
+        {isAdmin && 
           <Button size="small" variant="contained" sx={{ maxHeight: 50, maxWidth: '100%', mt:2 }} onClick={openAddMatchModal}>
           <AddOutlinedIcon /> Create Match
         </Button>
-        )}
+        }
       <AddMatch open={isAddMatchModalOpen} handleClose={closeAddMatchModal} />
-      </Container>
+      </Box>
       
     );
   }
 
   return (
-    <Container>
+    <Box sx={{ml: 35}}>
       {/* inii Filter */}
-      <Typography variant="h4" sx={{  ml: 42, mb: 3, mt: 10, fontWeight: 500}}>List Matches</Typography>
-      <Container sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, ml: 40, minWidth: 1200 }}>
+      <Typography variant="h4" sx={{  mb: 3, fontWeight: 500}}>List Matches</Typography>
+      <Container sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, minWidth: 1200 }}>
         
         <Box>
           <Typography variant="h6">Sort By : </Typography>
@@ -313,7 +318,7 @@ const Matches = () => {
 
           <Box>
 
-        {!isMemberOrKapten && (
+        {isAdmin && (
           <Button
           size="small"
           variant="contained"
@@ -325,7 +330,7 @@ const Matches = () => {
         )}
         </Box>
       </Container>
-      <Container sx={{ mt: 4, ml: 40, minHeight: 550  }}>
+      <Container sx={{ mt: 4, minHeight: 550  }}>
         <Grid container spacing={4}>
           {filteredMatches?.map((match: Match) => (
             <Grid item xs={12} sm={6} md={4} key={match.id}>
@@ -370,25 +375,25 @@ const Matches = () => {
                       {renderDate(match.startTime)} - {renderTime(match.endTime)}
 
                     </Typography>
-                {!isMemberOrKapten && (
+                
                   <Box sx={{ display: "flex", mt: 3, mb: -1 }}>
-                  <Button
+                  {isOrganizer && <Button
                     size="small"
                     onClick={() => openUpdateMatchModal(match)}
                   >
                     <EditCalendarOutlinedIcon />
                     Update
-                  </Button>
-                  <Button
+                  </Button>}
+                 {isAdmin && <Button
                     size="small"
                     sx={{ color: "red" }}
                     onClick={() => handleDelete(match.id, eventId!)}
                   >
                     <DeleteOutlineOutlinedIcon />
                     Delete
-                  </Button>
+                  </Button>}
                 </Box>
-                )}
+              
               </Paper>
             </Grid>
           ))}
@@ -404,7 +409,7 @@ const Matches = () => {
           matchData={currentMatch}
         />
       )}
-    </Container>
+    </Box>
   );
 };
 

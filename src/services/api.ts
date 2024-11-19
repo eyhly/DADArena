@@ -1,24 +1,24 @@
 import axios from "axios";
-import { Event } from "../types/event";
-import { Sport } from "../types/sport";
+import { Event, EventResponse, Pagination } from "../types/event";
+import { Sport, SportResponse } from "../types/sport";
 import { LoginUser } from "../types/login";
-import { Roles, UserLogin } from "../types/user";
-import { Team } from "../types/team";
-import { Match } from "../types/match";
+import { Roles, UserLogin, UserResponse } from "../types/user";
+import { Team, TeamResponse } from "../types/team";
+import { Match, MatchResponse } from "../types/match";
 import { SportPlayer } from "../types/sportPlayer";
-import { TeamMember } from "../types/teamMember";
+import { TeamMember, TeamMemberResponse } from "../types/teamMember";
 import { Point } from "../types/point";
 import { Notes } from "../types/notes";
 import { Round } from "../types/round";
-import { Schedule } from "../types/schedule";
-import { Attendance } from "../types/attendance";
+import { Schedule, ScheduleResponse } from "../types/schedule";
+import { Attendance, AttendanceResponse } from "../types/attendance";
 import { ExtraPoint } from "../types/extraPoint";
 import { useEffect, useState } from "react";
 import { useAuthState } from "../hook/useAuth";
 import { Profile } from "../types/profile";
 
-const BASE_URL = "http://localhost:5001/api";
-// const BASE_URL = "http://192.168.137.207:5001/api";
+const BASE_URL = "http://api-dadsportleague.my.id:5001/api";
+// const BASE_URL = "http://192.168.53.3:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 
 const useApi = () => {
@@ -26,13 +26,13 @@ const useApi = () => {
   const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem('access_token'))
 
   useEffect(() => {
-    const handleAuthToken =  () => {
+    const handleAuthToken = () => {
       if (authState?.isAuthenticated && authState.user?.access_token) {
         const token =  authState?.user?.access_token;
         if (token) {
           setAccessToken(token)
           localStorage.setItem('access_token', token)
-
+          
           //untuk mwnghilangkan code di url
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -57,15 +57,22 @@ const useApi = () => {
   };
 
   //get user info
-    const getUserInfo = async () => {
+    const getUserInfo = async (pageNumber: number, pageSize: number): Promise<UserResponse> => {
       try {
         // const token = await getToken();
-        const response = await axios.get<UserLogin>(`${BASE_URL}/users`, {
+        const response = await axios.get<{data: UserLogin[]; pagination: Pagination}>(`${BASE_URL}/users/`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
+          params: {
+            pageNumber,
+            pageSize
+          }
         });
-        return response.data;
+        return {
+          data: response.data.data,
+          pagination: response.data.pagination
+        };
       } catch (error) {
         console.error("Error fetching user info:", error);
         throw error;
@@ -76,12 +83,12 @@ const useApi = () => {
 
   const getAllEvents = async (): Promise<Event[]> => {
     // const token = await getToken();
-    const response = await axios.get<Event[]>(`${BASE_URL}/events`, {
+    const response = await axios.get<EventResponse>(`${BASE_URL}/events`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data;
+    return response.data.data;
   };
   // get event by ID
   const getEvent = async (id: string): Promise<Event> => {
@@ -137,7 +144,7 @@ const useApi = () => {
     // const token = await getToken();
 
     try {
-      const response = await axios.get<Sport[]>(
+      const response = await axios.get<SportResponse>(
         `${BASE_URL}/events/${eventId}/sports`,
         {
           headers: {
@@ -145,7 +152,7 @@ const useApi = () => {
           },
         }
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching sports:", error);
       throw new Error("Failed to fetch sports");
@@ -221,7 +228,7 @@ const useApi = () => {
   //  get all teams
   const getAllTeams = async (eventId: string): Promise<Team[]> => {
     // const token = await getToken();
-    const response = await axios.get<Team[]>(
+    const response = await axios.get<TeamResponse>(
       `${BASE_URL}/events/${eventId}/teams`,
       {
         headers: {
@@ -229,7 +236,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   // get teams by ID
@@ -292,7 +299,7 @@ const useApi = () => {
     // const token = await getToken();
 
     try {
-      const response = await axios.get<Match[]>(
+      const response = await axios.get<MatchResponse>(
         `${BASE_URL}/events/${eventId}/matches`,
         {
           headers: {
@@ -300,7 +307,7 @@ const useApi = () => {
           },
         }
       );
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching matches:", error);
       throw new Error("Failed to fetch matches");
@@ -369,9 +376,9 @@ const useApi = () => {
   };
 
   //get all schedules
-  const getAllSchedules = async (eventId: string) => {
+  const getAllSchedules = async (eventId: string) : Promise<Schedule[]> => {
     // const token = await getToken();
-    const response = await axios.get(
+    const response = await axios.get<ScheduleResponse>(
       `${BASE_URL}/events/${eventId}/schedules`,
       {
         headers: {
@@ -379,7 +386,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //get schedule by id
@@ -450,7 +457,7 @@ const useApi = () => {
     scheduleId: string
   ): Promise<Attendance[]> => {
     // const token = await getToken();
-    const response = await axios.get<Attendance[]>(
+    const response = await axios.get<AttendanceResponse>(
       `${BASE_URL}/events/${scheduleId}/schedules/${eventId}/attendances`,
       {
         headers: {
@@ -458,7 +465,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //create attendance
@@ -589,7 +596,7 @@ const useApi = () => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data;
+    return response.data.data;
   };
 
   //create poin
@@ -652,7 +659,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //create extrapoint
@@ -723,7 +730,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //create notes
@@ -789,6 +796,29 @@ const useApi = () => {
     return response.data;
   };
 
+  //export recap point
+  const exportRecapPoint = async (eventId: string) => {
+    const response = await axios.get(
+      `${BASE_URL}/events/${eventId}/totalpoints/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        responseType: 'blob'
+      }
+    );
+    //mmebuat url untuk mengunduh datanya
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Recap-Poin.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode!.removeChild(link);
+    return response.data;
+  }
+
+
   //get total match point
   const getMatchPoints = async (eventId: string) => {
     // const token = await getToken();
@@ -800,7 +830,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //get all sportPlayer
@@ -814,7 +844,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //create sportPlayer
@@ -875,9 +905,9 @@ const useApi = () => {
   };
 
   //get all teamMember
-  const getAllTeamMembers = async (eventId: string, teamId: string) => {
+  const getAllTeamMembers = async (eventId: string, teamId: string): Promise<TeamMember[]> => {
     // const token = await getToken();
-    const response = await axios.get(
+    const response = await axios.get<TeamMemberResponse>(
       `${BASE_URL}/events/${eventId}/teams/${teamId}/teamMembers`,
       {
         headers: {
@@ -885,7 +915,7 @@ const useApi = () => {
         },
       }
     );
-    return response.data;
+    return response.data.data;
   };
 
   //create teamMember
@@ -1107,6 +1137,7 @@ const useApi = () => {
     getAllRoles,
     createRoles,
     deleteRoles,
+    exportRecapPoint,
   };
 };
 

@@ -79,6 +79,7 @@ const ListTeam: React.FC = () => {
   const {data: profile} = useGetProfile(userId!);
   const roles = profile?.roles || [];
   const isAdmin = roles.includes("committee");
+  const isCaptain = roles.includes("captain");
 
 
   const filteredData = React.useMemo(
@@ -204,9 +205,9 @@ const ListTeam: React.FC = () => {
 
   if (filteredData.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+      <Box sx={{ textAlign: "center", display: 'block', alignItems: 'center', ml: 25, justifyContent:'center'}}>
         <Typography variant="h6">No teams found for this event</Typography>
-        {!!isAdmin && (
+        {(isCaptain || isAdmin) && 
           <Button
           size="small"
           variant="contained"
@@ -215,14 +216,14 @@ const ListTeam: React.FC = () => {
         >
           <AddOutlined /> Create Team
         </Button>
-        )}
+        }
       <CreateTeam eventId={eventId!} open={openCreate} onClose={handleCloseCreate} />
       </Box>
     );
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             color="text.primary"
@@ -234,7 +235,7 @@ const ListTeam: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List of Team
         </Typography>
-        {!!isAdmin && (
+        {(isAdmin || isCaptain) && (
           <Button
           variant="contained"
           size="small"

@@ -153,11 +153,16 @@ const UpdateExtraPoint: React.FC<UpdateExtraPointModalProps> = ({
                   )}
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={6}>
                 <Button type="submit" variant="contained" fullWidth>
                   Update Extra Point
                 </Button>
               </Grid>
+                <Grid item xs={6}>
+                <Button variant="contained" fullWidth onClick={handleClose}>
+                  Cancel
+                </Button>
+                </Grid>
             </Grid>
           </Box>
         </DialogContent>

@@ -12,19 +12,22 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography,
 } from "@mui/material";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import React, { useState } from "react";
 import { UserLogin } from "../../types/user";
-import { AddOutlined, KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import {  KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import { useGetUserInfo } from "../../services/queries";
 import RolesModal from "./Roles";
 
@@ -47,10 +50,14 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 const DataUser: React.FC = () => {
-  const { data: users, isLoading, isError } = useGetUserInfo();
+  const [pageNumber, setPageNumber] =useState(1);
+  const pageSize = 5;
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { data, isLoading, isError } = useGetUserInfo(pageNumber);
+  const users = data?.data || []
+  const pagination = data?.pagination;
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserLogin | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserLogin | null>(null);  
 
   const handleOpenModal = (user: UserLogin) => {
     setSelectedUser(user);
@@ -98,17 +105,32 @@ const DataUser: React.FC = () => {
   const table = useReactTable({
     data: Array.isArray(users) ? users : [],
     columns,
+    
     state: {
       sorting,
+      pagination: {pageIndex: pageNumber - 1, pageSize},
     },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
+    manualPagination: true,
+    manualSorting: true,
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: (updater) => {
+      setPageNumber((oldPageNumber) => {
+        const newPagination =
+          typeof updater === "function" ? updater({ pageIndex: oldPageNumber - 1, pageSize }) : updater;
+  
+        return newPagination.pageIndex + 1;
+      });
+    },
+  
   });
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4, ml: 95 }}>
+      <Box sx={{ textAlign: "center", marginTop: 4, ml: 25 }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading users...
@@ -131,24 +153,20 @@ const DataUser: React.FC = () => {
     return (
       <Box sx={{ textAlign: "center", marginTop: 3 }}>
         <Typography variant="h6">No users found for this event</Typography>
-        <Button
-          size="small"
-          variant="contained"
-          sx={{ mt: 2, mb: 3 }}
-          startIcon={<AddOutlined />}
-        >
-          Create Sport
-        </Button>
       </Box>
     );
   }
 
   return (
-    <Container sx={{ mb: 4, width: "1000px", minHeight: 500, maxHeight: 500, ml: 50 }}>
-      <Typography variant="h3" sx={{ color: "black", textAlign: "center", mb: 4 }}>
+    <Container sx={{ mb: 4, width: "1000px", minHeight: 600, maxHeight: 500}}>
+      <Box sx={{display: 'flex', px: 2, borderLeft: '10px solid #FFD500', height:'55px', mb: 4}}>
+        {/* <Box sx={{border: '5px solid #FFD500', height: '55px' }}/> */}
+      <Typography sx={{ color: "black", fontSize: 40 }}>
         List User
       </Typography>
-      <TableContainer component={Paper} sx={{ maxWidth: 1000, maxHeight: 500, overflow: "auto" }}>
+      </Box>
+      
+      <TableContainer component={Paper} sx={{ minWidth: 1200, maxWidth: 1200, maxHeight: 500, overflow: "auto", position: 'relative' }}>
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -184,6 +202,34 @@ const DataUser: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+        <Box sx={{ height: '50px', mt: 4, mb: 2, display: 'flex', justifyContent: 'space-around', position:'fixed', bottom: 0}}>
+            {/* previousPage */}
+            <Button onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber === 1}>
+            Previous
+          </Button>
+
+            {/* next page */}
+          <Button onClick={() => setPageNumber((prev) => prev + 1)} disabled={!users || users.length < pageSize}>
+            Next
+          </Button>
+
+          <Typography component="span">
+            Page <Typography component="span">{pageNumber} of {pagination?.totalPages || 0}</Typography>
+          </Typography>
+
+          <TextField
+            type="number"
+            inputProps={{
+              min: 1,
+            }}
+            onChange={(e) => {
+              const page = Number(e.target.value);
+              if (page >= 1) {
+                setPageNumber(page);
+              }
+            }}
+          />
+        </Box>
       </TableContainer>
 
       <RolesModal

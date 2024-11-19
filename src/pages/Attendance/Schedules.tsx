@@ -36,13 +36,12 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import AddSchedule from "./AddSchedule";
-// import UpdateSchedule from "./UpdateSchedule";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import UpdateSchedule from "./UpdateSchedule";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuthState } from "../../hook/useAuth";
 import axios from "axios";
+import { useAuthState } from "../../hook/useAuth";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -92,19 +91,18 @@ const SchedulesTable: React.FC = () => {
     null
   );
   const navigate = useNavigate();
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isAdmin = roles.includes("committee");
 
   const filteredData = React.useMemo(
     () =>
       data?.filter((schedule: Schedule) => schedule.eventId === eventId) ?? [],
     [data, eventId]
   );
-
-  const {data : bio} = useAuthState();
-  const user = bio?.user;
-  const userId = user?.profile.sub;
-  const {data: profile} = useGetProfile(userId!);
-  const roles = profile?.roles || [];
-  const isMemberOrKapten = roles.includes("member") || roles.includes("captain");
 
   const handleOpenModalUpdate = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
@@ -170,7 +168,7 @@ const SchedulesTable: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => (
           <Box sx={{display: 'flex', justifyContent: 'space-evenly'}}>
-          {!isMemberOrKapten && (
+          {isAdmin && (
             <div>
             <Button onClick={() => handleOpenModalUpdate(row.original)}>
               <EditOutlinedIcon />
@@ -237,9 +235,9 @@ const SchedulesTable: React.FC = () => {
 
   if (filteredData.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", ml: 85 }}>
+      <Box sx={{ textAlign: "center", ml: 25 }}>
         <Typography variant="h6">No schedules found for this event</Typography>
-        {!isMemberOrKapten && (
+        {isAdmin && (
           <Button
           variant="contained"
           sx={{ mt: 2 }}
@@ -257,7 +255,7 @@ const SchedulesTable: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             color="text.primary"
@@ -269,7 +267,7 @@ const SchedulesTable: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           List of Schedules
         </Typography>
-        {!isMemberOrKapten && (
+        {isAdmin && (
           <Button
           variant="contained"
           sx={{ mb: 2, ml: 95, maxHeight: 50}}

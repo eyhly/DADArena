@@ -7,6 +7,8 @@ import {
   TextField,
   Button,
   Box,
+  DialogActions,
+  Grid,
 } from '@mui/material';
 import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { useUpdateTeam } from '../../services/mutation';
@@ -66,29 +68,36 @@ const UpdateTeam: React.FC<UpdateModalProps> = ({ open, onClose, selectedTeam })
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle variant="h6" component="h2" >
-        Update Team
-      </DialogTitle>
-      <DialogContent>
-        <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          <Controller
-            name="name"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Team Name"
-                variant="outlined"
-                fullWidth
-                sx={{ mt: 2 }}
-              />
-            )}
-          />
-          <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
-            Update Team
-          </Button>
-        </Box>
-      </DialogContent>
+        <DialogTitle variant="h6" component="h2" >
+          Update Team
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={1}>
+          <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+            <Controller
+              name="name"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Team Name"
+                  variant="outlined"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                />
+              )}
+            />
+            <DialogActions>
+            <Button type="submit" variant="contained" fullWidth>
+              Update Team
+            </Button>
+            <Button onClick={onClose} variant="contained" fullWidth sx={{ mt: 2 }}>
+              Close
+            </Button>
+            </DialogActions>
+          </Box>
+          </Grid>
+        </DialogContent>
     </Dialog>
   );
 };

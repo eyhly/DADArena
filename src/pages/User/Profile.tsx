@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import { Profile } from "../../types/profile";
 import axios from "axios";
-import Navbar from "../Navigation/Navbar";
+import Navbar from "../../components/Navigation/Navbar";
 
 const ProfilePage = () => {
   const { data } = useAuthState();

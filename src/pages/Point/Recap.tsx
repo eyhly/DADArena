@@ -25,12 +25,14 @@ import {
   Breadcrumbs,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllTeams, useGetAllTotalPoints } from "../../services/queries";
+import { useGetAllTeams, useGetAllTotalPoints, useGetProfile } from "../../services/queries";
 import { styled } from "@mui/system";
 import { TotalPoint } from "../../types/totalPoint";
-import { KeyboardArrowDown, KeyboardArrowUp, RemoveRedEyeOutlined } from "@mui/icons-material";
+import { KeyboardArrowDown, KeyboardArrowUp, RemoveRedEyeOutlined, SaveAltRounded } from "@mui/icons-material";
 import { Team } from "../../types/team";
 import DetailMatchPoint from "./DetailMatchPoint";
+import { useAuthState } from "../../hook/useAuth";
+import useApi from "../../services/api";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -59,11 +61,27 @@ const StyledTotalPointsCell = styled(TableCell)({
 const Recap: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
+  const {exportRecapPoint} = useApi();
   const { data: teams} = useGetAllTeams(eventId!);
   const { data: totalPoints, isLoading, isError } = useGetAllTotalPoints(eventId!);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [openModal, setOpenModal] = useState(false);
   const [selectedTeamPoints, setSelectedTeamPoints] = useState<TotalPoint | null>(null);  
+  const [isPending, setIsPending] = useState(false);
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isCaptain = roles.includes("captain");
+  const isOrganizer = roles.includes("committee") || roles.includes("official");
+
+  const handleDownload = async () => {
+    setIsPending(true);
+    await exportRecapPoint(eventId!)
+    setIsPending(false);
+  }
 
   const handleOpenModal = (teamPoints: TotalPoint) => {
     setSelectedTeamPoints(teamPoints);
@@ -137,15 +155,16 @@ const Recap: React.FC = () => {
 
   if (isLoading ) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center'}}>
         <CircularProgress />
+        <Typography variant="h6">Loading...</Typography>
       </Box>
     );
   }
 
   if (isError) {
     return (
-      <Typography variant="h6" color="error" sx={{ mt: 3 }}>
+      <Typography variant="h6" color="error" sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center'}}>
         Error fetching data.
       </Typography>
     );
@@ -160,7 +179,7 @@ const Recap: React.FC = () => {
   }
 
   return (
-    <Container sx={{ ml: 50, mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
       <Breadcrumbs aria-label="breadcrumb">
           <Typography
             color="text.primary"
@@ -171,8 +190,25 @@ const Recap: React.FC = () => {
         <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
           Recap Point
         </Typography>
-      <TableContainer component={Paper} sx={{maxWidth: 1000}}>
-        <Table>
+        {(isOrganizer || isCaptain)
+          ? [ 
+            <Button
+              variant="contained"
+              size="small"
+              sx={{ gap: 1, mb: 2, ml: 103 }}
+              onClick={handleDownload}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <SaveAltRounded />
+              )}
+              {isPending ? "Downloading..." : "Download"}
+            </Button>
+          ] : null}
+      <TableContainer component={Paper} sx={{maxWidth: 1000, overflow:'auto', maxHeight: 500}}>
+        <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
