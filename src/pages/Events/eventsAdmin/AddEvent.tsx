@@ -278,6 +278,9 @@ export default function AddEventPage() {
                   Allowed Sport Limit <Typography component='span' color='red'>*</Typography></Typography>}
                 type="number"
                 variant="outlined"
+                inputProps={{
+                  min: 0,
+                }}
                 fullWidth
                 error={!!errors.allowedSportLimit}
                 helperText={errors.allowedSportLimit?.message}

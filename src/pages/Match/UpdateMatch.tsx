@@ -371,6 +371,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     {...field}
                     type="number"
                     label="Week"
+                    inputProps={{
+                      min: 1,
+                    }}
                     variant="outlined"
                     fullWidth
                     sx={{ mb: 2 }}
@@ -445,6 +448,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                       {...field}
                       label={`Team Red Score (Round ${index + 1})`}
                       type="number"
+                      inputProps={{
+                        min: 0,
+                      }}
                       variant="outlined"
                       fullWidth
                     />
@@ -460,6 +466,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                       {...field}
                       label={`Team Blue Score (Round ${index + 1})`}
                       type="number"
+                      inputProps={{
+                        min: 0,
+                      }}
                       variant="outlined"
                       fullWidth
                     />
@@ -651,6 +660,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     label="Final Red Score"
                     type="number"
                     variant="outlined"
+                    inputProps={{
+                      min: 0,
+                    }}
                     fullWidth
                     disabled={isComingSoon}
                     sx={{ mb: 2 }}
@@ -669,6 +681,9 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                     label="Final Blue Score"
                     type="number"
                     variant="outlined"
+                    inputProps={{
+                      min: 0,
+                    }}
                     fullWidth
                     disabled={isComingSoon}
                     sx={{ mb: 2 }}
@@ -730,7 +745,6 @@ const UpdateMatch: React.FC<UpdateMatchModalProps> = ({
                 type="submit"
                 variant="contained"
                 fullWidth
-                disabled={isComingSoon}
               >
                 Update Match
               </Button>

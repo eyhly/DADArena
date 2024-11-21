@@ -890,7 +890,7 @@ const useApi = () => {
   const deleteSportPlayer = async (
     id: string,
     eventId: string,
-    sportId: string
+    sportId: string,
   ) => {
     // const token = await getToken();
     const response = await axios.delete(

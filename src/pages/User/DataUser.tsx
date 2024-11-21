@@ -3,6 +3,7 @@ import {
   Button,
   CircularProgress,
   Container,
+  Grid,
   Paper,
   styled,
   Table,
@@ -202,9 +203,13 @@ const DataUser: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-        <Box sx={{ height: '50px', mt: 4, mb: 2, display: 'flex', justifyContent: 'space-around', position:'fixed', bottom: 0}}>
-            {/* previousPage */}
-            <Button onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber === 1}>
+      </TableContainer>
+
+      <Box sx={{ height: '50px', mt: 4, mb: 2, display: 'flex', position:'fixed', bottom: 0}}>
+        <Grid container sx={{alignItems: 'center', justifyContent: 'space-between', gap: 2}}>
+        {/* previousPage */}
+        <Grid item>
+        <Button onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber === 1}>
             Previous
           </Button>
 
@@ -212,25 +217,35 @@ const DataUser: React.FC = () => {
           <Button onClick={() => setPageNumber((prev) => prev + 1)} disabled={!users || users.length < pageSize}>
             Next
           </Button>
-
-          <Typography component="span">
+        </Grid>
+            
+         <Grid item>
+         <Typography component="span">
             Page <Typography component="span">{pageNumber} of {pagination?.totalPages || 0}</Typography>
           </Typography>
+         </Grid>
 
+          <Grid item>
           <TextField
+          size="small"
             type="number"
             inputProps={{
               min: 1,
             }}
-            onChange={(e) => {
-              const page = Number(e.target.value);
-              if (page >= 1) {
-                setPageNumber(page);
+            onKeyDown={(e) => {
+              const target = e.target as HTMLInputElement;
+          
+              if (e.key === 'Enter') {
+                const page = Number(target.value);
+                if (page >= 1) {
+                  setPageNumber(page);
+                }
               }
             }}
           />
-        </Box>
-      </TableContainer>
+          </Grid>
+        </Grid>      
+      </Box>
 
       <RolesModal
         open={isModalOpen}

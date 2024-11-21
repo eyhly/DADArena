@@ -110,6 +110,9 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                       </Typography>}
                       type="number"
                       variant="outlined"
+                      inputProps={{
+                        min: 1,
+                      }}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value))
                       }}
@@ -135,6 +138,9 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                       </Typography>}
                       type="number"
                       variant="outlined"
+                      inputProps={{
+                        min: 1,
+                      }}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value))
                       }}
@@ -160,6 +166,9 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                       </Typography>}
                       type="number"
                       variant="outlined"
+                      inputProps={{
+                        min: 0,
+                      }}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value))
                       }}
@@ -174,7 +183,6 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                 <Controller
                   name="minMen"
                   control={control}
-                  defaultValue={1}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -185,6 +193,9 @@ const AddSport: React.FC<{ open: boolean; handleClose: () => void }> = ({
                       </Typography>}
                       type="number"
                       variant="outlined"
+                      inputProps={{
+                        min: 1,
+                      }}
                       onChange={(e) => {
                         field.onChange(Number(e.target.value))
                       }}

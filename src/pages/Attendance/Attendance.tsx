@@ -116,7 +116,7 @@ const AttendancePage: React.FC = () => {
 
   if (isError) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4, ml: 90 }}>
+      <Box sx={{ textAlign: "center", justifyContent: 'center', ml: 20 }}>
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Failed to load attendance data
         </Typography>
@@ -127,19 +127,6 @@ const AttendancePage: React.FC = () => {
   if (attendances?.length === 0) {
     return (
       <Box sx={{ display:'block', textAlign: 'center', justifyContent:'center', ml: 40 }}>
-        {/* <Box>
-          <Breadcrumbs aria-label="breadcrumb">
-            <Typography
-              onClick={() => navigate(`/events/${eventId}/schedules/`)}
-              style={{ cursor: "pointer" }}
-              color="inherit"
-            >
-              Schedule
-            </Typography>
-            <Typography color="text.primary">Attendance</Typography>
-          </Breadcrumbs>
-        </Box> */}
-        {/* <Box sx={{ textAlign: "center", mt: 35 }}> */}
           <Typography variant="h6">
             No attendance records found for this schedule
           </Typography>
@@ -158,8 +145,7 @@ const AttendancePage: React.FC = () => {
   }
 
   return (
-    <Container sx={{ mb: 4, minHeight: 550 }}>
-      <Box>
+    <Container sx={{ mb: 4, minHeight: 550, width: '1000px' }}>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             onClick={() => navigate(`/events/${eventId}/schedules/`)}
@@ -170,14 +156,14 @@ const AttendancePage: React.FC = () => {
           </Typography>
           <Typography color="text.primary">Attendance</Typography>
         </Breadcrumbs>
-      </Box>
+      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
       <Typography variant="h4" sx={{ mb: 3, mt: 2 }}>
         Attendance List
       </Typography>
 
       <Button
         variant="contained"
-        sx={{ mb: 2, ml: 100 }}
+        sx={{ mt: 5, maxHeight: 30 }}
         onClick={() => setOpenAddModal(true)}
         disabled={isButtonDisabled}
       >
@@ -185,7 +171,8 @@ const AttendancePage: React.FC = () => {
       </Button>
 
       <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
-      <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
+        </Box>
+      <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200 }}>
         <Table stickyHeader>
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (

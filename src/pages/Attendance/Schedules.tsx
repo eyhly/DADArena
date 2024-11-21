@@ -263,14 +263,14 @@ const SchedulesTable: React.FC = () => {
             Schedule
           </Typography>
         </Breadcrumbs>
-        <Box>
-        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+        <Typography variant="h4">
           List of Schedules
         </Typography>
         {isAdmin && (
           <Button
           variant="contained"
-          sx={{ mb: 2, ml: 95, maxHeight: 50}}
+          sx={{ mt: 5, maxHeight: 30}}
           onClick={() => setOpenAddModal(true)}
         >
           <AddOutlinedIcon /> Create Schedule
@@ -281,7 +281,7 @@ const SchedulesTable: React.FC = () => {
           handleClose={() => setOpenAddModal(false)}
         />
       </Box>
-      <TableContainer component={Paper} sx={{ maxWidth: 1000, maxHeight: 450, overflow: "auto" }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200, maxHeight: 450, overflow: "auto" }}>
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (

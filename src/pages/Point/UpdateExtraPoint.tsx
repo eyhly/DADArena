@@ -99,6 +99,9 @@ const UpdateExtraPoint: React.FC<UpdateExtraPointModalProps> = ({
                       </Typography>}
                       type="number"
                       variant="outlined"
+                      inputProps={{
+                        min: 1,
+                      }}
                       fullWidth
                       onChange={(e) => {
                         field.onChange(Number(e.target.value))

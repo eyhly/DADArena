@@ -239,7 +239,7 @@ const SportsTable: React.FC = () => {
 
   if (filteredData.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+      <Box sx={{ textAlign: "center", marginTop: 3, ml:30}}>
         <Typography variant="h6">No sports found for this event</Typography>
         {isAdmin && (
           <Button
@@ -265,15 +265,15 @@ const SportsTable: React.FC = () => {
           Sport
           </Typography>
         </Breadcrumbs>
-        <Box>
-        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+        <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+        <Typography variant="h4">
           List Sports
         </Typography>
       {isAdmin && (
         <Button
         size="small"
         variant="contained"
-        sx={{ mb: 2, mt: -3, ml: 100, maxWidth: "100%" }}
+        sx={{ mt: 5, maxWidth: "100%", maxHeight: 30 }}
         onClick={() => setOpen(true)}
       >
         <AddOutlinedIcon /> Create Sport
@@ -283,7 +283,7 @@ const SportsTable: React.FC = () => {
       </Box>
       <TableContainer
         component={Paper}
-        sx={{ maxWidth: 1000, maxHeight: 500, overflow: "auto" }}
+        sx={{ minWidth: 1200, maxWidth: 1200, maxHeight: 500, overflow: "auto" }}
       >
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>

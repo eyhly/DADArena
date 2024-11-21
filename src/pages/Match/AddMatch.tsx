@@ -151,6 +151,9 @@ const AddMatch: React.FC<AddMatchModalProps> = ({ open, handleClose }) => {
                     </Typography>
                   </Typography>}
                   variant="outlined"
+                  inputProps={{
+                    min: 1,
+                  }}
                   fullWidth
                   error={!!errors.week}
                   helperText={errors.week?.message}

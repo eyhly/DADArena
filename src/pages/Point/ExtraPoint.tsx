@@ -219,7 +219,7 @@ const ExtraPointPage: React.FC = () => {
 
   if (isExtraPointsLoading || isTeamsLoading) {
     return (
-      <Box sx={{ display: "block", justifyContent: "center", alignItems: 'center'}}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign: 'center'}}>
         <CircularProgress />
         <Typography>Loading Extra Point ...</Typography>
       </Box>
@@ -255,7 +255,6 @@ const ExtraPointPage: React.FC = () => {
 
   return (
     <Container sx={{ mb: 4, width: '1000px',minHeight: 550, maxHeight: 550 }}>
-      <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             onClick={() => navigate(`/events/${eventId}/recap/`)}
@@ -266,22 +265,23 @@ const ExtraPointPage: React.FC = () => {
           </Typography>
           <Typography color="text.primary">Extra Point</Typography>
         </Breadcrumbs>
-      </Box>
-      <Typography variant="h4" sx={{ mt: 3, mb: 2}}>
+      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+      <Typography variant="h4">
         Extra Points for {getTeamNameById(teamId!)}
       </Typography>
       {isAdmin && (
         <Button
         size="small"
         variant="contained"
-        sx={{ mt: -3, mb: 3, ml: 98}}
+        sx={{ mt: 5, maxHeight: 30}}
         onClick={() => setOpenAdd(true)}
       >
         <AddOutlined /> Add Extra Point
       </Button>
       )}
       <AddExtraPoint open={openAdd} handleClose={() => setOpenAdd(false)} />
-      <TableContainer component={Paper} sx={{ maxWidth: 1000,}}>
+        </Box>
+      <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200}}>
         <Table>
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (

@@ -67,6 +67,8 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 const SportPlayerTable: React.FC = () => {
   const { eventId, sportId } = useParams();
   const { data: teams, isLoading, isError } = useGetAllTeams(eventId!);
+  console.log(teams, 'teams');
+  
   const [sorting, setSorting] = useState<SortingState>([]);
   const deletePlayer = useDeleteSportPlayer();
   const queryClient = useQueryClient();
@@ -102,7 +104,7 @@ const SportPlayerTable: React.FC = () => {
   };
 
   const handleDelete = async (id: string, eventId: string, sportId: string) => {
-    console.log(eventId, "ada eventid??");
+    console.log(id, "ada id??");
 
     const confirmation = await Swal.fire({
       title: "Are you sure you want to delete this player?",
@@ -145,8 +147,12 @@ const SportPlayerTable: React.FC = () => {
 
   const getTeamNameById = (teamId: string) => {
     const team = teams?.find((team: Team) => team.id === teamId);
+    console.log(team, 'team');
+    console.log(teamId, 'id tim');
+    
     return team ? team.name : "Team not found";
   };
+  
 
   const columns = useMemo<ColumnDef<SportPlayer>[]>(
     () => [
@@ -154,6 +160,10 @@ const SportPlayerTable: React.FC = () => {
         accessorFn: (row) => getTeamNameById(row.teamId),
         header: "Team Name",
       },
+      // {
+      //   accessorKey: 'teamName',
+      //   header: "Team Name",
+      // },
       {
         accessorKey: "fullname",
         header: "Players",
@@ -176,10 +186,10 @@ const SportPlayerTable: React.FC = () => {
                 <Button
                   onClick={() =>
                     handleDelete(
-                      row.original.eventId,
-                      row.original.sportId,
-                      row.original.id
-                    )
+                      row.original.id,
+                      eventId!, sportId!
+                    )     
+                    
                   }
                   sx={{ color: "red" }}
                 >
@@ -207,7 +217,7 @@ const SportPlayerTable: React.FC = () => {
 
   if (isLoading || isLoadingPlayers) {
     return (
-      <Box sx={{ display: "block", justifyContent: "center", textAlign: 'center' }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign: 'center', ml: 20 }}>
         <CircularProgress />
         <Typography variant="h6">Loading Sport Players ...</Typography>
       </Box>
@@ -216,7 +226,7 @@ const SportPlayerTable: React.FC = () => {
 
   if (isError) {
     return (
-      <Typography variant="h6" color="error" sx={{ mt: 3, ml: 60 }}>
+      <Typography variant="h6" color="error" sx={{ textAlign:'center', ml: 20 }}>
         Error fetching SportPlayer.
       </Typography>
     );
@@ -244,7 +254,7 @@ const SportPlayerTable: React.FC = () => {
 
   return (
     <Container sx={{ mb: 4, minHeight: 550, maxHeight: 550, width:'1000px' }}>
-      <Box>
+
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             onClick={() => navigate(`/events/${eventId}/sports/`)}
@@ -255,14 +265,14 @@ const SportPlayerTable: React.FC = () => {
           </Typography>
           <Typography color="text.primary">Sport Players</Typography>
         </Breadcrumbs>
-      </Box>
-      <Typography variant="h3" sx={{ mt: 2, mb: 3 }}>
+      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+      <Typography variant="h4">
         List SportPlayer
       </Typography>
 
       <Box
         sx={{
-          mb: 2,
+          mt: 5,
           display: "flex",
           gap: 2,
           justifyContent: "flex-end",
@@ -274,7 +284,7 @@ const SportPlayerTable: React.FC = () => {
             <Button
               variant="contained"
               size="small"
-              sx={{ gap: 1 }}
+              sx={{ gap: 1, maxHeight: 30 }}
               onClick={handleDownload}
               disabled={isPending}
             >
@@ -289,6 +299,7 @@ const SportPlayerTable: React.FC = () => {
         {isCaptain && (
           <Button
             size="small"
+            sx={{maxHeight: 30}}
             variant="contained"
             onClick={() =>
               navigate(`/events/${eventId}/sports/${sportId}/sportplayers/add`)
@@ -298,8 +309,9 @@ const SportPlayerTable: React.FC = () => {
           </Button>
         )}
       </Box>
+      </Box>
 
-      <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200 }}>
         <Table>
           <TableHead>
             <StyledTableRow>

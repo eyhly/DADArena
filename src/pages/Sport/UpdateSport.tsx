@@ -147,6 +147,9 @@ const UpdateSport: React.FC<UpdateSportProps> = ({
                     field.onChange(Number(e.target.value))
                   }}
                   fullWidth
+                  inputProps={{
+                    min: 1,
+                  }}
                   error={!!errors.minPlayer}
                   helperText={errors.minPlayer?.message}
                   variant="outlined"
@@ -173,6 +176,9 @@ const UpdateSport: React.FC<UpdateSportProps> = ({
                     field.onChange(Number(e.target.value))
                   }}
                   fullWidth
+                  inputProps={{
+                    min: 1,
+                  }}
                   error={!!errors.maxPlayer}
                   helperText={errors.maxPlayer?.message}
                 />
@@ -198,6 +204,9 @@ const UpdateSport: React.FC<UpdateSportProps> = ({
                     field.onChange(Number(e.target.value))
                   }}
                   fullWidth
+                  inputProps={{
+                    min: 0,
+                  }}
                   error={!!errors.minWomen}
                   helperText={errors.minWomen?.message}
                 />
@@ -223,6 +232,9 @@ const UpdateSport: React.FC<UpdateSportProps> = ({
                     field.onChange(Number(e.target.value))
                   }}
                   fullWidth
+                  inputProps={{
+                    min: 1,
+                  }}
                   error={!!errors.minMen}
                   helperText={errors.minMen?.message}
                 />

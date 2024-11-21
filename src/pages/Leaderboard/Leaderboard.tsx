@@ -17,10 +17,9 @@ const Leaderboard = () => {
     );
   }
 
-  // Handle error state
   if (isError) {
     return (
-      <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center', ml: 20}}>
         <Typography variant="h6" color="error">
           Error fetching leaderboard data
         </Typography>
@@ -30,7 +29,7 @@ const Leaderboard = () => {
 
   if (!totalPoints || totalPoints.length === 0) {
     return (
-      <Box sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center', ml: 20}}>
         <Typography variant="h6">
           No leaderboard data available
         </Typography>

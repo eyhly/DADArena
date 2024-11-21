@@ -107,6 +107,9 @@ const UpdateSchedule: React.FC<UpdateModalSchedule> = ({ open, handleClose, sche
                                             </Typography>}
                                             type="number"
                                             variant="outlined"
+                                            inputProps={{
+                                                min: 1,
+                                              }}
                                             fullWidth
                                             error={!!errors.week}
                                             helperText={errors.week?.message}

@@ -172,7 +172,7 @@ const Recap: React.FC = () => {
 
   if (totalPoints.length === 0 ) {
      return (
-      <Box sx={{ textAlign: "center", marginTop: 3, ml: 90 }}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center', ml: 20}}>
         <Typography variant="h6">No recap point found for this event</Typography>
       </Box>
      )
@@ -187,7 +187,8 @@ const Recap: React.FC = () => {
           Recap
           </Typography>
         </Breadcrumbs>
-        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+        <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+        <Typography variant="h4" >
           Recap Point
         </Typography>
         {(isOrganizer || isCaptain)
@@ -195,7 +196,7 @@ const Recap: React.FC = () => {
             <Button
               variant="contained"
               size="small"
-              sx={{ gap: 1, mb: 2, ml: 103 }}
+              sx={{ gap: 1, mt: 5, maxHeight: 30 }}
               onClick={handleDownload}
               disabled={isPending}
             >
@@ -207,7 +208,8 @@ const Recap: React.FC = () => {
               {isPending ? "Downloading..." : "Download"}
             </Button>
           ] : null}
-      <TableContainer component={Paper} sx={{maxWidth: 1000, overflow:'auto', maxHeight: 500}}>
+          </Box>
+      <TableContainer component={Paper} sx={{maxWidth: 1200, minWidth: 1200, overflow:'auto', maxHeight: 500}}>
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             {tableInstance.getHeaderGroups().map((headerGroup) => (

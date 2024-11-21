@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCreateTeamMember } from "../../../services/mutation";
 import { useGetUserInfo } from "../../../services/queries";
@@ -15,7 +15,7 @@ import {
   IconButton,
   Autocomplete,
   TextField,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import { TeamMember } from "../../../types/teamMember";
 import { Add, Remove } from "@mui/icons-material";
@@ -33,40 +33,42 @@ interface UserOption {
   value: string;
 }
 
-const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => {
-  const { eventId, teamId } = useParams();
+const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose}) => {
+  const {eventId, teamId} = useParams();
   const { mutate } = useCreateTeamMember();
   const queryClient = useQueryClient();
-  
+
   // Query untuk mendapatkan user
-  const { 
-    data, 
-    isPending: isUsersPending 
-  } = useGetUserInfo(1, 500);
+  const { data, isPending: isUsersPending } = useGetUserInfo(1, 500);
 
   // Transform data users langsung
-  const allUsers: UserOption[] = data?.data.map(user => ({
-    label: `${user.user_Metadata.fullname} (${user.email})`,
-    value: user.user_Id
-  })) || [];
+  const allUsers: UserOption[] =
+    data?.data.map((user) => ({
+      label: `${user.user_Metadata.fullname} (${user.email})`,
+      value: user.user_Id,
+    })) || [];
 
   // State untuk pencarian
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Filter user berdasarkan query
-  const filteredUserOptions = allUsers.filter((option) =>
-    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUserOptions = useMemo(
+    () =>
+      allUsers.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [allUsers, searchQuery]
   );
 
   const { handleSubmit, control, reset } = useForm<TeamMember>({
     defaultValues: {
-      userId: [""]
-    }
+      userId: [""],
+    },
   });
-  
+
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "userId"
+    name: "userId",
   });
 
   // Handler untuk submit form
@@ -77,8 +79,18 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
     }
 
     const payload = data.userId
-      .filter((id) => id) 
+      .filter((id) => id) // Hapus nilai kosong
       .map((id) => ({ userId: id }));
+
+    if (payload.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please add at least one team member.",
+        confirmButtonText: "Ok",
+      });
+      return;
+    }
 
     mutate(
       { data: payload, eventId, teamId },
@@ -99,7 +111,7 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
             Swal.fire({
               icon: "error",
               title: "Error",
-              text: error.response?.data,
+              text: error.response?.data || "An error occurred",
               confirmButtonText: "Ok",
             });
           }
@@ -126,29 +138,33 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
                     render={({ field: { onChange, value } }) => (
                       <Autocomplete
                         fullWidth
-                        options={allUsers}
+                        options={filteredUserOptions}
                         loading={isUsersPending}
-                        value={filteredUserOptions.find(option => option.value === value) || null}
+                        value={
+                          allUsers.find((option) => option.value === value) || null
+                        }
                         onChange={(_, newValue) => {
-                          onChange(newValue ? newValue.value : '');
+                          onChange(newValue ? newValue.value : "");
                         }}
                         renderInput={(params) => (
-                          <TextField 
-                            {...params} 
-                            label="Select User" 
+                          <TextField
+                            {...params}
+                            label="Select User"
                             variant="outlined"
                             InputProps={{
                               ...params.InputProps,
                               endAdornment: (
                                 <>
-                                  {isUsersPending ? <CircularProgress color="inherit" size={20} /> : null}
+                                  {isUsersPending ? (
+                                    <CircularProgress color="inherit" size={20} />
+                                  ) : null}
                                   {params.InputProps.endAdornment}
                                 </>
                               ),
                             }}
                           />
                         )}
-                        isOptionEqualToValue={(option, value) => option.value === value.value}
+                        isOptionEqualToValue={(option, value) => option.value === value || value === ""}
                         getOptionLabel={(option) => option.label}
                         onInputChange={(_, newInputValue) => setSearchQuery(newInputValue)}
                       />
@@ -162,7 +178,7 @@ const AddTeamMember: React.FC<AddModalTeamMemberProps> = ({ open, onClose }) => 
                 </Grid>
               </Grid>
             ))}
-            
+
             <Grid item xs={12}>
               <Button
                 variant="contained"

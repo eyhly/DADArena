@@ -47,7 +47,7 @@ const DescriptionRule: React.FC<DescriptionModalProps> = ({
         <Typography
           key={index}
           variant="body1"
-          sx={{ whiteSpace: "pre-line", marginBottom: 1 }}
+          sx={{ whiteSpace: "pre-line", marginBottom: 1, maxWidth: 700, overflow: 'clip', }}
         >
           {line}
         </Typography>

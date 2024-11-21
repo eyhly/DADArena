@@ -227,7 +227,6 @@ const TeamMembers: React.FC = () => {
 
   return (
     <Container sx={{ mb: 4, minHeight: 550, maxHeight: 550, width: '1000px' }}>
-      <Box>
         <Breadcrumbs aria-label="breadcrumb">
           <Typography
             onClick={() => navigate(`/events/${eventId}/teams/`)}
@@ -238,26 +237,26 @@ const TeamMembers: React.FC = () => {
           </Typography>
           <Typography color="text.primary">Team Members</Typography>
         </Breadcrumbs>
-      </Box>
+      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
       <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
         List Team Members
       </Typography>
       
-        <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end', maxWidth: '1000px'}}>
-        {isOrganizer || isCaptain ? [<Button size="small" variant="contained" sx={{maxWidth: 150, gap: 1}} onClick={handleDownload} disabled={isPending}>
+        <Box sx={{ mb: 2, display: 'flex', gap : 2, justifyContent: 'flex-end', maxWidth: '1000px', mt: 7}}>
+        {isOrganizer || isCaptain ? [<Button size="small" variant="contained" sx={{maxWidth: "100%", gap: 1, maxHeight: 30}} onClick={handleDownload} disabled={isPending}>
           {isPending ? (
             <CircularProgress size={24} color="inherit"/>
           ) : (
             <SaveAltRounded/> 
           )} {isPending ? 'Downloading...' : 'Download'}
         </Button>] : null}
-        {isCaptain && <Button size="small" variant="contained" sx={{maxWidth: 250}} onClick={handleOpenCreate} >
+        {isCaptain && <Button size="small" variant="contained" sx={{maxWidth: 250, maxHeight: 30}} onClick={handleOpenCreate} >
           <AddOutlined /> Create Member
         </Button>}
         </Box>
-      
+      </Box>
 
-      <TableContainer component={Paper} sx={{ maxWidth: 1000 }}>
+      <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200 }}>
         <Table>
           <TableHead>
             <StyledTableRow>

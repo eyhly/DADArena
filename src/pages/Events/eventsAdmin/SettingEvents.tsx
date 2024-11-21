@@ -241,7 +241,7 @@ export default function SettingEvents() {
 
         {!isEditable ? (
           <>
-          <Grid container spacing={2} >
+          <Grid container spacing={3} >
            <Grid item  xs={12}>
            <Typography variant="h4" gutterBottom>
               {event?.title}
@@ -256,9 +256,7 @@ export default function SettingEvents() {
             </Typography>
            </Grid>
            <Grid item  xs={2}>
-           <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold', backgroundColor: '#006BFF', display: "inline-block", borderRadius: 2,  color: 'white', p: 1, mx: 1 }}>
-
-             
+           <Typography variant="body1" gutterBottom sx={{ fontWeight: 'bold', backgroundColor: '#006BFF', display: "inline-block", borderRadius: 2,  color: 'white', p: 1, mx: 1, width:'100%' }}>
              {formatStatus(event?.status ?? '')}
             </Typography>
            </Grid>
@@ -464,6 +462,9 @@ export default function SettingEvents() {
                   Allowed Sport Limit <Typography component='span' color='red'>*</Typography></Typography>}
                 type="number"
                 variant="outlined"
+                inputProps={{
+                  min: 0,
+                }}
                 fullWidth
                 error={!!errors.allowedSportLimit}
                 helperText={errors.allowedSportLimit?.message}

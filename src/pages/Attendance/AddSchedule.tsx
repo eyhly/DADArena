@@ -98,6 +98,9 @@ const AddSchedule:React.FC<AddModalSchedule>= ({open, handleClose}) => {
                                 </Typography>}
                                 type='number'
                                 variant='outlined'
+                                inputProps={{
+                                    min: 1,
+                                  }}
                                 fullWidth
                                 error={!!errors.week}
                                 helperText={errors.week?.message}

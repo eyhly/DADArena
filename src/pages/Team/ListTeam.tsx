@@ -231,22 +231,22 @@ const ListTeam: React.FC = () => {
             Team
           </Typography>
         </Breadcrumbs>
-        <Box>
-        <Typography variant="h4" sx={{ mb: 2, mt: 2}}>
+        <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+        <Typography variant="h4" sx={{ mb: 2}}>
           List of Team
         </Typography>
         {(isAdmin || isCaptain) && (
           <Button
           variant="contained"
           size="small"
-          sx={{ mb: 2, ml: 102, maxHeight: 50}}
+          sx={{ mt: 5, maxHeight: 30}}
           onClick={handleOpenCreate}
         >
           <AddOutlined /> Create Team
         </Button>
         )}
       </Box>
-      <TableContainer component={Paper} sx={{maxWidth: 1000, maxHeight: 450, overflow: "auto"}}>
+      <TableContainer component={Paper} sx={{maxWidth: 1200, minWidth: 1200, maxHeight: 450, overflow: "auto"}}>
         <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             <StyledTableRow>
