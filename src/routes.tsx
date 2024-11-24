@@ -1,13 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Login from './pages/Auth/Login';
 import EventsPage from './pages/Events/eventsAdmin/EventsPage';
 import LayoutPages from './pages/Layout/LayoutPages';
 import AddEventPage from './pages/Events/eventsAdmin/AddEvent';
-import LandingPage from './pages/User/LandingPage';
+import LandingPage from './pages/Events/LandingPage';
 import SportsTable from './pages/Sport/SportTable';
-import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
 import ListTeam from './pages/Team/ListTeam';
-import LoginButton from './pages/Auth/LoginButton';
 import Matches from './pages/Match/Matches';
 import SettingEvents from './pages/Events/eventsAdmin/SettingEvents';
 import Attendance from './pages/Attendance/Attendance';
@@ -23,14 +20,6 @@ import ProtectedRoute from './hook/protectedRoute';
 import AddSportPlayer from './pages/Sport/Player/AddSportPlayer';
 
 const router = createBrowserRouter([
-  {
-    path: '/l',
-    element: <Login />,
-  },
-  {
-    path: '/login',
-    element: <LoginButton />,
-  },
   {
     path: '/',
     element: <LandingPage/>
@@ -55,10 +44,6 @@ const router = createBrowserRouter([
   id: 'root',
   element: <LayoutPages/>, 
   children: [
-    {
-      path: '/events/edit/:eventId',
-      element: <ProtectedRoute element={<UpdateEvent/>}/>
-    },
     {
       path: '/events/:eventId/schedules',
       element: <ProtectedRoute element={<Schedules/>} />

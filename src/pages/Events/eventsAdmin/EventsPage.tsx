@@ -31,7 +31,7 @@ import { useNavigate } from "react-router-dom";
 // import { useDeleteEvent } from "../../../services/mutation";
 // import Swal from "sweetalert2";
 // import { useQueryClient } from "@tanstack/react-query";
-import DetailEvents from "./DetailEvents";
+import DetailEvents from "../DetailEvents";
 import { useAuthState, useSignOutRedirect } from "../../../hook/useAuth";
 
 interface HideScrollProps {

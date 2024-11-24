@@ -18,7 +18,7 @@
   import { Event } from "../../types/event";
   import { useNavigate } from "react-router-dom";
   import { queryKeyAuthState, useAuthState, useSigninRedirect, useSignOutRedirect } from "../../hook/useAuth";
-  import DetailEvents from "../Events/eventsAdmin/DetailEvents";
+  import DetailEvents from "./DetailEvents";
   import { useQueryClient } from "@tanstack/react-query";
 import Navbar from "../../components/Navigation/Navbar";
 import { AddOutlined } from "@mui/icons-material";

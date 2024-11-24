@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, CardMedia, Container, Dialog, DialogActions, DialogContent, DialogTitle, Grid, Typography } from '@mui/material';
-import { useEvent } from '../../../services/queries';
+import { useEvent } from '../../services/queries';
 import { AccessTimeOutlined, HourglassTopOutlined } from '@mui/icons-material';
 
 interface DetailEventsProps {
