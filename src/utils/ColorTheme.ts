@@ -8,7 +8,7 @@ const ColorTheme = createTheme({
     secondary: {
       main: '#fff176',
     },
-    text: {
+    text: { 
       primary: '#0f0f0f',
     },
   },
