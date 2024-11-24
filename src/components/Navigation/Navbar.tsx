@@ -51,7 +51,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenUserMenu, anchorElUser, onCloseUs
         </Box>
         <Box sx={{ flexGrow: 0 }}>
           <Tooltip title={isAuthenticated ? user?.profile?.name || "Profile" : "Login"}>
-            <IconButton onClick={onOpenUserMenu} sx={{ p: 0 }} sx={{ px: 2, borderRadius: 2 }}>
+            <IconButton onClick={onOpenUserMenu} sx={{ px: 2, borderRadius: 2 }}>
               <AccountCircle />
               <Typography>
                 {user?.profile?.email}
