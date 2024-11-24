@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import {zodResolver} from '@hookform/resolvers/zod'
 import {
   TextField,
   Button,
@@ -7,19 +8,15 @@ import {
   Typography,
   Box,
   Grid,
-  // Select,
   InputLabel,
   FormControl,
-  // MenuItem,
 } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
 import { useCreateEvent } from "../../../services/mutation";
 import { Event } from "../../../types/event";
-import ColorTheme from "../../../utils/ColorTheme";
 import Swal from "sweetalert2";
 import { useNavigate} from "react-router-dom";
-// import { useGetAllTeams } from "../../services/queries";
-// import { Team } from "../../types/team";
+import { eventSchema } from "../../../utils/schema";
+import axios from "axios";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -27,40 +24,49 @@ const formatDate = (dateString: string) => {
 };
 
 export default function AddEventPage() {
-  // const {eventId} = useParams();
-  const { handleSubmit, control, setValue } = useForm<Event>();
+  const { handleSubmit, control, setValue, formState: {errors} } = useForm<Event>({
+    resolver: zodResolver(eventSchema),
+  });
   const { mutate } = useCreateEvent();
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
-  // const { data: teams } = useGetAllTeams(eventId!);
 
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [registrationStartDate, setRegistrationStartDate] = useState<string>("");
+  const [eventStartDate, setEventStartDate] = useState<string>("");
 
-  // Function to convert image file to base64
+  // untuk upload image
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("image", reader.result as string); 
-      };
-      reader.readAsDataURL(file);
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+        setFile(selectedFile); // Store the actual file in state
+        setFileName(selectedFile.name);
+        setValue("image", selectedFile.name); // Set file name in form state if needed
     } else {
-      setFileName("");
+        setFile(null);
+        setFileName("");
     }
-  };
+};
 
   const onSubmit = (data: Event) => {
-    const formattedData = {
-      ...data,
-      registrationStartDate: formatDate(data.registrationStartDate),
-      registrationEndDate: formatDate(data.registrationEndDate),
-      eventStartDate: formatDate(data.eventStartDate),
-      eventEndDate: formatDate(data.eventEndDate),
-    };
+    const formattedData = new FormData();
+    formattedData.append("title", data.title)
+    formattedData.append("description", data.description)
+    formattedData.append("registrationStartDate", formatDate(data.registrationStartDate))
+    formattedData.append("registrationEndDate", formatDate(data.registrationEndDate))
+    formattedData.append("eventStartDate", formatDate(data.eventStartDate))
+    formattedData.append("eventEndDate", formatDate(data.eventEndDate))
+    formattedData.append("allowedSportLimit",  String(data.allowedSportLimit))
+    
+    if (file) {
+      formattedData.append("image", file)
+    }
+    console.log(...formattedData)
+    
     mutate(formattedData, {
       onSuccess: () => {
+        console.log(formattedData)
         Swal.fire({
           icon: "success",
           title: "Success Add Event!",
@@ -68,23 +74,23 @@ export default function AddEventPage() {
           confirmButtonText: "Ok",
         }).then((result) => {
           if (result.isConfirmed) {
-            navigate("/events");
+            navigate("/");
           }
         });
       },
       onError: (error) => {
-        Swal.fire({
-          icon: "error",
-          title: "Failed to add event!",
-          text: error instanceof Error
-          ? error.message 
-          : "An unexpected error occurred.",
-          confirmButtonText: "Ok",
-        }).then((result) => {
+        if (axios.isAxiosError(error)) {
+          Swal.fire({
+            icon: "error",
+            title: "Failed!",
+            text: error.response?.data ,
+            confirmButtonText: "Ok",
+          }).then((result) => {
           if (result.isConfirmed) {
             navigate("/events/add");
           }
         });
+      }
       },
     });
   };
@@ -101,15 +107,14 @@ export default function AddEventPage() {
       cancelButtonText: "No",
     }).then((result) => {
       if (result.isConfirmed) {
-        navigate("/events");
+        navigate("/");
       }
     });
   };
 
   return (
-    <Container maxWidth="md" sx={{ marginX: 60 }}>
-      <ThemeProvider theme={ColorTheme}>
-        <Typography variant="h4" align="center" sx={{ mt: -5 }} gutterBottom>
+    <Container maxWidth="md" sx={{ mx: 45, mt: 30 }}>
+        <Typography variant="h4" align="center" sx={{ mt: -35 }} gutterBottom>
           Add New Event
         </Typography>
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 3 }}>
@@ -118,13 +123,19 @@ export default function AddEventPage() {
               <Controller
                 name="title"
                 control={control}
+                defaultValue=""
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Event Title"
+                    label= {<Typography component="span">
+                      Event Title <Typography component="span" color="red" >
+                        *
+                      </Typography>
+                    </Typography>}
                     variant="outlined"
+                    error={!!errors.title}
+                    helperText={errors.title?.message}
                     fullWidth
-                    required
                   />
                 )}
               />
@@ -134,15 +145,19 @@ export default function AddEventPage() {
               <Controller
                 name="description"
                 control={control}
+                defaultValue=""
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Description"
+                    label={<Typography component='span'>
+                      Description <Typography component='span' color='red'>*</Typography>
+                    </Typography>}
                     variant="outlined"
+                    error={!!errors.description}
+                    helperText={errors.description?.message}
                     fullWidth
                     multiline
                     rows={4}
-                    required
                   />
                 )}
               />
@@ -155,7 +170,9 @@ export default function AddEventPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Registration Start Date"
+                    label={<Typography component='span'>
+                      Registration Start Date <Typography component='span' color='red'>*</Typography>
+                    </Typography>}
                     type="date"
                     inputProps={{min: today}}
                     InputLabelProps={{
@@ -163,7 +180,12 @@ export default function AddEventPage() {
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.registrationStartDate}
+                    helperText={errors.registrationStartDate?.message}
+                    onChange={(e) => {
+                      setRegistrationStartDate(e.target.value);
+                      field.onChange(e); 
+                    }}
                   />
                 )}
               />
@@ -176,15 +198,18 @@ export default function AddEventPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Registration End Date"
+                    label={<Typography component='span'>
+                    Registration End Date <Typography component='span' color='red'>*</Typography>
+                  </Typography>}
                     type="date"
-                    inputProps={{min: today}}
+                    inputProps={{min: registrationStartDate || today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.registrationEndDate}
+                    helperText={errors.registrationEndDate?.message}
                   />
                 )}
               />
@@ -197,15 +222,22 @@ export default function AddEventPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Event Start Date"
+                    label={<Typography component='span'>
+                    Event Start Date <Typography component='span' color='red'>*</Typography>
+                  </Typography>}
                     type="date"
-                    inputProps={{min: today}}
+                    inputProps={{min: registrationStartDate || today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.eventStartDate}
+                    helperText={errors.eventStartDate?.message}
+                    onChange={(e)=> {
+                      setEventStartDate(e.target.value);
+                      field.onChange(e);
+                    }}
                   />
                 )}
               />
@@ -218,23 +250,51 @@ export default function AddEventPage() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Event End Date"
+                    label={<Typography component='span'>
+                      Event End Date <Typography component='span' color='red'>*</Typography>
+                    </Typography>}
                     type="date"
-                    inputProps={{min: today}}
+                    inputProps={{min: eventStartDate || today}}
                     InputLabelProps={{
                       shrink: true,
                     }}
                     variant="outlined"
                     fullWidth
-                    required
+                    error={!!errors.eventEndDate}
+                    helperText={errors.eventEndDate?.message}
                   />
                 )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+              name="allowedSportLimit"
+              control={control}
+              defaultValue={0}
+              render={({field}) => (
+                <TextField
+                {...field}
+                label={<Typography component='span'>
+                  Allowed Sport Limit <Typography component='span' color='red'>*</Typography></Typography>}
+                type="number"
+                variant="outlined"
+                inputProps={{
+                  min: 0,
+                }}
+                fullWidth
+                error={!!errors.allowedSportLimit}
+                helperText={errors.allowedSportLimit?.message}
+                onChange={(e) => {
+                  field.onChange(Number(e.target.value));
+                }}
+                />
+              )}
               />
             </Grid>
 
             <Grid item xs={12}>
                 <InputLabel htmlFor="image-upload">Image</InputLabel>
-              <FormControl fullWidth variant="outlined">
+              <FormControl fullWidth variant="outlined" >
                 <Button
                   variant="outlined"
                   component="label"
@@ -250,32 +310,9 @@ export default function AddEventPage() {
                     id="image-upload"
                   />
                 </Button>
+
               </FormControl>
             </Grid>
-
-            {/* <Grid item xs={6}>
-              <FormControl fullWidth>
-                <InputLabel id="team-select-label">Official Team</InputLabel>
-                <Controller
-                  name="officialId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      labelId="team-select-label"
-                      id="team-select"
-                      label="Official Team"
-                      {...field}
-                    >
-                      {teams?.map((team: Team) => (
-                        <MenuItem key={team.id} value={team.id}>
-                          {team.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  )}
-                />
-              </FormControl>
-            </Grid> */}
 
             <Grid item xs={6}>
               <Button
@@ -300,7 +337,6 @@ export default function AddEventPage() {
             </Grid>
           </Grid>
         </Box>
-      </ThemeProvider>
     </Container>
   );
 }

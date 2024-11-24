@@ -1,44 +1,89 @@
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import { styled, ThemeProvider } from '@mui/material/styles';
-import ColorTheme from '../../utils/ColorTheme';
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  Tooltip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+} from "@mui/material";
+import { AccountCircle, ManageAccountsRounded } from "@mui/icons-material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { useNavigate } from "react-router-dom";
+import { useSignOutRedirect, useAuthState } from "../../hook/useAuth";
+import Logo from "/img/logo.png";
 
-interface AppBarProps {
-  onMenuClick: () => void;
+interface NavbarProps {
+  onOpenUserMenu: (event: React.MouseEvent<HTMLElement>) => void;
+  anchorElUser: HTMLElement | null;
+  onCloseUserMenu: () => void;
 }
 
-const drawerWidth = 240;
+const Navbar: React.FC<NavbarProps> = ({ onOpenUserMenu, anchorElUser, onCloseUserMenu }) => {
+  const navigate = useNavigate();
+  const { mutate: signOutRedirect } = useSignOutRedirect();
+  const { data } = useAuthState();
+  const user = data?.user;
+  const isAuthenticated = data?.isAuthenticated;
 
-const StyledAppBar = styled(AppBar)(({theme}) => ({
-  width: `calc(100% - ${drawerWidth}px)`,
-  marginLeft: `${drawerWidth}px`,
-  backgroundColor: theme.palette.primary.main,
-}));
+  const handleProfileClick = () => {
+    if (user?.profile?.sub) {
+      navigate(`/profile/${user.profile.sub}`);
+      onCloseUserMenu();
+    }
+  };
 
-const Navbar: React.FC<AppBarProps> = ({ onMenuClick }) => {
+  const handleLogout = () => {
+    signOutRedirect();
+    onCloseUserMenu();
+  };
+
   return (
-    <ThemeProvider theme={ColorTheme}>
-    <StyledAppBar position="fixed">
-      <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          onClick={onMenuClick}
-          edge="start"
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <Typography variant="h6" noWrap component="div">
-          Dashboard Admin
-        </Typography>
+    <AppBar position="fixed" sx={{ width: "100%" }}>
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex"}}>
+            <img src={Logo} alt="Logo" width="40px" />
+          <Typography variant="h6" noWrap component="div" ml={2}>
+            Sports Events
+          </Typography>
+        </Box>
+        <Box sx={{ flexGrow: 0 }}>
+          <Tooltip title={isAuthenticated ? user?.profile?.name || "Profile" : "Login"}>
+            <IconButton onClick={onOpenUserMenu} sx={{ p: 0 }} sx={{ px: 2, borderRadius: 2 }}>
+              <AccountCircle />
+              <Typography>
+                {user?.profile?.email}
+              </Typography>
+            </IconButton>
+          </Tooltip>
+          <Menu
+            sx={{ mt: "45px" }}
+            id="menu-appbar"
+            anchorEl={anchorElUser}
+            anchorOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            open={Boolean(anchorElUser)}
+            onClose={onCloseUserMenu}
+          >
+                <MenuItem onClick={handleProfileClick}>
+                  <ManageAccountsRounded sx={{ mr: 1 }} /> My Profile
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <LogoutIcon sx={{ mr: 1 }} /> Logout
+                </MenuItem>
+          </Menu>
+        </Box>
       </Toolbar>
-    </StyledAppBar>
-    </ThemeProvider>
+    </AppBar>
   );
 };
 

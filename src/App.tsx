@@ -1,11 +1,14 @@
 import { RouterProvider } from "react-router-dom";
 import router from "./routes";
+import { ThemeProvider } from "@mui/material";
+import ColorTheme from "./utils/colorTheme";
 
-function App() {
+const App = () =>  {
+
   return (
-    <>
-      <RouterProvider router={router} />
-    </>
+    <ThemeProvider theme={ColorTheme}>
+      <RouterProvider router={router}  />
+    </ThemeProvider>
   );
 }
 

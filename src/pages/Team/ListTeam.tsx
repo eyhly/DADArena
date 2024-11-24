@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetAllTeams } from "../../services/queries";
+import { useGetAllTeams, useGetProfile } from "../../services/queries";
 import {
   Table,
   TableBody,
@@ -23,12 +23,26 @@ import {
   styled,
   tableCellClasses,
   Button,
-  ThemeProvider,
+  Tooltip,
+  Breadcrumbs,
+  Container,
 } from "@mui/material";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { Team } from "../../types/team";
-import ColorTheme from "../../utils/ColorTheme";
-import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import {
+  DeleteOutlineOutlined,
+  AddOutlined,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+  EditOutlined,
+} from "@mui/icons-material";
+import Swal from "sweetalert2";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDeleteTeam } from "../../services/mutation";
+import CreateTeam from "./AddTeam";
+import UpdateTeam from "./UpdateTeam";
+import { useAuthState } from "../../hook/useAuth";
+import axios from "axios";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -52,14 +66,73 @@ const ListTeam: React.FC = () => {
   const { eventId } = useParams();
   const { data, isLoading, isError } = useGetAllTeams(eventId!);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [openUpdate, setOpenUpdate] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const deleteTeam = useDeleteTeam();
+
+  const {data : bio} = useAuthState();
+  const user = bio?.user;
+  const userId = user?.profile.sub;
+  const {data: profile} = useGetProfile(userId!);
+  const roles = profile?.roles || [];
+  const isAdmin = roles.includes("committee");
+  const isCaptain = roles.includes("captain");
+
+
+  const filteredData = React.useMemo(
+    () =>
+      data?.filter((team: Team) => team.eventId === eventId) ?? [],
+    [data, eventId]
+  );
+
+  const handleOpenCreate = () => setOpenCreate(true);
+  const handleCloseCreate = () => setOpenCreate(false);
+  const handleOpenUpdate = (team: Team) => {
+    setSelectedTeam(team);
+    setOpenUpdate(true);
+  };
+  const handleCloseUpdate = () => setOpenUpdate(false);
+
+  const handleDelete = async (id: string, eventId: string) => {
+    const confirmation = await Swal.fire({
+      title: "Are you sure want to delete this team?",
+      text: "You can cancel!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+    if (confirmation.isConfirmed) {
+      deleteTeam.mutateAsync({ id, eventId },
+        {
+          onSuccess: () => {
+            Swal.fire({
+              icon: "success",
+              title: "Success",
+              text: "Team deleted successfully!",
+              confirmButtonText: "Ok",
+            });
+            queryClient.invalidateQueries({ queryKey: ["teams", eventId] });
+      }, onError: (error) => {
+        if (axios.isAxiosError(error)){
+        Swal.fire({
+          icon: "error",
+          title: "Failed!",
+          text: error.response?.data,
+        });
+      }
+      }
+    }
+  )}
+  };
 
   const columns = React.useMemo<ColumnDef<Team>[]>(
     () => [
-      {
-        accessorFn: (row, i) => i + 1,
-        header: "No",
-      },
       {
         accessorKey: "name",
         header: "Team Name",
@@ -68,21 +141,41 @@ const ListTeam: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <Button
-            onClick={() =>
-              navigate(`/events/${eventId}/teams/${row.original.id}/members`)
-            }
-            sx={{ color: "#24aed4" }}
-          >
-            <VisibilityOutlinedIcon /> View Members
-          </Button>
+          <Box sx={{display: 'flex'}}>
+          {!!isAdmin && (
+            <div>
+            <Button onClick={() => handleOpenUpdate(row.original)}>
+              <EditOutlined /> 
+            </Button>
+            <Button
+              onClick={() =>
+                handleDelete(row.original.id, row.original.eventId)
+              }
+              sx={{ color: "red" }}
+            >
+              <DeleteOutlineOutlined /> 
+            </Button>
+            </div>
+          )}
+            <div>
+            <Tooltip title='View Members' placement="right-end">
+            <Button variant="contained"
+              size="small"
+              onClick={() =>
+                navigate(`/events/${eventId}/teams/${row.original.id}/teamMembers`)
+              }
+            >
+              <VisibilityOutlinedIcon /> View Members
+            </Button>
+            </Tooltip>
+          </div>
+          </Box>
         ),
       },
     ],
     [navigate, eventId]
   );
 
-  // Set up the table instance
   const table = useReactTable({
     data: data ?? [],
     columns,
@@ -96,7 +189,7 @@ const ListTeam: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+      <Box sx={{ display: "flex", mt: 3, ml: 105 }}>
         <CircularProgress />
       </Box>
     );
@@ -104,45 +197,84 @@ const ListTeam: React.FC = () => {
 
   if (isError) {
     return (
-      <Typography variant="h6" color="error" sx={{ mt: 3 }}>
+      <Typography variant="h6" color="error" sx={{ mt: 3 , ml: 65}}>
         Error fetching teams.
       </Typography>
     );
   }
 
+  if (filteredData.length === 0) {
+    return (
+      <Box sx={{ textAlign: "center", display: 'block', alignItems: 'center', ml: 25, justifyContent:'center'}}>
+        <Typography variant="h6">No teams found for this event</Typography>
+        {(isCaptain || isAdmin) && 
+          <Button
+          size="small"
+          variant="contained"
+          sx={{ maxHeight: 50, maxWidth: "100%" }}
+          onClick={handleOpenCreate}
+        >
+          <AddOutlined /> Create Team
+        </Button>
+        }
+      <CreateTeam eventId={eventId!} open={openCreate} onClose={handleCloseCreate} />
+      </Box>
+    );
+  }
+
   return (
-    <ThemeProvider theme={ColorTheme}>
-      <Typography variant="h3" sx={{ ml: 90, mb: 3 }}>
-        List Teams
-      </Typography>
-      <TableContainer component={Paper} sx={{ ml: 50, maxWidth: 900 }}>
-        <Table>
+    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>      
+        <Breadcrumbs aria-label="breadcrumb">
+          <Typography
+            color="text.primary"
+          >
+            Team
+          </Typography>
+        </Breadcrumbs>
+        <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
+        <Typography variant="h4" sx={{ mb: 2}}>
+          List of Team
+        </Typography>
+        {(isAdmin || isCaptain) && (
+          <Button
+          variant="contained"
+          size="small"
+          sx={{ mt: 5, maxHeight: 30}}
+          onClick={handleOpenCreate}
+        >
+          <AddOutlined /> Create Team
+        </Button>
+        )}
+      </Box>
+      <TableContainer component={Paper} sx={{maxWidth: 1200, minWidth: 1200, maxHeight: 450, overflow: "auto"}}>
+        <Table stickyHeader aria-label="customized collapsible table">
           <TableHead>
             <StyledTableRow>
-              {table
-                .getHeaderGroups()
-                .map((headerGroup) =>
-                  headerGroup.headers.map((header) => (
-                    <StyledTableCell key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder ? null : (
-                        <div 
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => (
+                  <StyledTableCell key={header.id} colSpan={header.colSpan}>
+                    {header.isPlaceholder ? null : (
+                      <div
                         {...{
                           onClick: header.column.getToggleSortingHandler(),
-                          style: {cursor: 'pointer', display: 'flex'}
+                          style: { cursor: "pointer", display: "flex" },
                         }}
-                        >
-
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {header.column.getIsSorted() === 'asc' ? <KeyboardArrowUp/> : null}
-                          {header.column.getIsSorted() === 'desc' ? <KeyboardArrowDown/> : null}
-                        </div>
-                      )}
-                    </StyledTableCell>
-                  ))
-                )}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() === "asc" ? (
+                          <KeyboardArrowUp />
+                        ) : null}
+                        {header.column.getIsSorted() === "desc" ? (
+                          <KeyboardArrowDown />
+                        ) : null}
+                      </div>
+                    )}
+                  </StyledTableCell>
+                ))
+              )}
             </StyledTableRow>
           </TableHead>
           <TableBody>
@@ -154,11 +286,17 @@ const ListTeam: React.FC = () => {
                   </StyledTableCell>
                 ))}
               </StyledTableRow>
-            ))}
+            ))} 
           </TableBody>
         </Table>
       </TableContainer>
-    </ThemeProvider>
+
+      {/* Create Modal */}
+      <CreateTeam eventId={eventId!} open={openCreate} onClose={handleCloseCreate} />
+
+      {/* Update Modal */}
+      <UpdateTeam eventId={eventId!} open={openUpdate} onClose={handleCloseUpdate} selectedTeam={selectedTeam} />
+    </Container>
   );
 };
 

@@ -1,86 +1,107 @@
 import { createBrowserRouter } from 'react-router-dom';
-import Login from './pages/Auth/Login';
 import EventsPage from './pages/Events/eventsAdmin/EventsPage';
-// import DashboardAdmin from './pages/Dashboard/AdminDashboard';
 import LayoutPages from './pages/Layout/LayoutPages';
 import AddEventPage from './pages/Events/eventsAdmin/AddEvent';
-import LandingPage from './pages/User/LandingPage';
-import SportsTable from './pages/Sport/sportsAdmin/SportTable';
-import UpdateEvent from './pages/Events/eventsAdmin/UpdateEvent';
-// import { SignIn, SignUp } from '@clerk/clerk-react';
-import ListRules from './pages/Sport/Rules';
+import LandingPage from './pages/Events/LandingPage';
+import SportsTable from './pages/Sport/SportTable';
 import ListTeam from './pages/Team/ListTeam';
-import LoginButton from './pages/Auth/LoginButton';
-import Matches from './pages/Match/matchAdmin/Matches';
+import Matches from './pages/Match/Matches';
+import SettingEvents from './pages/Events/eventsAdmin/SettingEvents';
+import Attendance from './pages/Attendance/Attendance';
+import Leaderboard from './pages/Leaderboard/Leaderboard';
+import Recap from './pages/Point/Recap';
+import Schedules from './pages/Attendance/Schedules';
+import ExtraPointPage from './pages/Point/ExtraPoint';
+import TeamMembers from './pages/Team/TeamMember/TeamMembers';
+import SportPlayerTable from './pages/Sport/Player/SportPlayer';
+import DataUser from './pages/User/DataUser';
+import ProfilePage from './pages/User/Profile';
+import ProtectedRoute from './hook/protectedRoute';
+import AddSportPlayer from './pages/Sport/Player/AddSportPlayer';
 
 const router = createBrowserRouter([
-  {
-    path: '/l',
-    element: <Login />,
-  },
-  {
-    path: '/login',
-    element: <LoginButton />,
-  },
   {
     path: '/',
     element: <LandingPage/>
   },
   // {
-  //   path: '/login',
-  //   element: <SignIn/>
-  // },
-  // {
-  //   path: '/register',
-  //   element: <SignUp/>
+  //   path: '/',
+  //   element: <ProtectedRoute element={<LandingPage/>}/>
   // },
   {
     path: '/events',
-    element: <EventsPage/>
+    element: <ProtectedRoute element={<EventsPage/>}/>
   },
-  // {
-  //   path: '/register',
-  //   element: <Register />,
-  // },
+  {
+    path: '/events/add',
+    element: <ProtectedRoute element={<AddEventPage/>}/>
+  },
+  {
+    path: '/profile/:user_Id',
+    element: <ProtectedRoute element={<ProfilePage/>}/>
+  }, 
  {
   id: 'root',
   element: <LayoutPages/>, 
-  // loader
   children: [
-    // {
-    //   path: '/events',
-    //   element: <EventsPage/>
-    // },
     {
-      path: '/events/add',
-      element: <AddEventPage/>
+      path: '/events/:eventId/schedules',
+      element: <ProtectedRoute element={<Schedules/>} />
     },
     {
-      path: '/events/edit/:eventId',
-      element: <UpdateEvent/>
+      path: '/events/:eventId/schedules/:scheduleId/attendances',
+      element: <ProtectedRoute element={<Attendance/>} />
     },
-    // {
-    //   path: 'admin/events',
-    //   element: <DashboardAdmin/>
-    // },
+    {
+      path: '/events/:eventId/leaderboard',
+      element: <ProtectedRoute element={<Leaderboard/>} />
+    },
+    {
+      path: '/events/:eventId/user',
+      element: <ProtectedRoute element={<DataUser/>} />
+    },
     {
       path: '/events/:eventId/sports',
-      element: <SportsTable/>
+      element: <ProtectedRoute element={<SportsTable/>} />
     },
     {
-      path: '/events/:eventId/sports/:sportId/rules',
-      element: <ListRules/>
+      path: '/events/:eventId/sports/:sportId/sportplayers',
+      element: <ProtectedRoute element={<SportPlayerTable/>} />
     },
     {
-      path: '/events/:eventId/sports/:sportId/matches',
-      element: <Matches/>
+      path: '/events/:eventId/sports/:sportId/sportplayers/add',
+      element: <ProtectedRoute element={<AddSportPlayer/>} />, 
     },
     {
-      path: '/events/:eventId/team',
-      element: <ListTeam/>
-    }
-  ]
- }
-]);
+      path: '/events/:eventId/matches',
+      element: <ProtectedRoute element={<Matches/>} />
+    },
+    {
+      path: '/events/:eventId/teams',
+      element: <ProtectedRoute element={<ListTeam/>}/>
+    },
+    {
+      path: '/events/:eventId/teams/:teamId/teamMembers',
+      element: <ProtectedRoute element={<TeamMembers/>} />
+    },
+    {
+      path: '/events/:eventId/detail',
+      element: <ProtectedRoute element={<SettingEvents/>} />
+    },
+    {
+      path: '/events/:eventId/recap',
+      element: <ProtectedRoute element={<Recap/>} />
+    },
+    {
+      path: '/events/:eventId/recap/:teamId/extrapoints',
+      element: <ProtectedRoute element={<ExtraPointPage/>} />
+    },
+    // {
+    //   path: '/events/:eventId/recap/:teamId/detailmatchpoints',
+    //   element: <DetailMatchPoint/>
+    // }, 
+  ],  
+ } 
+]); 
 
-export default router;
+export default router;  
