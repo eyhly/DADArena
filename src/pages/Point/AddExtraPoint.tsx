@@ -5,8 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { ExtraPoint } from "../../types/extraPoint";
 import Swal from "sweetalert2";
-import { ThemeProvider } from "@emotion/react";
-import ColorTheme from "../../utils/colorTheme";
 import {
   Box,
   Button,
@@ -79,7 +77,6 @@ const AddExtraPoint: React.FC<AddExtraPointModalProps> = ({
   };
 
   return (
-    <ThemeProvider theme={ColorTheme}>
       <Dialog open={open}>
         <DialogContent>
           <DialogTitle variant="h6" sx={{ mb: 2 }}>
@@ -175,7 +172,6 @@ const AddExtraPoint: React.FC<AddExtraPointModalProps> = ({
           </Box>
         </DialogContent>
       </Dialog>
-    </ThemeProvider>
   );
 };
 
