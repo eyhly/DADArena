@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { useAuthState } from "../hook/useAuth";
 import { Profile } from "../types/profile";
 
-const BASE_URL = "http://api-dadsportleague.my.id:5001/api";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 // const BASE_URL = "http://192.168.53.3:5001/api";
 // const axios = axios.create({ baseURL: BASE_URL });
 

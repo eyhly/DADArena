@@ -5,6 +5,8 @@ export interface Schedule {
     date: string,
     startAttendance: string,
     endAttendance: string,
+    longitude: string,
+    latitude: string,
 }
 
 export interface ScheduleResponse {

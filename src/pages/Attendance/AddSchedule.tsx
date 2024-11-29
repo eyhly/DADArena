@@ -16,7 +16,6 @@ interface AddModalSchedule {
 }
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    // return date.toISOString().slice(0, 16).replace('T', ' ') + 'Z';
     console.log('date', date.toISOString())
     return date.toISOString();
 }
@@ -42,12 +41,12 @@ const AddSchedule:React.FC<AddModalSchedule>= ({open, handleClose}) => {
     
         const formattedData = {
             ...data,
-            // startAttendance: formatDate(data.startAttendance),
-            // endAttendance: formatDate(data.endAttendance),
             week: Number(data.week),
             startAttendance: formatDate(data.startAttendance),
             endAttendance: formatDate(data.endAttendance),
-        };
+            // latitude: -6.1850545,
+            // longitude: 106.9311869,
+        };        
     
         mutate(
             { data: formattedData, eventId },
@@ -76,6 +75,7 @@ const AddSchedule:React.FC<AddModalSchedule>= ({open, handleClose}) => {
                 },
             }
         );
+        
     };
   return (
         <Dialog open={open}>
@@ -111,6 +111,42 @@ const AddSchedule:React.FC<AddModalSchedule>= ({open, handleClose}) => {
                             )}
                             />
                         </Grid>
+                        <Grid item xs={6}>
+                            <Controller
+                            name='latitude'
+                            control={control}
+                            defaultValue={'-6.1850545'}
+                            render={({field}) => (
+                                <TextField
+                                {...field}
+                                label={<Typography component="span">
+                                    Latitude Employee Center <Typography component="span" color="red"> *</Typography>
+                                </Typography>}
+                                variant='outlined'
+                                fullWidth
+                                />
+                            )}
+                            />
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <Controller
+                            name='longitude'
+                            control={control}
+                            defaultValue={'106.9311869'}
+                            render={({field}) => (
+                                <TextField
+                                {...field}
+                                label={<Typography component="span">
+                                    Longitude Employee Center <Typography component="span" color="red"> *</Typography>
+                                </Typography>}
+                                variant='outlined'
+                                fullWidth
+                                />
+                            )}
+                            />
+                        </Grid>
+                        
                         <Grid item xs={6}>
                             <Controller
                             name='startAttendance'

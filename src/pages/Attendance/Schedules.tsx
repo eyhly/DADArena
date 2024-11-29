@@ -82,6 +82,8 @@ const renderDateTime = (dateString: string) => {
 const SchedulesTable: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { data, isLoading, isError } = useGetAllSchedules(eventId!);
+  console.log(data);
+  
   const queryClient = useQueryClient();
   const deleteSchedule = useDeleteSchedule();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -214,7 +216,7 @@ const SchedulesTable: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", marginTop: 4 }}>
+      <Box sx={{ textAlign: "center", ml: 20 }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading schedules...

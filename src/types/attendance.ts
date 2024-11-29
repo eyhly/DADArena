@@ -8,6 +8,8 @@ export interface Attendance {
     name: string,
     username: string,
     time: string,
+    userLatitude?: number,
+    userLongitude?: number,
 }
 
 export interface Pagination {

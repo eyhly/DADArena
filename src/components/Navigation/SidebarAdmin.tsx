@@ -177,7 +177,8 @@ export default function PermanentDrawerLeft() {
       <Divider />
       <List>
         {menuItems.map(({ text, icon, path }) => (
-          <ListItem key={text} disablePadding>
+          <Tooltip title={text} disableHoverListener={isDrawerOpen} placement="left">
+            <ListItem key={text} disablePadding >
             <ListItemButton
               selected={location.pathname === path}
               onClick={() => handleNavigation(path)}
@@ -190,6 +191,7 @@ export default function PermanentDrawerLeft() {
                     color: (theme) => theme.palette.primary.main,
                   },
                 },
+              
               }}
             >
               <ListItemIcon>{icon}</ListItemIcon>
@@ -197,6 +199,7 @@ export default function PermanentDrawerLeft() {
             </ListItemButton>
             
           </ListItem>
+          </Tooltip>
         ))}
       </List>
       {isDrawerOpen ? <Button

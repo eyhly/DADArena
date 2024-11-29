@@ -17,7 +17,11 @@ import {
   Container,
 } from "@mui/material";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetAllAttendances, useGetAllSchedules, useGetAllTeams } from "../../services/queries";
+import {
+  useGetAllAttendances,
+  useGetAllSchedules,
+  useGetAllTeams,
+} from "../../services/queries";
 import { Attendance } from "../../types/attendance";
 import {
   useReactTable,
@@ -28,7 +32,11 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { Team } from "../../types/team";
-import { AddOutlined, KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import {
+  AddOutlined,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+} from "@mui/icons-material";
 import AddAttendance from "./AddAttendance";
 import { useAuthState } from "../../hook/useAuth";
 
@@ -63,9 +71,16 @@ const renderDate = (dateString: string) => {
 };
 
 const AttendancePage: React.FC = () => {
-  const { eventId, scheduleId } = useParams<{eventId: string; scheduleId: string;}>();
-  const {data: attendances, isLoading, isError} = useGetAllAttendances(scheduleId!, eventId!);
-  const {data: schedules} = useGetAllSchedules(eventId!);
+  const { eventId, scheduleId } = useParams<{
+    eventId: string;
+    scheduleId: string;
+  }>();
+  const {
+    data: attendances,
+    isLoading,
+    isError,
+  } = useGetAllAttendances(scheduleId!, eventId!);
+  const { data: schedules } = useGetAllSchedules(eventId!);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { data: teams } = useGetAllTeams(eventId!);
   const navigate = useNavigate();
@@ -75,19 +90,28 @@ const AttendancePage: React.FC = () => {
   };
   const [openAddModal, setOpenAddModal] = useState(false);
   const { data } = useAuthState();
-  const user = data?.user;
+  const user = data?.user;  
 
-  const currentSchedule = schedules?.find(schedule => schedule.id === scheduleId);
-  const isScheduleEnded = currentSchedule ? new Date() > new Date(currentSchedule.endAttendance) : true;
-  const hasUserAttended = attendances?.some(att => att.userId === user?.profile.sub);
+  const currentSchedule = schedules?.find(
+    (schedule) => schedule.id === scheduleId
+  );
+  const isScheduleEnded = currentSchedule
+    ? new Date() > new Date(currentSchedule.endAttendance)
+    : true;
+  const hasUserAttended = attendances?.some(
+    (att) => att.userId === user?.profile.sub
+  );
   const isButtonDisabled = isScheduleEnded || hasUserAttended;
 
-  const columns = React.useMemo<ColumnDef<Attendance>[]>(() => [
-    { accessorFn: (row) => getTeamNameById(row.teamId), header: "Team Name" },
-    { accessorKey: "fullname", header: "User" },
-    { accessorKey: "name", header: "Email" },
-    { accessorFn: (row) => renderDate(row.time), header: "Attendance time" },
-  ], [teams]);
+  const columns = React.useMemo<ColumnDef<Attendance>[]>(
+    () => [
+      { accessorFn: (row) => getTeamNameById(row.teamId), header: "Team Name" },
+      { accessorKey: "fullname", header: "User" },
+      { accessorKey: "name", header: "Email" },
+      { accessorFn: (row) => renderDate(row.time), header: "Attendance time" },
+    ],
+    [teams]
+  );
 
   useEffect(() => {
     console.log("Event ID:", eventId);
@@ -105,7 +129,7 @@ const AttendancePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ textAlign: "center", }}>
+      <Box sx={{ textAlign: "center", ml: 20 }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Loading attendance data...
@@ -116,7 +140,7 @@ const AttendancePage: React.FC = () => {
 
   if (isError) {
     return (
-      <Box sx={{ textAlign: "center", justifyContent: 'center', ml: 20 }}>
+      <Box sx={{ textAlign: "center", justifyContent: "center", ml: 20 }}>
         <Typography variant="h6" sx={{ marginTop: 2 }}>
           Failed to load attendance data
         </Typography>
@@ -126,52 +150,72 @@ const AttendancePage: React.FC = () => {
 
   if (attendances?.length === 0) {
     return (
-      <Box sx={{ display:'block', textAlign: 'center', justifyContent:'center', ml: 40 }}>
-          <Typography variant="h6">
-            No attendance records found for this schedule
-          </Typography>
-          <Button
-            variant="contained"
-            sx={{ mb: 2 }}
-            onClick={() => setOpenAddModal(true)}
-            disabled={isButtonDisabled}
-          >
-            <AddOutlined /> Create Attendance
-          </Button>
-          <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
+      <Box
+        sx={{
+          display: "block",
+          textAlign: "center",
+          justifyContent: "center",
+          ml: 40,
+        }}
+      >
+        <Typography variant="h6">
+          No attendance records found for this schedule
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{ mb: 2 }}
+          onClick={() => setOpenAddModal(true)}
+          disabled={isButtonDisabled}
+        >
+          <AddOutlined /> Create Attendance
+        </Button>
+        <AddAttendance
+          open={openAddModal}
+          handleClose={() => setOpenAddModal(false)}
+        />
         {/* </Box> */}
       </Box>
     );
   }
 
   return (
-    <Container sx={{ mb: 4, minHeight: 550, width: '1000px' }}>
-        <Breadcrumbs aria-label="breadcrumb">
-          <Typography
-            onClick={() => navigate(`/events/${eventId}/schedules/`)}
-            style={{ cursor: "pointer" }}
-            color="inherit"
-          >
-            Schedule
-          </Typography>
-          <Typography color="text.primary">Attendance</Typography>
-        </Breadcrumbs>
-      <Box sx={{display: 'flex', justifyContent:'space-between', width: '1200px', mb: 2}}>
-      <Typography variant="h4" sx={{ mb: 3, mt: 2 }}>
-        Attendance List
-      </Typography>
-
-      <Button
-        variant="contained"
-        sx={{ mt: 5, maxHeight: 30 }}
-        onClick={() => setOpenAddModal(true)}
-        disabled={isButtonDisabled}
+    <Container sx={{ mb: 4, minHeight: 550, width: "1000px" }}>
+      <Breadcrumbs aria-label="breadcrumb">
+        <Typography
+          onClick={() => navigate(`/events/${eventId}/schedules/`)}
+          style={{ cursor: "pointer" }}
+          color="inherit"
+        >
+          Schedule
+        </Typography>
+        <Typography color="text.primary">Attendance</Typography>
+      </Breadcrumbs>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          width: "1200px",
+          mb: 2,
+        }}
       >
-        <AddOutlined /> Create Attendance
-      </Button>
+        <Typography variant="h4" sx={{ mb: 3, mt: 2 }}>
+          Attendance List
+        </Typography>
 
-      <AddAttendance open={openAddModal} handleClose={() => setOpenAddModal(false)} />
-        </Box>
+        <Button
+          variant="contained"
+          sx={{ mt: 5, maxHeight: 30 }}
+          onClick={() => setOpenAddModal(true)}
+          disabled={isButtonDisabled}
+        >
+          <AddOutlined /> Create Attendance
+        </Button>
+
+        <AddAttendance
+          open={openAddModal}
+          handleClose={() => setOpenAddModal(false)}
+        />
+      </Box>
       <TableContainer component={Paper} sx={{ maxWidth: 1200, minWidth: 1200 }}>
         <Table stickyHeader>
           <TableHead>
@@ -186,9 +230,16 @@ const AttendancePage: React.FC = () => {
                           style: { cursor: "pointer", display: "flex" },
                         }}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === "asc" ? <KeyboardArrowUp /> : null}
-                        {header.column.getIsSorted() === "desc" ? <KeyboardArrowDown /> : null}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getIsSorted() === "asc" ? (
+                          <KeyboardArrowUp />
+                        ) : null}
+                        {header.column.getIsSorted() === "desc" ? (
+                          <KeyboardArrowDown />
+                        ) : null}
                       </div>
                     )}
                   </StyledTableCell>
@@ -214,4 +265,3 @@ const AttendancePage: React.FC = () => {
 };
 
 export default AttendancePage;
-

@@ -60,6 +60,8 @@ export const extraPointSchema = z.object({
 
 export const scheduleSchema = z.object({
     week: z.number({invalid_type_error: "Week must be number"}).min(1, "Week must be at least 1"),
+    longitude: z.string().nonempty('Longitude is required'),
+    latitude: z.string().nonempty('Longitude is required'),
     startAttendance: z.string().nonempty("Start Attendance is required"),
     endAttendance: z.string().nonempty("End Attendance is required")
     }).superRefine((data, ctx) => {
