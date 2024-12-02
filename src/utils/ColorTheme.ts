@@ -2,7 +2,6 @@ import { createTheme } from '@mui/material/styles';
 
 const ColorTheme = createTheme({
   palette: {
-    mode: 'light',
     primary: {
       main: '#FFD500',
     },
