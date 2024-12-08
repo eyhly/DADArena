@@ -155,7 +155,7 @@ const Recap: React.FC = () => {
 
   if (isLoading ) {
     return (
-      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center'}}>
+      <Box sx={{ display: "block", justifyContent: "center", textAlign:'center', alignItems: 'center', ml: 20}}> 
         <CircularProgress />
         <Typography variant="h6">Loading...</Typography>
       </Box>

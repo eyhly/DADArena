@@ -208,7 +208,8 @@ export default function SettingEvents() {
         display: "column",
         justifyContent: "center",
         minHeight: 550,
-        maxHeight: 550
+        maxHeight: 550,
+        mr: 17,
       }}
     >
         <CardMedia

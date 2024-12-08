@@ -38,7 +38,7 @@ const Leaderboard = () => {
   }
 
   return (
-    <Container sx={{ mb: 4, width: '1000px', minHeight: 550, maxHeight: 550 }}>
+    <Container sx={{ mb: 4, mr: 5, minWidth: '1200px', minHeight: 550, maxHeight: 550 }}>
       <Typography variant="h4" align="center"sx={{mb: 2, mt: 5}}>
         Leaderboard
       </Typography>

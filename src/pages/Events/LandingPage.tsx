@@ -162,7 +162,7 @@ import { AddOutlined } from "@mui/icons-material";
               alt="WELCOME"
               sx={{
                 height: "100%",
-                width: "137%",
+                width: "144%",
                 objectFit: "contain",
                 mb: 3,
                 borderRadius: 6
@@ -220,7 +220,7 @@ import { AddOutlined } from "@mui/icons-material";
                         image={event.image}
                         onClick={() => navigate(`/events/${event.id}/matches`)}
                       />
-                      <CardContent sx={{ height: 100, overflow: "hidden" }}>
+                      <CardContent sx={{ height: 120, overflow: "hidden" }}>
                         <Typography gutterBottom variant="h5" component="div">
                           {event.title}
                         </Typography>
